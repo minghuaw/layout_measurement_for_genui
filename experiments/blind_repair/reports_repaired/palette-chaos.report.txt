@@ -1,0 +1,44 @@
+=== Layout Report: palette-chaos.html ===
+Page 375×812 contentH=1083 scrollW=375
+Palette bg:#ffffff 48%|#f5f6fa 14% | text:#ffffff 38%|#222222 9% | accent:#ff3b30 10%|#29cc6a 10%|#3b82f6 10% | accentArea:38% | accentHues:0°/150°/210°/270° 无和声
+├─ header.header (0,0 375×82)
+│  ├─ h1 (16,16 343×28) <fs20,lh1.4,#222222/#ffffff> "今日推荐"
+│  └─ p (16,48 343×18) <fs13,lh1.4,#5f5f5f/#ffffff> "为你精选的 4 条内容"
+├─ main.card-list (0,82 375×917)
+│  ├─ article.card (12,94 351×211) <r12>
+│  │  ├─ div.banner (26,108 323×120) <fs15,r8,#ffffff/#ff3b30> "热门活动"
+│  │  ├─ h3 (26,240 323×22) <fs16,lh1.4,#222222/#ffffff> "城市漫步指南"
+│  │  └─ p (26,271 323×21) <fs13,lh1.6,#666666/#ffffff> "用半天时间探索老城区的街巷与咖啡馆。"
+│  ├─ article.card (12,321 351×211) <r12>
+│  │  ├─ div.banner (26,335 323×120) <fs15,r8,#ffffff/#29cc6a> "新品首发"
+│  │  ├─ h3 (26,467 323×22) <fs16,lh1.4,#222222/#ffffff> "周末市集活动预告"
+│  │  └─ p (26,498 323×21) <fs13,lh1.6,#666666/#ffffff> "本周末两天，近 40 家摊主集结。"
+│  ├─ article.card (12,549 351×211) <r12>
+│  │  ├─ div.banner (26,563 323×120) <fs15,r8,#ffffff/#3b82f6> "限时折扣"
+│  │  ├─ h3 (26,695 323×22) <fs16,lh1.4,#222222/#ffffff> "手冲咖啡入门课"
+│  │  └─ p (26,725 323×21) <fs13,lh1.6,#666666/#ffffff> "从磨豆到注水，两小时入门手冲。"
+│  └─ article.card (12,776 351×211) <r12>
+│     ├─ div.banner (26,790 323×120) <fs15,r8,#ffffff/#a855f7> "会员专享"
+│     ├─ h3 (26,922 323×22) <fs16,lh1.4,#222222/#ffffff> "近郊徒步路线推荐"
+│     └─ p (26,952 323×21) <fs13,lh1.6,#666666/#ffffff> "三条一日往返路线，难度适中。"
+└─ nav.tabbar (0,1015 375×56) <r12>
+   ├─ a (0,1015 94×56) <interactive>
+   │  ├─ span.icon (35,1022 25×24) <fs18,#666666/#ffffff> "🏠"
+   │  └─ span (35,1048 24×16) <fs12,#666666/#ffffff> "首页"
+   ├─ a (94,1015 94×56) <interactive>
+   │  ├─ span.icon (128,1022 25×24) <fs18,#666666/#ffffff> "🧭"
+   │  └─ span (129,1048 24×16) <fs12,#666666/#ffffff> "发现"
+   ├─ a (188,1015 94×56) <interactive>
+   │  ├─ span.icon (227,1022 15×24) <fs18,#666666/#ffffff> "☆"
+   │  └─ span (222,1048 24×16) <fs12,#666666/#ffffff> "收藏"
+   └─ a (281,1015 94×56) <interactive>
+      ├─ span.icon (321,1022 15×24) <fs18,#666666/#ffffff> "⚙"
+      └─ span (316,1048 24×16) <fs12,#666666/#ffffff> "我的"
+ISSUES (7):
+  [CONTRAST_LOW] div.banner 文字 #ffffff 对背景 #ff3b30 对比度 3.55:1 (<4.5:1 WCAG AA)，建议改为 #000000
+  [CONTRAST_LOW] div.banner 文字 #ffffff 对背景 #29cc6a 对比度 2.11:1 (<4.5:1 WCAG AA)，建议改为 #000000
+  [CONTRAST_LOW] div.banner 文字 #ffffff 对背景 #3b82f6 对比度 3.68:1 (<4.5:1 WCAG AA)，建议改为 #000000
+  [CONTRAST_LOW] div.banner 文字 #ffffff 对背景 #a855f7 对比度 3.96:1 (<4.5:1 WCAG AA)，建议改为 #000000
+  [COLOR_DOMINANCE] 强调色面积占 38%（60-30-10 法则建议 ≤10-15%）：#ff3b30/#29cc6a/#3b82f6，建议大面积使用中性色
+  [HARMONY_OFF] 强调色相 0°/150°/210°/270° 互不成和声（类似/互补/三角），建议保留 1 个主强调色，其余改同族或中性色
+  [GARISH_SATURATION] 高饱和色块总面积 38%（建议 ≤20%）：#ff3b30/#29cc6a/#3b82f6，建议降饱和或缩小面积

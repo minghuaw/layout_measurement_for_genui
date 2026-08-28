@@ -1,0 +1,20 @@
+﻿fixture        before  blind  guided  layout-only  鍒ゅ畾(layout-only)
+contrast-chaos 9      5      0       9           鏃犳晥 (9鈫?)
+color-chaos    9      4      5       0           鍏ㄤ慨澶?palette-chaos  7      7      0       6           閮ㄥ垎 (7鈫?)
+TOTAL          25     16     5       15         
+
+=== 鍒嗙被鍨嬫槑缁?(before/blind/guided/layout-only) ===
+  CONTRAST_LOW         contrast-chaos 9 / 5 / 0 / 9
+  CONTRAST_LOW         color-chaos  6 / 4 / 4 / 0
+  CONTRAST_LOW         palette-chaos 4 / 4 / 0 / 4
+  COLOR_INCONSISTENT   color-chaos  1 / 0 / 0 / 0
+  ACCENT_BLOAT         color-chaos  1 / 0 / 0 / 0
+  COLOR_DOMINANCE      palette-chaos 1 / 1 / 0 / 1
+  HARMONY_OFF          color-chaos  1 / 0 / 1 / 0
+  HARMONY_OFF          palette-chaos 1 / 1 / 0 / 0
+  GARISH_SATURATION    palette-chaos 1 / 1 / 0 / 1
+
+=== 鏂板紩鍏ラ棶棰樻鏌ワ紙鍚勮噦鐩稿 before锛?===
+blind > none
+guided > none
+layoutOnly > none

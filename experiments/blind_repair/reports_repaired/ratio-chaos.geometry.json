@@ -1,0 +1,662 @@
+{
+  "pageInfo": {
+    "viewport": {
+      "w": 375,
+      "h": 812
+    },
+    "innerW": 375,
+    "scrollWidth": 375,
+    "scrollHeight": 812
+  },
+  "tree": [
+    {
+      "tag": "header",
+      "id": "",
+      "cls": "header",
+      "role": "",
+      "text": "",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 375,
+        "h": 79
+      },
+      "pos": "static",
+      "interactive": false,
+      "textClip": false,
+      "fontSize": 16,
+      "lineHeight": null,
+      "radius": 0,
+      "padding": 16,
+      "children": [
+        {
+          "tag": "h1",
+          "id": "",
+          "cls": "",
+          "role": "",
+          "text": "今日推荐",
+          "rect": {
+            "x": 16,
+            "y": 16,
+            "w": 343,
+            "h": 26
+          },
+          "pos": "static",
+          "interactive": false,
+          "textClip": false,
+          "fontSize": 20,
+          "lineHeight": null,
+          "radius": 0,
+          "padding": 0,
+          "children": [],
+          "_pt": "header"
+        },
+        {
+          "tag": "p",
+          "id": "",
+          "cls": "",
+          "role": "",
+          "text": "为你精选的 4 条内容",
+          "rect": {
+            "x": 16,
+            "y": 46,
+            "w": 343,
+            "h": 17
+          },
+          "pos": "static",
+          "interactive": false,
+          "textClip": false,
+          "fontSize": 13,
+          "lineHeight": null,
+          "radius": 0,
+          "padding": 0,
+          "children": [],
+          "_pt": "header"
+        }
+      ],
+      "_pt": "body"
+    },
+    {
+      "tag": "main",
+      "id": "",
+      "cls": "card-list",
+      "role": "",
+      "text": "",
+      "rect": {
+        "x": 0,
+        "y": 79,
+        "w": 375,
+        "h": 324.75
+      },
+      "pos": "static",
+      "interactive": false,
+      "textClip": false,
+      "fontSize": 16,
+      "lineHeight": null,
+      "radius": 0,
+      "padding": 12,
+      "children": [
+        {
+          "tag": "article",
+          "id": "",
+          "cls": "card",
+          "role": "",
+          "text": "",
+          "rect": {
+            "x": 12,
+            "y": 91,
+            "w": 351,
+            "h": 63.19
+          },
+          "pos": "static",
+          "interactive": false,
+          "textClip": false,
+          "fontSize": 16,
+          "lineHeight": null,
+          "radius": 12,
+          "padding": 0,
+          "children": [
+            {
+              "tag": "h3",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "城市漫步指南",
+              "rect": {
+                "x": 12,
+                "y": 91,
+                "w": 351,
+                "h": 22.39
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 16,
+              "lineHeight": 1.4,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "article"
+            },
+            {
+              "tag": "p",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "用半天时间探索老城区的街巷与咖啡馆。",
+              "rect": {
+                "x": 12,
+                "y": 121.39,
+                "w": 351,
+                "h": 20.8
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 13,
+              "lineHeight": 1.6,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "article"
+            }
+          ],
+          "_pt": "main"
+        },
+        {
+          "tag": "article",
+          "id": "",
+          "cls": "card",
+          "role": "",
+          "text": "",
+          "rect": {
+            "x": 12,
+            "y": 170.19,
+            "w": 351,
+            "h": 63.19
+          },
+          "pos": "static",
+          "interactive": false,
+          "textClip": false,
+          "fontSize": 16,
+          "lineHeight": null,
+          "radius": 12,
+          "padding": 0,
+          "children": [
+            {
+              "tag": "h3",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "周末市集活动预告",
+              "rect": {
+                "x": 12,
+                "y": 170.19,
+                "w": 351,
+                "h": 22.39
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 16,
+              "lineHeight": 1.4,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "article"
+            },
+            {
+              "tag": "p",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "本周末两天，近 40 家摊主集结。",
+              "rect": {
+                "x": 12,
+                "y": 200.58,
+                "w": 351,
+                "h": 20.8
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 13,
+              "lineHeight": 1.6,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "article"
+            }
+          ],
+          "_pt": "main"
+        },
+        {
+          "tag": "article",
+          "id": "",
+          "cls": "card",
+          "role": "",
+          "text": "",
+          "rect": {
+            "x": 12,
+            "y": 249.38,
+            "w": 351,
+            "h": 63.19
+          },
+          "pos": "static",
+          "interactive": false,
+          "textClip": false,
+          "fontSize": 16,
+          "lineHeight": null,
+          "radius": 12,
+          "padding": 0,
+          "children": [
+            {
+              "tag": "h3",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "手冲咖啡入门课",
+              "rect": {
+                "x": 12,
+                "y": 249.38,
+                "w": 351,
+                "h": 22.39
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 16,
+              "lineHeight": 1.4,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "article"
+            },
+            {
+              "tag": "p",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "从磨豆到注水，两小时带你做出第一杯好喝的手冲咖啡。",
+              "rect": {
+                "x": 12,
+                "y": 279.77,
+                "w": 351,
+                "h": 20.8
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 13,
+              "lineHeight": 1.6,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "article"
+            }
+          ],
+          "_pt": "main"
+        },
+        {
+          "tag": "article",
+          "id": "",
+          "cls": "card",
+          "role": "",
+          "text": "",
+          "rect": {
+            "x": 12,
+            "y": 328.56,
+            "w": 351,
+            "h": 63.19
+          },
+          "pos": "static",
+          "interactive": false,
+          "textClip": false,
+          "fontSize": 16,
+          "lineHeight": null,
+          "radius": 12,
+          "padding": 0,
+          "children": [
+            {
+              "tag": "h3",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "近郊徒步路线推荐",
+              "rect": {
+                "x": 12,
+                "y": 328.56,
+                "w": 351,
+                "h": 22.39
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 16,
+              "lineHeight": 1.4,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "article"
+            },
+            {
+              "tag": "p",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "三条一日往返路线，难度适中。",
+              "rect": {
+                "x": 12,
+                "y": 358.95,
+                "w": 351,
+                "h": 20.8
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 13,
+              "lineHeight": 1.6,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "article"
+            }
+          ],
+          "_pt": "main"
+        }
+      ],
+      "_pt": "body"
+    },
+    {
+      "tag": "nav",
+      "id": "",
+      "cls": "tabbar",
+      "role": "",
+      "text": "",
+      "rect": {
+        "x": 0,
+        "y": 419.75,
+        "w": 375,
+        "h": 56
+      },
+      "pos": "static",
+      "interactive": false,
+      "textClip": false,
+      "fontSize": 16,
+      "lineHeight": null,
+      "radius": 12,
+      "padding": 0,
+      "children": [
+        {
+          "tag": "a",
+          "id": "",
+          "cls": "",
+          "role": "",
+          "text": "",
+          "rect": {
+            "x": 0,
+            "y": 419.75,
+            "w": 93.75,
+            "h": 56
+          },
+          "pos": "static",
+          "interactive": true,
+          "textClip": false,
+          "fontSize": 12,
+          "lineHeight": null,
+          "radius": 0,
+          "padding": 0,
+          "children": [
+            {
+              "tag": "span",
+              "id": "",
+              "cls": "icon",
+              "role": "",
+              "text": "🏠",
+              "rect": {
+                "x": 34.52,
+                "y": 425.75,
+                "w": 24.72,
+                "h": 24
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 18,
+              "lineHeight": null,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "a"
+            },
+            {
+              "tag": "span",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "首页",
+              "rect": {
+                "x": 34.88,
+                "y": 453.75,
+                "w": 24,
+                "h": 16
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 12,
+              "lineHeight": null,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "a"
+            }
+          ],
+          "_pt": "nav"
+        },
+        {
+          "tag": "a",
+          "id": "",
+          "cls": "",
+          "role": "",
+          "text": "",
+          "rect": {
+            "x": 93.75,
+            "y": 419.75,
+            "w": 93.75,
+            "h": 56
+          },
+          "pos": "static",
+          "interactive": true,
+          "textClip": false,
+          "fontSize": 12,
+          "lineHeight": null,
+          "radius": 0,
+          "padding": 0,
+          "children": [
+            {
+              "tag": "span",
+              "id": "",
+              "cls": "icon",
+              "role": "",
+              "text": "🧭",
+              "rect": {
+                "x": 128.27,
+                "y": 425.75,
+                "w": 24.72,
+                "h": 24
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 18,
+              "lineHeight": null,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "a"
+            },
+            {
+              "tag": "span",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "发现",
+              "rect": {
+                "x": 128.63,
+                "y": 453.75,
+                "w": 24,
+                "h": 16
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 12,
+              "lineHeight": null,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "a"
+            }
+          ],
+          "_pt": "nav"
+        },
+        {
+          "tag": "a",
+          "id": "",
+          "cls": "",
+          "role": "",
+          "text": "",
+          "rect": {
+            "x": 187.5,
+            "y": 419.75,
+            "w": 93.75,
+            "h": 56
+          },
+          "pos": "static",
+          "interactive": true,
+          "textClip": false,
+          "fontSize": 12,
+          "lineHeight": null,
+          "radius": 0,
+          "padding": 0,
+          "children": [
+            {
+              "tag": "span",
+              "id": "",
+              "cls": "icon",
+              "role": "",
+              "text": "☆",
+              "rect": {
+                "x": 226.95,
+                "y": 425.75,
+                "w": 14.83,
+                "h": 24
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 18,
+              "lineHeight": null,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "a"
+            },
+            {
+              "tag": "span",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "收藏",
+              "rect": {
+                "x": 222.38,
+                "y": 453.75,
+                "w": 24,
+                "h": 16
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 12,
+              "lineHeight": null,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "a"
+            }
+          ],
+          "_pt": "nav"
+        },
+        {
+          "tag": "a",
+          "id": "",
+          "cls": "",
+          "role": "",
+          "text": "",
+          "rect": {
+            "x": 281.25,
+            "y": 419.75,
+            "w": 93.75,
+            "h": 56
+          },
+          "pos": "static",
+          "interactive": true,
+          "textClip": false,
+          "fontSize": 12,
+          "lineHeight": null,
+          "radius": 0,
+          "padding": 0,
+          "children": [
+            {
+              "tag": "span",
+              "id": "",
+              "cls": "icon",
+              "role": "",
+              "text": "⚙",
+              "rect": {
+                "x": 320.53,
+                "y": 425.75,
+                "w": 15.17,
+                "h": 24
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 18,
+              "lineHeight": null,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "a"
+            },
+            {
+              "tag": "span",
+              "id": "",
+              "cls": "",
+              "role": "",
+              "text": "我的",
+              "rect": {
+                "x": 316.13,
+                "y": 453.75,
+                "w": 24,
+                "h": 16
+              },
+              "pos": "static",
+              "interactive": false,
+              "textClip": false,
+              "fontSize": 12,
+              "lineHeight": null,
+              "radius": 0,
+              "padding": 0,
+              "children": [],
+              "_pt": "a"
+            }
+          ],
+          "_pt": "nav"
+        }
+      ],
+      "_pt": "body"
+    }
+  ]
+}

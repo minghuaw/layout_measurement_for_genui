@@ -1,0 +1,14 @@
+{
+  "name": "lightweight-layout-eng",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "collect": "node src/run.mjs",
+    "test": "node tests/config.test.mjs",
+    "golden": "node tests/golden.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

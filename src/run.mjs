@@ -1,0 +1,58 @@
+/**
+ * run.mjs —— 实验启动器（夹具清单与主程序解耦的唯一持有方）
+ *
+ * 职责：
+ *   1. 持有实验夹具清单 ALL（实验资产，不污染管线模块 collect.mjs）
+ *   2. 解析命令行与环境变量：INPUT_DIR / OUTPUT_DIR / METRICS_CONFIG /
+ *      METRICS_OFF / METRICS_ON（配置经 config.mjs 四级优先级合并）
+ *   3. 管理 Playwright 浏览器生命周期，逐夹具驱动 collectPage
+ *   4. 汇总打印：四产物体积对比表 + 各夹具 report.txt 全文
+ *
+ * 用法：
+ *   node src/run.mjs                # 全量 15 夹具（fixtures/ → reports/）
+ *   node src/run.mjs good overflow  # 指定夹具子集
+ *   $env:INPUT_DIR='repaired'; $env:OUTPUT_DIR='reports_repaired'; node src/run.mjs overflow …
+ *   $env:METRICS_OFF='L5'; node src/run.mjs good   # 关闭整层/单规则
+ */
+
+import { chromium } from 'playwright';
+import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { collectPage } from './collect.mjs';
+import { loadConfig } from './config.mjs';
+
+const DIR = fileURLToPath(new URL('.', import.meta.url));
+const ROOT = resolve(DIR, '..');
+
+/** 实验夹具清单（15 个：1 对照 + 14 缺陷注入；与 tests/golden.snapshot.json 顺序一致） */
+const ALL = ['good', 'overflow', 'overlap', 'mixed', 'font-chaos', 'align-chaos', 'card-chaos', 'cramped', 'img-chaos', 'ratio-chaos', 'void-band', 'sparse-card', 'contrast-chaos', 'color-chaos', 'palette-chaos'];
+
+/** 目标夹具：命令行参数优先，缺省全量 */
+const FIXTURES = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
+
+/** 输入/输出目录：环境变量参数化（实验目录复用主管线的入口），缺省主 fixtures/reports */
+const INPUT_DIR = resolve(process.env.INPUT_DIR || join(ROOT, 'fixtures'));
+const OUT = resolve(process.env.OUTPUT_DIR || join(ROOT, 'reports'));
+
+/* 配置一次性加载，进程内全部夹具共享（保证 Config 回显一致） */
+const { cfg, echo } = loadConfig();
+
+const browser = await chromium.launch();
+const results = [];
+for (const name of FIXTURES) {
+  results.push(await collectPage(browser, { name, inputDir: INPUT_DIR, outDir: OUT, cfg, echo }));
+}
+await browser.close();
+
+/* ---- 汇总输出：体积对比表（回流成本代理指标） ---- */
+const kb = (n) => (n / 1024).toFixed(1) + ' KB';
+console.log('\n=== 输出格式体积对比 ===');
+console.log(['fixture'.padEnd(10), 'aria.yml'.padEnd(10), 'geometry.json'.padEnd(14), 'cdp.json'.padEnd(10), 'report.txt'.padEnd(11), 'issues'].join(' '));
+for (const r of results) {
+  console.log([r.name.padEnd(10), kb(r.sizes.aria).padEnd(10), kb(r.sizes.geo).padEnd(14), kb(r.sizes.cdp).padEnd(10), kb(r.sizes.report).padEnd(11), String(r.issues)].join(' '));
+}
+/* ---- 逐夹具打印完整报告（人工核验通路） ---- */
+for (const r of results) {
+  console.log('\n' + readFileSync(join(OUT, r.name + '.report.txt'), 'utf8'));
+}

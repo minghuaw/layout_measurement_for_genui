@@ -1,0 +1,25 @@
+- banner:
+  - heading "今日推荐" [level=1]
+  - paragraph: 为你精选的 4 条内容
+- main:
+  - article:
+    - heading "城市漫步指南" [level=3]
+    - paragraph: 用半天时间探索老城区的街巷与咖啡馆。
+  - article:
+    - heading "周末市集活动预告" [level=3]
+    - paragraph: 本周末两天，近 40 家摊主集结。
+  - article:
+    - heading "手冲咖啡入门课" [level=3]
+    - paragraph: 从磨豆到注水，两小时带你做出第一杯好喝的手冲咖啡。
+  - article:
+    - heading "近郊徒步路线推荐" [level=3]
+    - paragraph: 三条一日往返路线，难度适中。
+- navigation:
+  - link "🏠 首页":
+    - /url: "#"
+  - link "🧭 发现":
+    - /url: "#"
+  - link "☆ 收藏":
+    - /url: "#"
+  - link "⚙ 我的":
+    - /url: "#"

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卡片流-对比度不足</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #222; padding-bottom: 12px; }
+.header { padding: 16px; background: #fff; }
+.header h1 { font-size: 20px; }
+.header p { margin-top: 4px; font-size: 13px; color: #5f6368; }
+.card-list { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.card { background: #fff; border-radius: 12px; padding: 14px; }
+.card h3 { font-size: 15px; line-height: 1.4; }
+.card .desc { margin-top: 6px; font-size: 13px; color: #cccccc; line-height: 1.4; }
+.card-foot { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+.price { color: #d93036; font-size: 17px; font-weight: 600; }
+.price small { font-size: 12px; font-weight: 400; }
+.btn { height: 44px; padding: 0 18px; border: none; border-radius: 8px; background: #9ecbff; color: #ffffff; font-size: 14px; }
+.more-link { display: block; margin-top: 12px; padding: 13px 0; color: #f7d354; font-size: 14px; text-decoration: none; }
+.tabbar { margin-top: 12px; display: flex; background: #fff; border-radius: 12px; }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 56px; text-decoration: none; color: #6b7280; font-size: 10px; }
+.tabbar .icon { font-size: 18px; }
+</style>
+</head>
+<body>
+<header class="header">
+  <h1>今日推荐</h1>
+  <p>为你精选的 4 条内容</p>
+</header>
+<main class="card-list">
+  <article class="card">
+    <h3>城市漫步指南</h3>
+    <p class="desc">用半天时间探索老城区的街巷与咖啡馆，感受城市的另一面。</p>
+    <div class="card-foot">
+      <div class="price"><small>¥</small>29</div>
+      <button class="btn">查看详情</button>
+    </div>
+  </article>
+  <article class="card">
+    <h3>周末市集活动预告</h3>
+    <p class="desc">本周末两天，近 40 家摊主集结，手作、烘焙、绿植应有尽有。</p>
+    <div class="card-foot">
+      <div class="price"><small>¥</small>19</div>
+      <button class="btn">查看详情</button>
+    </div>
+  </article>
+  <article class="card">
+    <h3>手冲咖啡入门课</h3>
+    <p class="desc">从磨豆到注水，两小时带你做出第一杯好喝的手冲咖啡。</p>
+    <div class="card-foot">
+      <div class="price"><small>¥</small>49</div>
+      <button class="btn">查看详情</button>
+    </div>
+  </article>
+  <article class="card">
+    <h3>近郊徒步路线推荐</h3>
+    <p class="desc">三条一日往返路线，难度适中，适合周末轻装出发。</p>
+    <div class="card-foot">
+      <div class="price"><small>¥</small>35</div>
+      <button class="btn">查看详情</button>
+    </div>
+  </article>
+</main>
+<a class="more-link" href="#">查看全部推荐 →</a>
+<nav class="tabbar">
+  <a href="#"><span class="icon">🏠</span><span>首页</span></a>
+  <a href="#"><span class="icon">🧭</span><span>发现</span></a>
+  <a href="#"><span class="icon">☆</span><span>收藏</span></a>
+  <a href="#"><span class="icon">⚙</span><span>我的</span></a>
+</nav>
+</body>
+</html>

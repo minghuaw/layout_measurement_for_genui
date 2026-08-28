@@ -1,0 +1,94 @@
+{
+  "good": [],
+  "overflow": [
+    "OVERFLOW",
+    "ELEMENT_OVERFLOW",
+    "TEXT_CLIP",
+    "BALANCE_OFF"
+  ],
+  "overlap": [
+    "OVERLAP",
+    "OVERLAP"
+  ],
+  "mixed": [
+    "OVERFLOW",
+    "ELEMENT_OVERFLOW",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "SPACING"
+  ],
+  "font-chaos": [
+    "FONT_INCONSISTENT",
+    "FONT_INCONSISTENT",
+    "FONT_INCONSISTENT"
+  ],
+  "align-chaos": [
+    "ALIGN_INCONSISTENT",
+    "SIZE_INCONSISTENT"
+  ],
+  "card-chaos": [
+    "SIZE_INCONSISTENT",
+    "RADIUS_INCONSISTENT"
+  ],
+  "cramped": [
+    "LINE_HEIGHT_TIGHT",
+    "LINE_HEIGHT_TIGHT",
+    "LINE_HEIGHT_TIGHT",
+    "LINE_HEIGHT_TIGHT"
+  ],
+  "img-chaos": [
+    "IMG_SIZE_INCONSISTENT"
+  ],
+  "ratio-chaos": [
+    "VOID_BAND",
+    "VOID_BAND",
+    "CARD_VOID",
+    "ASPECT_INCONSISTENT",
+    "ASPECT_EXTREME"
+  ],
+  "void-band": [
+    "VOID_BAND",
+    "VOID_BAND",
+    "VOID_BAND"
+  ],
+  "sparse-card": [
+    "VOID_BAND",
+    "VOID_BAND",
+    "VOID_BAND",
+    "VOID_BAND",
+    "CARD_VOID"
+  ],
+  "contrast-chaos": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW"
+  ],
+  "color-chaos": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "COLOR_INCONSISTENT",
+    "HARMONY_OFF",
+    "ACCENT_BLOAT"
+  ],
+  "palette-chaos": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "COLOR_DOMINANCE",
+    "GARISH_SATURATION",
+    "HARMONY_OFF"
+  ]
+}

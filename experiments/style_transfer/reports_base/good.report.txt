@@ -1,0 +1,74 @@
+=== Layout Report: good.html ===
+Page 375×812 contentH=917 scrollW=375
+Palette bg:#ffffff 86%|#f5f6fa 8% | text:#666666 11%|#222222 9% | accent:#2563eb 5% | accentArea:5% | accentHues:0°/210° 和声OK
+├─ header.header (0,0 375×79)
+│  ├─ h1 (16,16 343×26) <fs20,#222222/#ffffff> "今日推荐"
+│  └─ p (16,46 343×17) <fs13,#5f5f5f/#ffffff> "为你精选的 4 条内容"
+├─ main.card-list (0,79 375×758)
+│  ├─ article.card (12,91 351×174) <r12>
+│  │  ├─ div.card-head (26,105 323×90)
+│  │  │  ├─ div.thumb (26,105 64×64) <r8>
+│  │  │  └─ div.card-info (102,105 247×90)
+│  │  │     ├─ h3 (102,105 247×21) <fs15,lh1.4,#222222/#ffffff> "城市漫步指南"
+│  │  │     ├─ p.desc (102,132 247×36) <fs13,lh1.4,#666666/#ffffff> "用半天时间探索老城区的街巷与咖啡馆，感受城市的另一面。"
+│  │  │     └─ div.tags (102,176 247×19)
+│  │  │        ├─ span (102,176 34×19) <fs11,r4,#2563eb/#eef4ff> "旅行"
+│  │  │        └─ span (142,176 34×19) <fs11,r4,#2563eb/#eef4ff> "轻松"
+│  │  └─ div.card-foot (26,207 323×44)
+│  │     ├─ div.price (26,218 28×22) <fs17,#d93036/#ffffff> "29"
+│  │     │  └─ small (26,223 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,207 92×44) <interactive,fs14,r8,#ffffff/#2563eb> "查看详情"
+│  ├─ article.card (12,277 351×174) <r12>
+│  │  ├─ div.card-head (26,291 323×90)
+│  │  │  ├─ div.thumb (26,291 64×64) <r8>
+│  │  │  └─ div.card-info (102,291 247×90)
+│  │  │     ├─ h3 (102,291 247×21) <fs15,lh1.4,#222222/#ffffff> "周末市集活动预告"
+│  │  │     ├─ p.desc (102,318 247×36) <fs13,lh1.4,#666666/#ffffff> "本周末两天，近 40 家摊主集结，手作、烘焙、绿植应有尽有。"
+│  │  │     └─ div.tags (102,363 247×19)
+│  │  │        ├─ span (102,363 34×19) <fs11,r4,#2563eb/#eef4ff> "本地"
+│  │  │        └─ span (142,363 34×19) <fs11,r4,#2563eb/#eef4ff> "免票"
+│  │  └─ div.card-foot (26,394 323×44)
+│  │     ├─ div.price (26,405 28×22) <fs17,#d93036/#ffffff> "19"
+│  │     │  └─ small (26,410 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,394 92×44) <interactive,fs14,r8,#ffffff/#2563eb> "查看详情"
+│  ├─ article.card (12,464 351×174) <r12>
+│  │  ├─ div.card-head (26,478 323×90)
+│  │  │  ├─ div.thumb (26,478 64×64) <r8>
+│  │  │  └─ div.card-info (102,478 247×90)
+│  │  │     ├─ h3 (102,478 247×21) <fs15,lh1.4,#222222/#ffffff> "手冲咖啡入门课"
+│  │  │     ├─ p.desc (102,505 247×36) <fs13,lh1.4,#666666/#ffffff> "从磨豆到注水，两小时带你做出第一杯好喝的手冲咖啡。"
+│  │  │     └─ div.tags (102,549 247×19)
+│  │  │        ├─ span (102,549 34×19) <fs11,r4,#2563eb/#eef4ff> "生活"
+│  │  │        └─ span (142,549 34×19) <fs11,r4,#2563eb/#eef4ff> "新手"
+│  │  └─ div.card-foot (26,580 323×44)
+│  │     ├─ div.price (26,591 28×22) <fs17,#d93036/#ffffff> "49"
+│  │     │  └─ small (26,596 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,580 92×44) <interactive,fs14,r8,#ffffff/#2563eb> "查看详情"
+│  └─ article.card (12,650 351×174) <r12>
+│     ├─ div.card-head (26,664 323×90)
+│     │  ├─ div.thumb (26,664 64×64) <r8>
+│     │  └─ div.card-info (102,664 247×90)
+│     │     ├─ h3 (102,664 247×21) <fs15,lh1.4,#222222/#ffffff> "近郊徒步路线推荐"
+│     │     ├─ p.desc (102,691 247×36) <fs13,lh1.4,#666666/#ffffff> "三条一日往返路线，难度适中，适合周末轻装出发。"
+│     │     └─ div.tags (102,736 247×19)
+│     │        ├─ span (102,736 34×19) <fs11,r4,#2563eb/#eef4ff> "户外"
+│     │        └─ span (142,736 34×19) <fs11,r4,#2563eb/#eef4ff> "一日"
+│     └─ div.card-foot (26,767 323×44)
+│        ├─ div.price (26,778 28×22) <fs17,#d93036/#ffffff> "35"
+│        │  └─ small (26,783 7×16) <fs12,#d93036/#ffffff> "¥"
+│        └─ button.btn (257,767 92×44) <interactive,fs14,r8,#ffffff/#2563eb> "查看详情"
+└─ nav.tabbar (0,849 375×56) <r12>
+   ├─ a (0,849 94×56) <interactive>
+   │  ├─ span.icon (35,857 25×24) <fs18,#666666/#ffffff> "🏠"
+   │  └─ span (37,883 20×14) <fs10,#666666/#ffffff> "首页"
+   ├─ a (94,849 94×56) <interactive>
+   │  ├─ span.icon (128,857 25×24) <fs18,#666666/#ffffff> "🧭"
+   │  └─ span (131,883 20×14) <fs10,#666666/#ffffff> "发现"
+   ├─ a (188,849 94×56) <interactive>
+   │  ├─ span.icon (227,857 15×24) <fs18,#666666/#ffffff> "☆"
+   │  └─ span (224,883 20×14) <fs10,#666666/#ffffff> "收藏"
+   └─ a (281,849 94×56) <interactive>
+      ├─ span.icon (321,857 15×24) <fs18,#666666/#ffffff> "⚙"
+      └─ span (318,883 20×14) <fs10,#666666/#ffffff> "我的"
+ISSUES (0):
+  none - 布局正常

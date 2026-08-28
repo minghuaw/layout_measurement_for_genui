@@ -1,0 +1,51 @@
+=== Layout Report: contrast-chaos.html ===
+Page 375×812 contentH=847 scrollW=375
+Palette bg:#ffffff 79%|#f5f6fa 16% | text:#000000 25%|#222222 11% | accent:#9ecbff 5% | accentArea:5% | accentHues:0° 和声OK
+├─ header.header (0,0 375×79)
+│  ├─ h1 (16,16 343×26) <fs20,#222222/#ffffff> "今日推荐"
+│  └─ p (16,46 343×17) <fs13,#000000/#ffffff> "为你精选的 4 条内容"
+├─ main.card-list (0,79 375×631)
+│  ├─ article.card (12,91 351×147) <r12>
+│  │  ├─ h3 (26,105 323×21) <fs15,lh1.4,#222222/#ffffff> "城市漫步指南"
+│  │  ├─ p.desc (26,132 323×36) <fs13,lh1.4,#000000/#ffffff> "用半天时间探索老城区的街巷与咖啡馆，感受城市的另一面。"
+│  │  └─ div.card-foot (26,180 323×44)
+│  │     ├─ div.price (26,191 28×22) <fs17,#d93036/#ffffff> "29"
+│  │     │  └─ small (26,196 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,180 92×44) <interactive,fs14,r8,#000000/#9ecbff> "查看详情"
+│  ├─ article.card (12,250 351×147) <r12>
+│  │  ├─ h3 (26,264 323×21) <fs15,lh1.4,#222222/#ffffff> "周末市集活动预告"
+│  │  ├─ p.desc (26,291 323×36) <fs13,lh1.4,#000000/#ffffff> "本周末两天，近 40 家摊主集结，手作、烘焙、绿植应有尽有。"
+│  │  └─ div.card-foot (26,340 323×44)
+│  │     ├─ div.price (26,351 28×22) <fs17,#d93036/#ffffff> "19"
+│  │     │  └─ small (26,356 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,340 92×44) <interactive,fs14,r8,#000000/#9ecbff> "查看详情"
+│  ├─ article.card (12,410 351×147) <r12>
+│  │  ├─ h3 (26,424 323×21) <fs15,lh1.4,#222222/#ffffff> "手冲咖啡入门课"
+│  │  ├─ p.desc (26,451 323×36) <fs13,lh1.4,#000000/#ffffff> "从磨豆到注水，两小时带你做出第一杯好喝的手冲咖啡。"
+│  │  └─ div.card-foot (26,499 323×44)
+│  │     ├─ div.price (26,510 28×22) <fs17,#d93036/#ffffff> "49"
+│  │     │  └─ small (26,515 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,499 92×44) <interactive,fs14,r8,#000000/#9ecbff> "查看详情"
+│  └─ article.card (12,569 351×129) <r12>
+│     ├─ h3 (26,583 323×21) <fs15,lh1.4,#222222/#ffffff> "近郊徒步路线推荐"
+│     ├─ p.desc (26,610 323×18) <fs13,lh1.4,#000000/#ffffff> "三条一日往返路线，难度适中，适合周末轻装出发。"
+│     └─ div.card-foot (26,640 323×44)
+│        ├─ div.price (26,651 28×22) <fs17,#d93036/#ffffff> "35"
+│        │  └─ small (26,656 7×16) <fs12,#d93036/#ffffff> "¥"
+│        └─ button.btn (257,640 92×44) <interactive,fs14,r8,#000000/#9ecbff> "查看详情"
+├─ a.more-link (0,722 375×45) <interactive,fs14,#000000/#ffffff> "查看全部推荐 →"
+└─ nav.tabbar (0,779 375×56) <r12>
+   ├─ a (0,779 94×56) <interactive>
+   │  ├─ span.icon (35,787 25×24) <fs18,#666666/#ffffff> "🏠"
+   │  └─ span (37,813 20×14) <fs10,#666666/#ffffff> "首页"
+   ├─ a (94,779 94×56) <interactive>
+   │  ├─ span.icon (128,787 25×24) <fs18,#666666/#ffffff> "🧭"
+   │  └─ span (131,813 20×14) <fs10,#666666/#ffffff> "发现"
+   ├─ a (188,779 94×56) <interactive>
+   │  ├─ span.icon (227,787 15×24) <fs18,#666666/#ffffff> "☆"
+   │  └─ span (224,813 20×14) <fs10,#666666/#ffffff> "收藏"
+   └─ a (281,779 94×56) <interactive>
+      ├─ span.icon (321,787 15×24) <fs18,#666666/#ffffff> "⚙"
+      └─ span (318,813 20×14) <fs10,#666666/#ffffff> "我的"
+ISSUES (0):
+  none - 布局正常

@@ -1,0 +1,10 @@
+﻿style   arm       椋庢牸杈炬垚            鍥炲綊   浣嶇Щ     鎬诲垽瀹?dark     cmd       Y bgLum=0.021 (<0.25) 31     none 杈炬垚浣嗗洖褰?1
+dark     palette   Y bgLum=0.021 (<0.25) 26     none 杈炬垚浣嗗洖褰?6
+dark     spec      Y bgLum=0.012 (<0.25) 18     none 杈炬垚浣嗗洖褰?8
+warm     cmd       N 涓诲己璋?#d93036 hue=358掳 (鈭?5~55掳) 0      none 鏈揪鎴?warm     palette   Y 涓诲己璋?#f59e0b hue=38掳 (鈭?5~55掳) 12     none 杈炬垚浣嗗洖褰?2
+warm     spec      Y 涓诲己璋?#d97706 hue=32掳 (鈭?5~55掳) 12     none 杈炬垚浣嗗洖褰?2
+cool     cmd       Y 涓诲己璋?#60a5fa hue=213掳 (鈭?95~250掳) 30     none 杈炬垚浣嗗洖褰?0
+cool     palette   Y 涓诲己璋?#2563eb hue=221掳 (鈭?95~250掳) 18     none 杈炬垚浣嗗洖褰?8
+cool     spec      Y 涓诲己璋?#2563eb hue=221掳 (鈭?95~250掳) 0      none 鉁撹揪鎴?闆跺洖褰?闆朵綅绉?mono     cmd       Y hues=0 avgSat=0.00 (鈮? 涓?鈮?.35) 25     none 杈炬垚浣嗗洖褰?5
+mono     palette   Y hues=0 avgSat=0.00 (鈮? 涓?鈮?.35) 12     none 杈炬垚浣嗗洖褰?2
+mono     spec      Y hues=0 avgSat=0.00 (鈮? 涓?鈮?.35) 20     none 杈炬垚浣嗗洖褰?0

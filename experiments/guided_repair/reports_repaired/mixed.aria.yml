@@ -1,0 +1,31 @@
+- banner:
+  - heading "今日推荐" [level=1]
+  - paragraph: 热门与榜单
+- main:
+  - heading "热门卡片" [level=2]
+  - heading "限时优惠券" [level=3]
+  - paragraph: 满 100 减 20，本周有效
+  - button "领取"
+  - heading "新人礼包" [level=3]
+  - paragraph: 注册即得三重好礼
+  - button "领取"
+  - heading "会员日" [level=3]
+  - paragraph: 每月 8 号积分翻倍
+  - button "了解"
+  - heading "邀请有礼" [level=3]
+  - paragraph: 好友下单双方得券
+  - button "邀请"
+  - heading "推荐榜单" [level=2]
+  - article:
+    - heading "城市漫步指南" [level=3]
+    - paragraph: 用半天时间探索老城区的街巷与咖啡馆，感受城市的另一面。
+  - article:
+    - heading "周末市集活动预告" [level=3]
+    - paragraph: 本周末两天，近 40 家摊主集结，手作、烘焙、绿植应有尽有。
+  - article:
+    - heading "手冲咖啡入门课" [level=3]
+    - paragraph: 从磨豆到注水，两小时带你做出第一杯好喝的手冲咖啡。
+  - article:
+    - heading "近郊徒步路线推荐" [level=3]
+    - paragraph: 三条一日往返路线，难度适中，适合周末轻装出发。
+- complementary: 限时活动 banner 宽 380px 用于制造轻度横向溢出

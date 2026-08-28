@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卡片流-混合问题</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #222; padding-bottom: 12px; }
+.header { padding: 16px; background: #fff; }
+.header h1 { font-size: 20px; }
+.header p { margin-top: 4px; font-size: 13px; color: #888; }
+.section { padding: 12px; }
+.section h2 { font-size: 16px; margin-bottom: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.mini-card { background: #fff; border-radius: 10px; padding: 12px; }
+.mini-card h3 { font-size: 13px; }
+.mini-card p { font-size: 11px; color: #777; margin-top: 4px; line-height: 1.4; }
+.btn-sm { height: 28px; margin-top: 8px; padding: 0 12px; border: none; border-radius: 6px; background: #4f8cff; color: #fff; font-size: 12px; }
+.list .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.list .card h3 { font-size: 15px; }
+.list .card p { margin-top: 6px; font-size: 13px; color: #666; line-height: 1.4; }
+.wide-banner { width: 100%; max-width: 380px; margin: 12px 0; background: #22283a; color: #fff; border-radius: 10px; padding: 16px; font-size: 13px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<header class="header">
+  <h1>今日推荐</h1>
+  <p>热门与榜单</p>
+</header>
+<main>
+  <section class="section">
+    <h2>热门卡片</h2>
+    <div class="grid">
+      <div class="mini-card">
+        <h3>限时优惠券</h3>
+        <p>满 100 减 20，本周有效</p>
+        <button class="btn-sm">领取</button>
+      </div>
+      <div class="mini-card">
+        <h3>新人礼包</h3>
+        <p>注册即得三重好礼</p>
+        <button class="btn-sm">领取</button>
+      </div>
+      <div class="mini-card">
+        <h3>会员日</h3>
+        <p>每月 8 号积分翻倍</p>
+        <button class="btn-sm">了解</button>
+      </div>
+      <div class="mini-card">
+        <h3>邀请有礼</h3>
+        <p>好友下单双方得券</p>
+        <button class="btn-sm">邀请</button>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <h2>推荐榜单</h2>
+    <div class="list">
+      <article class="card">
+        <h3>城市漫步指南</h3>
+        <p>用半天时间探索老城区的街巷与咖啡馆，感受城市的另一面。</p>
+      </article>
+      <article class="card">
+        <h3>周末市集活动预告</h3>
+        <p>本周末两天，近 40 家摊主集结，手作、烘焙、绿植应有尽有。</p>
+      </article>
+      <article class="card">
+        <h3>手冲咖啡入门课</h3>
+        <p>从磨豆到注水，两小时带你做出第一杯好喝的手冲咖啡。</p>
+      </article>
+      <article class="card">
+        <h3>近郊徒步路线推荐</h3>
+        <p>三条一日往返路线，难度适中，适合周末轻装出发。</p>
+      </article>
+    </div>
+  </section>
+</main>
+<aside class="wide-banner">限时活动 banner 宽 380px 用于制造轻度横向溢出</aside>
+</body>
+</html>

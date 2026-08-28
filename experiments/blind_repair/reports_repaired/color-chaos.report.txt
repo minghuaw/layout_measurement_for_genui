@@ -1,0 +1,57 @@
+=== Layout Report: color-chaos.html ===
+Page 375×812 contentH=886 scrollW=375
+Palette bg:#ffffff 84%|#f5f6fa 11% | text:#222222 12%|#666666 9% | accent:#f0f0f0 5%|#7c3aed 1% | accentArea:6% | accentHues:0°/270° 和声OK
+├─ header.header (0,0 375×79)
+│  ├─ h1 (16,16 343×26) <fs20,#222222/#ffffff> "今日推荐"
+│  └─ p (16,46 343×17) <fs13,#5f5f5f/#ffffff> "为你精选的 4 条内容"
+├─ main.card-list (0,79 375×727)
+│  ├─ article.card (12,91 351×164) <r12>
+│  │  ├─ h3 (26,105 323×24) <fs16,lh1.5,#222222/#ffffff> "城市漫步指南"
+│  │  ├─ p.desc (26,137 323×21) <fs13,lh1.6,#666666/#ffffff> "用半天时间探索老城区的街巷与咖啡馆。"
+│  │  ├─ span.badge (26,166 38×19) <fs11,r10,#ffffff/#7c3aed> "精选"
+│  │  └─ div.card-foot (26,197 323×44)
+│  │     ├─ div.price (26,208 28×22) <fs17,#d93036/#ffffff> "29"
+│  │     │  └─ small (26,213 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,197 92×44) <interactive,fs14,r8,#ffffff/#f0f0f0> "查看详情"
+│  ├─ article.card (12,271 351×164) <r12>
+│  │  ├─ h3 (26,285 323×24) <fs16,lh1.5,#222222/#ffffff> "周末市集活动预告"
+│  │  ├─ p.desc (26,317 323×21) <fs13,lh1.6,#666666/#ffffff> "本周末两天，近 40 家摊主集结。"
+│  │  ├─ span.badge (26,346 38×19) <fs11,r10,#ffffff/#7c3aed> "本地"
+│  │  └─ div.card-foot (26,377 323×44)
+│  │     ├─ div.price (26,388 28×22) <fs17,#d93036/#ffffff> "19"
+│  │     │  └─ small (26,393 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,377 92×44) <interactive,fs14,r8,#ffffff/#f0f0f0> "查看详情"
+│  ├─ article.card (12,451 351×164) <r12>
+│  │  ├─ h3 (26,465 323×24) <fs16,lh1.5,#222222/#ffffff> "手冲咖啡入门课"
+│  │  ├─ p.desc (26,497 323×21) <fs13,lh1.6,#666666/#ffffff> "从磨豆到注水，两小时入门手冲。"
+│  │  ├─ span.badge (26,525 38×19) <fs11,r10,#ffffff/#7c3aed> "新手"
+│  │  └─ div.card-foot (26,556 323×44)
+│  │     ├─ div.price (26,567 28×22) <fs17,#d93036/#ffffff> "49"
+│  │     │  └─ small (26,572 7×16) <fs12,#d93036/#ffffff> "¥"
+│  │     └─ button.btn (257,556 92×44) <interactive,fs14,r8,#ffffff/#f0f0f0> "查看详情"
+│  └─ article.card (12,630 351×164) <r12>
+│     ├─ h3 (26,644 323×24) <fs16,lh1.5,#222222/#ffffff> "近郊徒步路线推荐"
+│     ├─ p.desc (26,676 323×21) <fs13,lh1.6,#666666/#ffffff> "三条一日往返路线，难度适中。"
+│     ├─ span.badge (26,705 38×19) <fs11,r10,#ffffff/#7c3aed> "户外"
+│     └─ div.card-foot (26,736 323×44)
+│        ├─ div.price (26,747 28×22) <fs17,#d93036/#ffffff> "35"
+│        │  └─ small (26,752 7×16) <fs12,#d93036/#ffffff> "¥"
+│        └─ button.btn (257,736 92×44) <interactive,fs14,r8,#ffffff/#f0f0f0> "查看详情"
+└─ nav.tabbar (0,818 375×56) <r12>
+   ├─ a (0,818 94×56) <interactive>
+   │  ├─ span.icon (35,826 25×24) <fs18,#666666/#ffffff> "🏠"
+   │  └─ span (37,852 20×14) <fs10,#666666/#ffffff> "首页"
+   ├─ a (94,818 94×56) <interactive>
+   │  ├─ span.icon (128,826 25×24) <fs18,#666666/#ffffff> "🧭"
+   │  └─ span (131,852 20×14) <fs10,#666666/#ffffff> "发现"
+   ├─ a (188,818 94×56) <interactive>
+   │  ├─ span.icon (227,826 15×24) <fs18,#666666/#ffffff> "☆"
+   │  └─ span (224,852 20×14) <fs10,#666666/#ffffff> "收藏"
+   └─ a (281,818 94×56) <interactive>
+      ├─ span.icon (321,826 15×24) <fs18,#666666/#ffffff> "⚙"
+      └─ span (318,852 20×14) <fs10,#666666/#ffffff> "我的"
+ISSUES (4):
+  [CONTRAST_LOW] button.btn 文字 #ffffff 对背景 #f0f0f0 对比度 1.14:1 (<4.5:1 WCAG AA)，建议改为 #000000
+  [CONTRAST_LOW] button.btn 文字 #ffffff 对背景 #f0f0f0 对比度 1.14:1 (<4.5:1 WCAG AA)，建议改为 #000000
+  [CONTRAST_LOW] button.btn 文字 #ffffff 对背景 #f0f0f0 对比度 1.14:1 (<4.5:1 WCAG AA)，建议改为 #000000
+  [CONTRAST_LOW] button.btn 文字 #ffffff 对背景 #f0f0f0 对比度 1.14:1 (<4.5:1 WCAG AA)，建议改为 #000000

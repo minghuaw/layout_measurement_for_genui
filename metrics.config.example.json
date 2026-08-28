@@ -1,0 +1,12 @@
+{
+  "$note": "复制为 metrics.config.json 后自动生效；也可用 METRICS_CONFIG=path 指定。优先级：内置默认 < 本文件 < METRICS_OFF/ON 环境变量",
+  "rules": {
+    "TAP_TARGET":    { "thresholds": { "TAP_MIN": 48 }, "note": "放宽点击区到 48px" },
+    "CONTRAST_LOW":  { "thresholds": { "RATIO_NORMAL": 7.0 }, "note": "对标 AAA" },
+    "GRAY_UNTINTED": { "enabled": false, "note": "关闭纯灰检测" },
+    "LINE_HEIGHT_TIGHT": { "severity": "error", "note": "行高问题升级为 error" }
+  },
+  "layers": {
+    "L5": { "enabled": false, "note": "整体关闭质感层" }
+  }
+}
