@@ -172,7 +172,7 @@ Layers: L1=1 L2=1 L3=0 L4=0 L5=0
 ```
 `[TYPE]` 行格式不变 → compare.mjs / style_eval.mjs / 实验脚本解析零改动。
 
-其余产物：`*.aria.yml`（无障碍树，纯结构）、`*.geometry.json`（全量事实）、`*.cdp.json`（DOMSnapshot 原始）。
+其余产物（**实验模式 `--full` 可选**，工具默认不产出）：`*.aria.yml`（无障碍树，纯结构）、`*.geometry.json`（全量事实，style_eval 消费）、`*.cdp.json`（DOMSnapshot 原始）。工具/实验逻辑解耦：工具模式仅产 report.txt（并跳过 aria/CDP 采集以提速），`--full` 供格式对比实验与风格转换评估使用。
 
 ---
 
@@ -268,10 +268,10 @@ lightweight_layout_eng/
 │
 ├─ src/
 │  ├── run.mjs                          # ★ 实验启动器：夹具清单 ALL / CLI 与 INPUT_DIR·OUTPUT_DIR 解析
-│  │                                    #   / 浏览器生命周期 / 汇总打印（与管线解耦的唯一实验入口）
+│  │                                    #   / 浏览器生命周期 / 双模式输出（工具摘要+报告原文；--full 体积表）
 │  ├── collect.mjs                      # 采集管线核心（纯模块，带注释）：COLLECT 页内采集函数
 │  │                                    #   （几何/排版/颜色/效果属性 + CSSOM 伪类扫描）+ collectPage()
-│  │                                    #   单页四产物流程；不持有夹具清单与启动逻辑
+│  │                                    #   双模式：默认仅产 report.txt；fullArtifacts=true 四产物
 │  ├── color.mjs                        # 颜色核心库（不动）：合成/WCAG/HSL/面积归因/和声/建议色
 │  │
 │  ├── schema.mjs                       # ★ issue 构造：makeIssue() + LAYERS/SEVERITIES 元数据
@@ -329,8 +329,9 @@ lightweight_layout_eng/
 ## 9. 运行方式【已实现】
 
 ```powershell
-npm run collect                                  # 全量 15 夹具 → reports/（入口 src/run.mjs）
+npm run collect                                  # 工具模式：全量 15 夹具 → reports/（仅 report.txt）
 node src/run.mjs good overflow                   # 指定夹具
+node src/run.mjs --full good                     # 实验模式：四产物全量（style_eval/格式对比需此模式）
 $env:INPUT_DIR='repaired'; $env:OUTPUT_DIR='reports_repaired'
 node src/run.mjs overflow …                      # 实验目录参数化
 
@@ -338,7 +339,7 @@ node src/run.mjs overflow …                      # 实验目录参数化
 node src/repair.mjs / guided_repair.mjs / layout_only_repair.mjs [fixtures…]
 node src/compare.mjs [fixtures…]                 # 四臂对比
 
-# 风格转换
+# 风格转换（注意：style_eval 依赖 geometry.json，重跑需用实验模式）
 node src/restyle.mjs && node src/style_eval.mjs
 
 # 配置

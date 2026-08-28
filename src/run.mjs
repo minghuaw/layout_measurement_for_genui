@@ -6,11 +6,14 @@
  *   2. 解析命令行与环境变量：INPUT_DIR / OUTPUT_DIR / METRICS_CONFIG /
  *      METRICS_OFF / METRICS_ON（配置经 config.mjs 四级优先级合并）
  *   3. 管理 Playwright 浏览器生命周期，逐夹具驱动 collectPage
- *   4. 汇总打印：四产物体积对比表 + 各夹具 report.txt 全文
+ *   4. 控制台输出（按模式分流）：
+ *      工具模式（默认）—— 摘要行（名称 | issues）+ 各夹具 report.txt 原文
+ *      实验模式（--full）—— 四产物体积对比表 + 各夹具报告原文
  *
  * 用法：
- *   node src/run.mjs                # 全量 15 夹具（fixtures/ → reports/）
+ *   node src/run.mjs                # 工具模式：全量 15 夹具，仅产出 report.txt
  *   node src/run.mjs good overflow  # 指定夹具子集
+ *   node src/run.mjs --full good    # 实验模式：四产物全量（style_eval / 格式对比用）
  *   $env:INPUT_DIR='repaired'; $env:OUTPUT_DIR='reports_repaired'; node src/run.mjs overflow …
  *   $env:METRICS_OFF='L5'; node src/run.mjs good   # 关闭整层/单规则
  */
@@ -28,8 +31,11 @@ const ROOT = resolve(DIR, '..');
 /** 实验夹具清单（15 个：1 对照 + 14 缺陷注入；与 tests/golden.snapshot.json 顺序一致） */
 const ALL = ['good', 'overflow', 'overlap', 'mixed', 'font-chaos', 'align-chaos', 'card-chaos', 'cramped', 'img-chaos', 'ratio-chaos', 'void-band', 'sparse-card', 'contrast-chaos', 'color-chaos', 'palette-chaos'];
 
-/** 目标夹具：命令行参数优先，缺省全量 */
-const FIXTURES = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
+/** 命令行解析：--full 旗标进入实验模式，其余非旗标参数为目标夹具（缺省全量） */
+const args = process.argv.slice(2);
+const FULL = args.includes('--full');
+const names = args.filter((a) => !a.startsWith('--'));
+const FIXTURES = names.length ? names : ALL;
 
 /** 输入/输出目录：环境变量参数化（实验目录复用主管线的入口），缺省主 fixtures/reports */
 const INPUT_DIR = resolve(process.env.INPUT_DIR || join(ROOT, 'fixtures'));
@@ -41,18 +47,27 @@ const { cfg, echo } = loadConfig();
 const browser = await chromium.launch();
 const results = [];
 for (const name of FIXTURES) {
-  results.push(await collectPage(browser, { name, inputDir: INPUT_DIR, outDir: OUT, cfg, echo }));
+  results.push(await collectPage(browser, { name, inputDir: INPUT_DIR, outDir: OUT, cfg, echo, fullArtifacts: FULL }));
 }
 await browser.close();
 
-/* ---- 汇总输出：体积对比表（回流成本代理指标） ---- */
-const kb = (n) => (n / 1024).toFixed(1) + ' KB';
-console.log('\n=== 输出格式体积对比 ===');
-console.log(['fixture'.padEnd(10), 'aria.yml'.padEnd(10), 'geometry.json'.padEnd(14), 'cdp.json'.padEnd(10), 'report.txt'.padEnd(11), 'issues'].join(' '));
-for (const r of results) {
-  console.log([r.name.padEnd(10), kb(r.sizes.aria).padEnd(10), kb(r.sizes.geo).padEnd(14), kb(r.sizes.cdp).padEnd(10), kb(r.sizes.report).padEnd(11), String(r.issues)].join(' '));
+if (FULL) {
+  /* ---- 实验模式：四产物体积对比表（回流成本代理指标） ---- */
+  const kb = (n) => (n / 1024).toFixed(1) + ' KB';
+  console.log('\n=== 输出格式体积对比（--full 实验模式） ===');
+  console.log(['fixture'.padEnd(10), 'aria.yml'.padEnd(10), 'geometry.json'.padEnd(14), 'cdp.json'.padEnd(10), 'report.txt'.padEnd(11), 'issues'].join(' '));
+  for (const r of results) {
+    console.log([r.name.padEnd(10), kb(r.sizes.aria).padEnd(10), kb(r.sizes.geo).padEnd(14), kb(r.sizes.cdp).padEnd(10), kb(r.sizes.report).padEnd(11), String(r.issues)].join(' '));
+  }
+} else {
+  /* ---- 工具模式：摘要行（名称 | issues | 报告体积） ---- */
+  console.log('\n=== 布局度量摘要 ===');
+  for (const r of results) {
+    const kb = (r.sizes.report / 1024).toFixed(1);
+    console.log(`${r.name.padEnd(14)} ${String(r.issues).padStart(2)} issues  report ${kb} KB`);
+  }
 }
-/* ---- 逐夹具打印完整报告（人工核验通路） ---- */
+/* ---- 逐夹具打印完整报告（工具的文本布局结果输出） ---- */
 for (const r of results) {
   console.log('\n' + readFileSync(join(OUT, r.name + '.report.txt'), 'utf8'));
 }

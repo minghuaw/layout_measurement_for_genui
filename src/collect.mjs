@@ -1,12 +1,12 @@
 /**
- * collect.mjs —— 度量管线核心模块
+ * collect.mjs —— 度量管线核心模块（与实验夹具解耦）
  *
  * 职责：
- *   对单个 H5 页面执行"四产物"采集与度量：
- *     1. *.aria.yml        Playwright 无障碍树快照（纯结构，无几何）
- *     2. *.geometry.json   自采集的事实树（几何/排版/颜色/效果属性，供引擎消费）
- *     3. *.cdp.json        CDP DOMSnapshot 原始数据（对照用）
- *     4. *.report.txt      规则判定 + 分层渲染的文本报告（LLM 回流通路）
+ *   对单个 H5 页面执行采集与度量，双模式产出：
+ *     工具模式（默认，fullArtifacts=false）：
+ *       *.report.txt  规则判定 + 分层渲染的文本报告（LLM 回流通路，工具唯一产物）
+ *     实验模式（fullArtifacts=true，供格式对比实验 / style_eval 等）：
+ *       额外产出 *.aria.yml（无障碍树）、*.geometry.json（事实树）、*.cdp.json（DOMSnapshot）
  *
  * 解耦说明：
  *   本模块不持有夹具清单、不解析命令行/环境变量、不负责汇总打印——
@@ -213,14 +213,16 @@ const COLLECT = (vw) => {
  *
  * @param browser  已启动的 Playwright Browser 实例（由启动器管理生命周期）
  * @param opts
- *   - name      夹具名（不含扩展名，决定输入/输出文件名）
- *   - inputDir  输入目录（含 <name>.html）
- *   - outDir    输出目录（四产物落盘处，自动创建）
- *   - cfg       已合并的度量配置（config.mjs loadConfig().cfg）
- *   - echo      配置回显串（写入报告 Config: 行）
- * @returns { name, sizes, issues } 供启动器汇总
+ *   - name          夹具名（不含扩展名，决定输入/输出文件名）
+ *   - inputDir      输入目录（含 <name>.html）
+ *   - outDir        输出目录（产物落盘处，自动创建）
+ *   - cfg           已合并的度量配置（config.mjs loadConfig().cfg）
+ *   - echo          配置回显串（写入报告 Config: 行）
+ *   - fullArtifacts 实验模式开关：false=工具默认仅 report.txt（跳过 aria/CDP 采集，更快）；
+ *                   true=额外产出 aria/geometry/cdp 三产物（格式对比实验、style_eval 用）
+ * @returns { name, sizes, issues } 供启动器汇总（工具模式下 sizes 仅含 report）
  */
-export async function collectPage(browser, { name, inputDir, outDir, cfg, echo }) {
+export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, fullArtifacts = false }) {
   mkdirSync(outDir, { recursive: true });
   const ctx = await browser.newContext({
     viewport: VIEWPORT,
@@ -231,39 +233,39 @@ export async function collectPage(browser, { name, inputDir, outDir, cfg, echo }
   const page = await ctx.newPage();
   await page.goto(pathToFileURL(join(inputDir, name + '.html')).href);
 
-  /* 三路采集：无障碍树 / 事实树 / CDP 快照 */
-  const aria = await page.ariaSnapshot();
+  /* 采集：事实树必采；aria/CDP 仅实验模式（工具模式跳过以提速） */
   const geo = await page.evaluate(COLLECT, { w: VIEWPORT.width, h: VIEWPORT.height });
-  const cdp = await ctx.newCDPSession(page);
-  const snap = await cdp.send('DOMSnapshot.captureSnapshot', { computedStyles: [], includeDOMRects: true });
+  let aria = null;
+  let snap = null;
+  if (fullArtifacts) {
+    aria = await page.ariaSnapshot();
+    const cdp = await ctx.newCDPSession(page);
+    snap = await cdp.send('DOMSnapshot.captureSnapshot', { computedStyles: [], includeDOMRects: true });
+  }
 
   /* 判定与渲染：facts 构建会向 geo 节点挂 _ 前缀内部字段，
      落盘前以 replacer 剥除，保证 geometry.json 只含纯净事实 */
   const issues = runMetrics(geo, cfg);
   const report = formatReport(name, geo, issues, echo);
-  const clean = JSON.parse(JSON.stringify(geo, (k, v) => (k.startsWith('_') ? undefined : v)));
 
-  const files = {
-    aria: join(outDir, name + '.aria.yml'),
-    geo: join(outDir, name + '.geometry.json'),
-    cdp: join(outDir, name + '.cdp.json'),
-    report: join(outDir, name + '.report.txt')
-  };
-  writeFileSync(files.aria, aria, 'utf8');
-  writeFileSync(files.geo, JSON.stringify(clean, null, 2), 'utf8');
-  writeFileSync(files.cdp, JSON.stringify(snap), 'utf8');
+  const files = { report: join(outDir, name + '.report.txt') };
+  const sizes = { report: 0 };
   writeFileSync(files.report, report, 'utf8');
+  sizes.report = statSync(files.report).size;
+  if (fullArtifacts) {
+    const clean = JSON.parse(JSON.stringify(geo, (k, v) => (k.startsWith('_') ? undefined : v)));
+    files.aria = join(outDir, name + '.aria.yml');
+    files.geo = join(outDir, name + '.geometry.json');
+    files.cdp = join(outDir, name + '.cdp.json');
+    writeFileSync(files.aria, aria, 'utf8');
+    writeFileSync(files.geo, JSON.stringify(clean, null, 2), 'utf8');
+    writeFileSync(files.cdp, JSON.stringify(snap), 'utf8');
+    sizes.aria = statSync(files.aria).size;
+    sizes.geo = statSync(files.geo).size;
+    sizes.cdp = statSync(files.cdp).size;
+  }
 
-  const result = {
-    name,
-    sizes: {
-      aria: statSync(files.aria).size,
-      geo: statSync(files.geo).size,
-      cdp: statSync(files.cdp).size,
-      report: statSync(files.report).size
-    },
-    issues: issues.length
-  };
+  const result = { name, sizes, issues: issues.length };
   await ctx.close();
   return result;
 }
