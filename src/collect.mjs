@@ -220,9 +220,11 @@ const COLLECT = (vw) => {
  *   - echo          配置回显串（写入报告 Config: 行）
  *   - fullArtifacts 实验模式开关：false=工具默认仅 report.txt（跳过 aria/CDP 采集，更快）；
  *                   true=额外产出 aria/geometry/cdp 三产物（格式对比实验、style_eval 用）
+ *   - filePath      （可选）直接指定的页面文件绝对路径；提供时跳过 inputDir/<name>.html 拼装，
+ *                   用于单文件独立分析（src/analyze.mjs），支持任意扩展名
  * @returns { name, sizes, issues } 供启动器汇总（工具模式下 sizes 仅含 report）
  */
-export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, fullArtifacts = false }) {
+export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, fullArtifacts = false, filePath }) {
   mkdirSync(outDir, { recursive: true });
   const ctx = await browser.newContext({
     viewport: VIEWPORT,
@@ -231,7 +233,8 @@ export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, 
     hasTouch: true
   });
   const page = await ctx.newPage();
-  await page.goto(pathToFileURL(join(inputDir, name + '.html')).href);
+  const url = filePath ? pathToFileURL(filePath).href : pathToFileURL(join(inputDir, name + '.html')).href;
+  await page.goto(url);
 
   /* 采集：事实树必采；aria/CDP 仅实验模式（工具模式跳过以提速） */
   const geo = await page.evaluate(COLLECT, { w: VIEWPORT.width, h: VIEWPORT.height });

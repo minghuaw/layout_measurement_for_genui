@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "collect": "node src/run.mjs",
+    "analyze": "node src/analyze.mjs",
     "test": "node tests/config.test.mjs",
     "golden": "node tests/golden.mjs"
   },
