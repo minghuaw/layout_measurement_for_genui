@@ -1,6 +1,14 @@
+/**
+ * layer-order.mjs —— L2 结构秩序（13 条）
+ *
+ * 语义：一致性与对齐（不齐=业余感）。多数规则跑在 textGroup / listGroup 执行器上，
+ *   即"同类元素应统一"——左缘/宽度/圆角/字号/颜色/字重/边框一致，间距成系统。
+ * 判据数值一律来自 config.mjs 的 T（DIFF/SPREAD/MAX 等），本文件无魔法数字。
+ */
 import { hex, rgbToHsl } from '../color.mjs';
 import { label, r0, spread } from '../engine/util.mjs';
 
+/** isStacked —— 判断一组兄弟是否纵向堆叠布局（排除横向并排导致的左缘差异天然成立） */
 function isStacked(items) {
   const s = [...items].sort((a, b) => a.rect.y - b.rect.y);
   for (let i = 1; i < s.length; i++) {
@@ -13,6 +21,7 @@ function isStacked(items) {
   return true;
 }
 
+/** findThumb —— 递归找"正方形占位缩略图"节点（无文本无子、24-128px 见方；IMG_SIZE 规则用） */
 function findThumb(n, out) {
   if (!n.children.length && !n.text && r0(n.rect.w) === r0(n.rect.h) && n.rect.w >= 24 && n.rect.w <= 128) {
     out.push(n);
@@ -20,12 +29,14 @@ function findThumb(n, out) {
   for (const c of n.children) findThumb(c, out);
 }
 
+/** collectTextNodes —— 递归收集子树内所有带文本的节点（CARD_VOID 等内容饱满度规则复用） */
 function collectTextNodes(n, out) {
   if (n.text) out.push(n);
   for (const c of n.children) collectTextNodes(c, out);
 }
 
 export const orderRules = [
+  /* ---- 几何一致性（listGroup 类） ---- */
   {
     id: 'ALIGN_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'listGroup',
     theory: '对齐一致性',
@@ -58,6 +69,7 @@ export const orderRules = [
     },
     message: (h) => `${h.n} 个 ${h.key} 圆角不统一: ${h.rs.join('/')}px (容器 ${h.parent})`
   },
+  /* ---- 排版一致性（textGroup 类） ---- */
   {
     id: 'FONT_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'textGroup',
     theory: '排版层级一致性',
@@ -83,6 +95,7 @@ export const orderRules = [
     },
     message: (h) => `${h.n} 个同类 ${h.tag} 颜色不一致: ${h.hexes.join('/')}，应统一为同一颜色 (容器 ${h.pt})`
   },
+  /* ---- 间距/系统化 ---- */
   {
     id: 'SPACING', layer: 'L2', severity: 'warn', runner: 'container',
     theory: '间距系统一致性',
@@ -130,6 +143,7 @@ export const orderRules = [
     },
     message: (h, T) => `出现 ${h.distinct.length} 种刻度外圆角 (${h.distinct.join('/')}px，共 ${h.total} 处)，应收敛到设计刻度 ${T.SCALE.join('/')}`
   },
+  /* ---- 边框与字重 ---- */
   {
     id: 'BORDER_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'listGroup',
     theory: '边框一致性',
@@ -162,6 +176,7 @@ export const orderRules = [
     },
     message: (h) => `${h.n} 个同类 ${h.tag} 字重不一致: ${h.ws.join('/')} (容器 ${h.pt})`
   },
+  /* ---- 全局收敛（page 类） ---- */
   {
     id: 'FONT_FAMILY_BLOAT', layer: 'L2', severity: 'info', runner: 'page',
     theory: '单页字族 ≤2',

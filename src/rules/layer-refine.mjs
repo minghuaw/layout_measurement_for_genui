@@ -1,10 +1,21 @@
+/**
+ * layer-refine.mjs —— L5 质感精致（11 条）
+ *
+ * 语义：高端效果系统化（锦上添花）。判据基于采集阶段解析的效果属性：
+ *   box-shadow（y 偏移/blur/alpha/层数）、backdrop-filter blur、transition 时长/属性、
+ *   以及 CSSOM 伪类扫描结果。TYPE_SCALE / SPACING_8PT / CONTRAST_AAA 为 aspirational，
+ *   默认关闭（config DEFAULTS enabled:false），经 METRICS_ON 按需开启。
+ */
 import { label, r0 } from '../engine/util.mjs';
 import { contrastRatio as cr, suggestAccessible as sa } from '../color.mjs';
 
+/** 全页带阴影的节点集合（L5 阴影类规则共用） */
 const shadowed = (F) => F.allNodes.filter((n) => n.shadow);
+/** 全页有文本的节点集合（字阶/AAA 类规则共用） */
 const withText = (F) => F.allNodes.filter((n) => n.text);
 
 export const refineRules = [
+  /* ---- 阴影（elevation 系统化） ---- */
   {
     id: 'SHADOW_INCONSISTENT', layer: 'L5', severity: 'warn', runner: 'page',
     theory: '阴影应聚类到 elevation 刻度（Tailwind sm~2xl）',
@@ -37,6 +48,7 @@ export const refineRules = [
     },
     message: (h, T) => `${h.count} 个元素阴影过重（如 ${h.ex} alpha=${h.alpha} 层数=${h.layers}），建议 alpha ≤${T.MAX_ALPHA} 且 ≤${T.MAX_LAYERS} 层`
   },
+  /* ---- 毛玻璃（Glassmorphism） ---- */
   {
     id: 'GLASS_NO_BLUR', layer: 'L5', severity: 'info', runner: 'page',
     theory: 'Glassmorphism：半透明面应配合 backdrop-blur',
@@ -59,6 +71,7 @@ export const refineRules = [
     },
     message: (h, T) => `${h.count} 个元素 backdrop-blur 越界 (${h.values.join('/')}px，建议 ${T.MIN}-${T.MAX}px)`
   },
+  /* ---- 动效 ---- */
   {
     id: 'MOTION_DURATION_OFF', layer: 'L5', severity: 'info', runner: 'page',
     theory: 'UI 过渡时长 100-500ms（典型 150-250ms）',
@@ -95,6 +108,7 @@ export const refineRules = [
     },
     message: (h) => `${h.count}/${h.total} 个可交互元素缺少 hover 反馈（如 ${h.ex}），与已有 hover 样式不一致`
   },
+  /* ---- 类型/间距/无障碍（aspirational，默认关闭） ---- */
   {
     id: 'TYPE_SCALE', layer: 'L5', severity: 'info', runner: 'page',
     theory: '字阶成 ~1.2 倍率（aspirational，默认关闭）',

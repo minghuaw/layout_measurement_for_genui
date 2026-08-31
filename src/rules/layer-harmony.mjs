@@ -1,7 +1,14 @@
+/**
+ * layer-harmony.mjs —— L4 色彩和谐（6 条）
+ *
+ * 语义：配色章法（从不出错到有修养）。判据核心是 color.mjs computePalette 的
+ *   面积归因结果（bg 占比/强调色面积/鲜艳面积/色相聚簇/和声），以及灰阶与明暗系统化。
+ */
 import { rgbToHsl, parseHex, hex } from '../color.mjs';
 import { pct } from '../engine/util.mjs';
 
 export const harmonyRules = [
+  /* ---- 面积法则（60-30-10） ---- */
   {
     id: 'COLOR_DOMINANCE', layer: 'L4', severity: 'warn', runner: 'page',
     theory: '60-30-10 法则',
@@ -20,6 +27,7 @@ export const harmonyRules = [
       ? `主导背景 ${h.hex} 仅占 ${pct(h.share)}（60-30-10 法则建议主导色 ≥50%），背景色过于碎片化`
       : `强调色面积占 ${pct(h.share)}（60-30-10 法则建议 ≤10-15%）：${h.hexes.join('/')}，建议大面积使用中性色`
   },
+  /* ---- 和声与克制 ---- */
   {
     id: 'HARMONY_OFF', layer: 'L4', severity: 'info', runner: 'page',
     theory: '色彩和声（类似/互补/三角）',
@@ -38,6 +46,7 @@ export const harmonyRules = [
     detect: (F, T) => (F.palette.accentColors.length > T.MAX ? F.palette : null),
     message: (p) => `强调色 ${p.accentColors.length} 种: ${p.accentColors.join('/')}，建议收敛到 2-3 种同族色`
   },
+  /* ---- 灰与色阶系统化 ---- */
   {
     id: 'GRAY_UNTINTED', layer: 'L4', severity: 'info', runner: 'page',
     theory: 'Refactoring UI：灰应带主色调',

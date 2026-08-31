@@ -1,6 +1,18 @@
+/**
+ * format.mjs —— 报告渲染层（report.txt 唯一产出方）
+ *
+ * 职责：把 [事实树 + 判定 issues + 配置回显] 渲染为紧凑、token 友好的纯文本：
+ *   1. 头部：文件名 / 页面尺寸 / Config 回显 / Palette 单行
+ *   2. 事实树：缩进树 + 紧凑元标记（fs/lh/r/fg/bg/sh/blur/tr/w 等）
+ *   3. ISSUES 段：按 L1→L5 分层分组、组内 severity 排序，末尾 Layers 健康度行
+ *
+ * 兼容约束：`[TYPE] 行` 格式保持不变（compare.mjs / style_eval.mjs / 实验脚本零改动）；
+ *   Config 行不以 `[` 开头（防解析器误读为 issue）。
+ */
 import { computePalette, paletteLine, hex } from './color.mjs';
 import { LAYERS, SEVERITY_ORDER } from './schema.mjs';
 
+/** formatReport —— 组装完整报告文本（issues 由 metrics 判定产出的 [] 传入） */
 export function formatReport(name, data, issues, configEcho) {
   const pi = data.pageInfo;
   const lines = [];
@@ -33,6 +45,7 @@ export function formatReport(name, data, issues, configEcho) {
   return lines.join('\n') + '\n';
 }
 
+/** buildTree —— 递归渲染事实树：标签 + 矩形 + 紧凑元标记（仅打印可读性关键字段） */
 function buildTree(nodes, prefix, lines) {
   nodes.forEach((n, i) => {
     const last = i === nodes.length - 1;

@@ -1,10 +1,24 @@
+/**
+ * config.mjs —— 判据配置层（DEFAULTS + loader + 零依赖校验器）
+ *
+ * 职责：
+ *   1. DEFAULTS：全量规则默认值表（每数字带出处注释：WCAG/HIG/Tailwind/60-30-10 等）
+ *   2. loader 四级优先级：内置默认 < metrics.config.json（根目录自动发现）
+ *      < METRICS_CONFIG=path 指定 < 环境变量 METRICS_OFF / METRICS_ON
+ *   3. 校验：未知规则 ID 报错并列合法清单、阈值键/类型检查、severity/enabled 校验、深度合并
+ *
+ * 设计约束：纯数据化配置，不支持 JS 规则注入（DEFAULTS 表本身即 schema）。
+ * 输出：{ cfg, echo } —— cfg 为冻结语义的完整配置，echo 为报告 Config: 行回显串。
+ */
 import { readFileSync, existsSync } from 'node:fs';
 import { SEVERITIES, LAYERS } from './schema.mjs';
 import { RULES } from './rules/index.mjs';
 
+/** 合法规则 ID / 层级清单（由注册表与 schema 派生，供校验器使用） */
 const VALID_IDS = RULES.map((r) => r.id);
 const VALID_LAYERS = Object.keys(LAYERS);
 
+/** DEFAULTS —— 全量默认值表；每条规则：enabled 开关 + thresholds 判据数值（魔法数字唯一收敛处） */
 export const DEFAULTS = {
   rules: {
     OVERFLOW:          { enabled: true, thresholds: {} },
@@ -59,14 +73,21 @@ export const DEFAULTS = {
   layers: {}
 };
 
+/** 启动自检：注册表里每条规则必须能在 DEFAULTS 中找到配置项（防声明/判据失配） */
 for (const r of RULES) {
   if (!DEFAULTS.rules[r.id]) throw new Error(`规则 "${r.id}" 缺少 DEFAULTS 配置项`);
 }
 
+/** 纯对象判定（非 null / 非数组）——配置文件各片段的结构前提 */
 function isPlainObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
 }
 
+/**
+ * applyOverride —— 把配置片段深度合并进 cfg（就地修改），并逐项校验。
+ * @param stats {n} 覆盖计数（供 Config 回显 "N 处覆盖"）
+ * 支持：rules.{id}.enabled / severity / thresholds.键；layers.{id}.enabled
+ */
 function applyOverride(cfg, frag, stats) {
   if (frag.rules) {
     if (!isPlainObject(frag.rules)) throw new Error('config.rules 必须是对象');
@@ -111,6 +132,7 @@ function applyOverride(cfg, frag, stats) {
   }
 }
 
+/** 应用环境变量清单（METRICS_OFF/ON）：逗号分隔，可含层级（L5）或规则 ID；enabled 决定开关值 */
 function applyEnvList(cfg, list, enabled) {
   for (const id of list) {
     if (VALID_LAYERS.includes(id)) {
@@ -123,6 +145,11 @@ function applyEnvList(cfg, list, enabled) {
   }
 }
 
+/**
+ * loadConfig —— 配置加载入口（进程内只调一次，全部夹具共享）
+ * 优先级：DEFAULTS < metrics.config.json（自动发现）< METRICS_CONFIG < METRICS_OFF/ON
+ * @returns { cfg, echo } 完整配置 + 回显串（'defaults' 或 '<path> (N 处覆盖)'）
+ */
 export function loadConfig(env = process.env) {
   const cfg = structuredClone(DEFAULTS);
   let source = 'defaults';

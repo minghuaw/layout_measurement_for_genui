@@ -1,11 +1,19 @@
+/**
+ * layer-rhythm.mjs —— L3 空间节奏（8 条）
+ *
+ * 语义：留白与比例（不违规但"不舒服"）。判定对象为空白带、卡片饱满度、
+ *   宽高比、行/屏幕密度、左右视觉重量；多为从宽阈值（宁可漏报不可误报）。
+ */
 import { label, r0, spread, pct } from '../engine/util.mjs';
 
+/** collectTextNodes —— 递归收集子树内所有带文本的节点（CARD_VOID 内容包络计算用） */
 function collectTextNodes(n, out) {
   if (n.text) out.push(n);
   for (const c of n.children) collectTextNodes(c, out);
 }
 
 export const rhythmRules = [
+  /* ---- 留白 ---- */
   {
     id: 'VOID_BAND', layer: 'L3', severity: 'warn', runner: 'page',
     theory: '留白节奏',
@@ -34,6 +42,7 @@ export const rhythmRules = [
     },
     message: (h) => `${h.voidCount}/${h.total} 个 ${h.key} 内容占比过低（大面积空白）(容器 ${h.parent})`
   },
+  /* ---- 比例 ---- */
   {
     id: 'ASPECT_INCONSISTENT', layer: 'L3', severity: 'warn', runner: 'listGroup',
     theory: '比例一致性',
@@ -89,6 +98,7 @@ export const rhythmRules = [
     },
     message: (h, T) => `${label(h.n)} 每行约 ${h.cpl} 字，超出舒适行长 (${T.MIN_CPL}-${T.MAX_CPL})，应限制内容宽度`
   },
+  /* ---- 页面密度与平衡 ---- */
   {
     id: 'DENSITY_EXTREME', layer: 'L3', severity: 'info', runner: 'page',
     theory: 'Ngo density：信息密度适中',

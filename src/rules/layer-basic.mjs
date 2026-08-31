@@ -1,7 +1,18 @@
+/**
+ * layer-basic.mjs —— L1 基础规范（10 条）
+ *
+ * 语义：页面可用底线，违反即"坏页面"（绝大多数 severity=error）。
+ * 每条规则形状：{ id, layer, severity, runner, theory, when?, detect, message }
+ *   - runner：engine/runners.mjs 的执行器类型（node/pair/textGroup/listGroup/container/page）
+ *   - when：node 类规则的预筛谓词（避免对无关节点跑 detect）
+ *   - detect：返回 null（不命中）或单对象/数组（命中，对象即 message 的输入 h）
+ *   - message：由命中对象渲染为带 CSS 修复线索 + 理论依据的消息串（LLM 回流文本）
+ */
 import { hex, contrastRatio, suggestAccessible, rgbToHsl } from '../color.mjs';
 import { label, r0 } from '../engine/util.mjs';
 
 export const basicRules = [
+  /* ---- 视口/尺寸底线 ---- */
   {
     id: 'OVERFLOW', layer: 'L1', severity: 'error', runner: 'page',
     theory: '视口适配底线',
@@ -39,6 +50,7 @@ export const basicRules = [
     },
     message: (h) => `${label(h.a)} 与 ${label(h.b)} 重叠 ${h.w}×${h.h}px (容器 ${h.parent})`
   },
+  /* ---- 交互可用性 ---- */
   {
     id: 'TAP_TARGET', layer: 'L1', severity: 'error', runner: 'node',
     theory: 'iOS HIG 最小点击区 44pt',
@@ -46,6 +58,7 @@ export const basicRules = [
     detect: (n, T) => (Math.min(n.rect.w, n.rect.h) < T.TAP_MIN ? n : null),
     message: (n, T) => `${label(n)} (${r0(n.rect.w)}×${r0(n.rect.h)}) 点击区域小于 ${T.TAP_MIN}px`
   },
+  /* ---- 可读性 ---- */
   {
     id: 'CONTRAST_LOW', layer: 'L1', severity: 'error', runner: 'node',
     theory: 'WCAG AA 对比度',
@@ -67,6 +80,7 @@ export const basicRules = [
     detect: (n, T) => ((n.fontSize || 16) < T.MIN_FS ? n : null),
     message: (n, T) => `${label(n)} 字号 ${r0(n.fontSize || 16)}px 低于可读下限 ${T.MIN_FS}px`
   },
+  /* ---- 无障碍（P1 CSSOM 类） ---- */
   {
     id: 'FOCUS_INVISIBLE', layer: 'L1', severity: 'error', runner: 'page',
     theory: 'WCAG 2.4.7 Focus Visible / F78',
@@ -81,6 +95,7 @@ export const basicRules = [
     },
     message: (h) => `${h.count} 个可交互元素焦点样式被移除（${h.sels}）且无 :focus-visible 替代，违反 WCAG 2.4.7`
   },
+  /* ---- 文本与背景关系 ---- */
   {
     id: 'GREY_ON_COLOR', layer: 'L1', severity: 'warn', runner: 'node',
     theory: 'Refactoring UI：彩色背景不用纯灰字',
