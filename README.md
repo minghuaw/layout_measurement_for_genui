@@ -22,7 +22,10 @@ npx playwright install chromium
 ```powershell
 npm run analyze -- <path/to/page.html>            # 位置参数
 node src/analyze.mjs --file page.html --out ./out # 旗标形式，--out 覆盖输出目录
+node src/analyze.mjs https://example.com --name example --out ./out   # URL 模式
 ```
+
+URL 模式：输入以 `http(s)://` 开头即直接分析远程页面（同一 375×812 移动视口）；报告命名无法从 URL 推导，`--name` 与 `--out` 必填。等待策略为 `networkidle`（30s 超时后回退 `load`，适配长轮询类页面）。
 
 ### 方式二：批量夹具管线（fixtures/ → reports/）
 

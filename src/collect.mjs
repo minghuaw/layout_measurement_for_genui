@@ -504,9 +504,11 @@ const COLLECT = (vw) => {
  *                   true=额外产出 aria/geometry/cdp 三产物（格式对比实验、style_eval 用）
  *   - filePath      （可选）直接指定的页面文件绝对路径；提供时跳过 inputDir/<name>.html 拼装，
  *                   用于单文件独立分析（src/analyze.mjs），支持任意扩展名
+ *   - url           （可选）远程页面 http(s) URL；提供时跳过本地文件拼装直接打开该地址，
+ *                   等待 networkidle（30s 超时后回退 load），供 src/analyze.mjs URL 模式使用
  * @returns { name, sizes, issues } 供启动器汇总（工具模式下 sizes 仅含 report）
  */
-export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, fullArtifacts = false, filePath }) {
+export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, fullArtifacts = false, filePath, url }) {
   mkdirSync(outDir, { recursive: true });
   const ctx = await browser.newContext({
     viewport: VIEWPORT,
@@ -515,8 +517,19 @@ export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, 
     hasTouch: true
   });
   const page = await ctx.newPage();
-  const url = filePath ? pathToFileURL(filePath).href : pathToFileURL(join(inputDir, name + '.html')).href;
-  await page.goto(url);
+  if (url) {
+    /* URL 模式：networkidle 尽量等齐异步资源；长轮询类页面超时后回退 load 兜底 */
+    if (!/^https?:\/\//i.test(url)) throw new Error(`仅支持 http(s) URL: ${url}`);
+    try {
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    } catch (e) {
+      if (e.name !== 'TimeoutError') throw e;
+      await page.goto(url, { waitUntil: 'load', timeout: 30000 });
+    }
+  } else {
+    const href = filePath ? pathToFileURL(filePath).href : pathToFileURL(join(inputDir, name + '.html')).href;
+    await page.goto(href);
+  }
 
   /* 采集：事实树必采；aria/CDP 仅实验模式（工具模式跳过以提速） */
   const geo = await page.evaluate(COLLECT, { w: VIEWPORT.width, h: VIEWPORT.height });
