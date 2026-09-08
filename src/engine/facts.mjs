@@ -79,9 +79,11 @@ export function buildFacts(data, cfg) {
   };
   collect(data.tree, 'body');
 
-  /* voidBands：文本叶子 y 区间先按起点排序、相邻重叠区间合并，再取区间之间的空隙（≥bandMin 视为空白带） */
+  /* voidBands：文本叶子 y 区间先按起点排序、相邻重叠区间合并，再取区间之间的空隙（≥bandMin 视为空白带）。
+     图表/媒体（media 节点，无文本但占满自身区域，如 data-echarts 容器）同样计入投影，
+     避免把图表这类“无文本内容”的区块误判为垂直空白带。 */
   const ivs = allNodes
-    .filter((n) => n.text)
+    .filter((n) => n.text || n.media)
     .map((n) => [n.rect.y, n.rect.y + n.rect.h])
     .sort((a, b) => a[0] - b[0]);
   const merged = [];
@@ -105,6 +107,8 @@ export function buildFacts(data, cfg) {
     listGroups,
     palette: computePalette(data.tree, pi),
     voidBands,
+    /* 图表文字（data-echarts 内 axisLabel/textStyle 等）blend 后的前景数组（CHART_TEXT_CONTRAST 输入） */
+    chartTexts: allNodes.filter((n) => Array.isArray(n.chartTextFgs) && n.chartTextFgs.length),
     pageInfo: pi,
     cssom: pi.cssom || {}
   };

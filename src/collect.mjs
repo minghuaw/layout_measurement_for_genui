@@ -45,6 +45,8 @@ const COLLECT = (vw) => {
   const SKIP = new Set(['SCRIPT', 'STYLE', 'META', 'LINK', 'TITLE', 'NOSCRIPT', 'BASE', 'HEAD']);
   /** 可交互元素选择器（TAP_TARGET / 反馈类规则的判定输入） */
   const INTERACTIVE = 'a,button,input,select,textarea,[role="button"],[contenteditable="true"]';
+  /** 图表/媒体容器选择器（VOID_BAND 空白带投影须计入其占位，避免把无文本内容区当空白带） */
+  const MEDIA = 'canvas,img,video,iframe,svg,object,[data-echarts],[data-chart-section],.echarts';
 
   /** 解析 computed color 字符串 "rgb(a)(r,g,b[,a])" → {r,g,b,a}；不匹配返回 null */
   const parseCs = (s) => {
@@ -53,6 +55,212 @@ const COLLECT = (vw) => {
     const p = m[1].split(',').map((v) => parseFloat(v));
     if (p.length < 3 || p.slice(0, 3).some((v) => Number.isNaN(v))) return null;
     return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+  };
+
+  /** 解析任意常见颜色字面量（#rgb/#rrggbb/#rrggbbaa / rgb(a)）→ {r,g,b,a}；否则 null */
+  const parseCol = (s) => {
+    if (!s) return null;
+    const h = s.trim();
+    if (h[0] === '#') {
+      let x = h.slice(1);
+      if (x.length === 3 || x.length === 4) x = [...x].map((c) => c + c).join('');
+      if (x.length === 6) x += 'ff';
+      if (!/^[0-9a-fA-F]{8}$/.test(x)) return null;
+      return {
+        r: parseInt(x.slice(0, 2), 16),
+        g: parseInt(x.slice(2, 4), 16),
+        b: parseInt(x.slice(4, 6), 16),
+        a: parseInt(x.slice(6, 8), 16) / 255
+      };
+    }
+    return parseCs(h);
+  };
+
+  /**
+   * collectChartTextColors —— 从 data-echarts 配置 JSON 中抽取“文字性”颜色（textStyle / axisLabel /
+   * nameTextStyle / label / name 语境下的 color 值）。图表颜色此前不进入任何规则（canvas/DOM 不可见、
+   * 属性 JSON 未被解析），导致模型任意改动图表配色而无反馈；此字段使图表文字进入对比度测量。
+   */
+  const collectChartTextColors = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    const out = [];
+    const walk = (v, path, inText) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === 'string') {
+        if (!/^(#([0-9a-f]{3,8})|rgba?\(|transparent)/i.test(v)) return;
+        if (v.toLowerCase() === 'transparent') return;
+        if (inText) out.push(v);
+        return;
+      }
+      if (Array.isArray(v)) {
+        for (const it of v) walk(it, path, inText);
+        return;
+      }
+      if (typeof v === 'object') {
+        for (const k of Object.keys(v)) {
+          const texty = inText || /textStyle|axisLabel|nameTextStyle|label|^name$/i.test(k);
+          walk(v[k], path + '.' + k, texty);
+        }
+      }
+    };
+    walk(obj, '', false);
+    return out.length ? out : null;
+  };
+
+  /**
+   * chartTopRisk —— 图表顶部空间风险（y 轴最大值刻度/轴名被裁切的启发式）：
+   *   只有显式 grid.containLabel=true 才算稳妥（让 ECharts 自动保留坐标轴标签空间）；
+   *   仅给 grid.top 数值仍可能裁切（exp17 实测 top:60 仍裁）。
+   * 返回 true/false；无 data-echarts 或解析失败返回 null。
+   */
+  const computeChartTopRisk = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    if (!obj || typeof obj !== 'object') return null;
+    const g = obj.grid;
+    if (g && g.containLabel === true) return false;
+    return true;
+  };
+
+  /**
+   * collectChartDataColors —— 从 data-echarts 配置抽取"数据/线条"非文字颜色（series 下的
+   *   color / lineStyle / itemStyle / areaStyle 等）。返回 { explicit, colors }：
+   *   未显式设置系列色时 ECharts 使用默认色板（不受控、与页面强调色无关），
+   *   这是图表"随机色"的来源；explicit=false 供 CHART_DATA_COLOR 判定。
+   */
+  const collectChartDataColors = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    const res = { explicit: false, colors: [], hasMark: false, markExplicit: false };
+    const walk = (v, path, inSeries) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === 'string') {
+        if (!inSeries) return;
+        if (path.includes('.data')) return; // series 的数据数组本身
+        const isMark = /\.(markLine|markPoint)/.test(path);
+        if (isMark) res.hasMark = true;
+        if (/^(#([0-9a-f]{3,8})|rgba?\(|transparent)/i.test(v) && !/transparent/i.test(v)) {
+          res.colors.push(v);
+          if (isMark) res.markExplicit = true;
+        }
+        return;
+      }
+      if (Array.isArray(v)) { for (const it of v) walk(it, path, inSeries); return; }
+      if (typeof v === 'object') {
+        if (inSeries && /\.(markLine|markPoint)(\.|$)/.test(path + '.') ) res.hasMark = true;
+        for (const k of Object.keys(v)) {
+          const inS = inSeries || /(^|\.)series/.test(path + '.' + k) || path === '' && k === 'series';
+          walk(v[k], path + '.' + k, inS);
+        }
+      }
+    };
+    // detect mark presence at object level too (markLine/markPoint may hold only data/style)
+    const scanMarks = (v) => {
+      if (v === null || typeof v !== 'object') return;
+      if (Array.isArray(v)) { for (const it of v) scanMarks(it); return; }
+      for (const k of Object.keys(v)) {
+        if (k === 'markLine' || k === 'markPoint') res.hasMark = true;
+        scanMarks(v[k]);
+      }
+    };
+    scanMarks(obj);
+    walk(obj, '', false);
+    if (res.colors.length) res.explicit = true;
+    return res;
+  };
+
+  /**
+   * chartYRange —— 纵轴数据范围度量：解析 series 数值型 data 的极值（仅纯数字叶子），
+   *   以及显式声明的 yAxis.min / yAxis.max。供 CHART_Y_RANGE（0 起点/范围过宽）判定。
+   * 返回 { dataMin, dataMax, yMin, yMax }；无数字 data 或解析失败返回 null。
+   */
+  const chartYRange = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    if (!obj || typeof obj !== 'object') return null;
+    const nums = [];
+    const walk = (v, inSeriesData) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === 'number' && Number.isFinite(v) && inSeriesData) { nums.push(v); return; }
+      if (Array.isArray(v)) { for (const it of v) walk(it, inSeriesData); return; }
+      if (typeof v === 'object') {
+        for (const k of Object.keys(v)) {
+          const asData = k === 'data' ? true : inSeriesData;
+          walk(v[k], asData);
+        }
+      }
+    };
+    // only descend into series -> data
+    const series = obj.series;
+    if (series) {
+      const arr = Array.isArray(series) ? series : [series];
+      for (const s of arr) if (s && typeof s === 'object') walk(s.data, true);
+    }
+    if (!nums.length) return null;
+    const dataMin = Math.min(...nums);
+    const dataMax = Math.max(...nums);
+    const y = Array.isArray(obj.yAxis) ? obj.yAxis[0] : obj.yAxis;
+    const yMin = y && typeof y.min === 'number' ? y.min : null;
+    const yMax = y && typeof y.max === 'number' ? y.max : null;
+    return { dataMin, dataMax, yMin, yMax };
+  };
+
+  /**
+   * collectChartSeries —— 逐 series 捕获颜色状态（系列/数据点 marker 随机色的根因）：
+   *   每个 series 记录 { type, name, symbol, hasSeriesColor, colors }：
+   *   - hasSeriesColor：series.color 或 series.itemStyle.color 是否显式存在
+   *     （series.color 决定线条与数据点 marker 的填充色；只设 lineStyle.color 时
+   *       marker/symbol 仍用 ECharts 默认色板 = 随机）
+   *   - colors：该 series 下除 markLine/数据外的显式颜色串（hex/rgba）
+   */
+  const collectChartSeries = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    const list = obj && obj.series;
+    if (!list) return null;
+    const arr = Array.isArray(list) ? list : [list];
+    const out = [];
+    for (const s of arr) {
+      if (!s || typeof s !== 'object') continue;
+      const colors = [];
+      const collect = (v, path) => {
+        if (v === null || v === undefined) return;
+        if (typeof v === 'string') {
+          if (path.includes('.data') || /\.(markLine|markPoint)/.test(path)) return;
+          if (/^(#([0-9a-f]{3,8})|rgba?\(|transparent)/i.test(v) && !/transparent/i.test(v)) {
+            colors.push(v);
+          }
+          return;
+        }
+        if (Array.isArray(v)) { for (const it of v) collect(it, path); return; }
+        if (typeof v === 'object') {
+          for (const k of Object.keys(v)) collect(v[k], path + '.' + k);
+        }
+      };
+      collect(s, '');
+      const hasSeriesColor =
+        typeof s.color === 'string' ||
+        (s.itemStyle && typeof s.itemStyle.color === 'string');
+      out.push({
+        type: s.type || 'line',
+        name: s.name || '',
+        symbol: s.symbol || null,
+        hasSeriesColor: !!hasSeriesColor,
+        colors
+      });
+    }
+    return out.length ? out : null;
   };
 
   /** alpha 合成：前景 f 叠加到底色 b（标准 source-over 公式） */
@@ -80,6 +288,31 @@ const COLLECT = (vw) => {
   const clip = (s) => {
     s = (s || '').replace(/\s+/g, ' ').trim();
     return s.length > 40 ? s.slice(0, 40) + '…' : s;
+  };
+
+  /**
+   * measureTextDelta —— 元素子树文本行盒（全部文本节点并集）垂直中心 相对 元素盒子中心的偏移 px。
+   * 用于 CONTROL_TEXT_CENTER（按钮等交互元素内文字是否垂直居中）；无可见文本返回 null。
+   * 注意：line box 含行高上下 half-leading，阈值（默认 4px）在规则层取。
+   */
+  const measureTextDelta = (el) => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    let top = null;
+    let bottom = null;
+    let node;
+    while ((node = walker.nextNode())) {
+      if (!node.textContent || !node.textContent.trim()) continue;
+      if (node.parentElement && node.parentElement.closest('script,style,noscript')) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const r = range.getBoundingClientRect();
+      if (!(r.height > 0) || !(r.width > 0)) continue;
+      top = top === null ? r.top : Math.min(top, r.top);
+      bottom = bottom === null ? r.bottom : Math.max(bottom, r.bottom);
+    }
+    if (top === null) return null;
+    const er = el.getBoundingClientRect();
+    return f2((top + bottom) / 2 - (er.top + er.bottom) / 2);
   };
 
   /** 解析 box-shadow → {y 偏移, blur, alpha, 层数}；none/不合法返回 null（L5 阴影类规则输入） */
@@ -142,6 +375,43 @@ const COLLECT = (vw) => {
       /* 直接文本 = 元素自身的文本节点拼接（不含子孙，控制树内文本体积） */
       let text = '';
       for (const n of child.childNodes) if (n.nodeType === 3) text += n.textContent;
+      const interactive = child.matches(INTERACTIVE);
+      const media = child.matches(MEDIA);
+      /* 渐变背景（linear/radial-gradient）——度量只读 background-color，渐变不可度量对比度；
+         GRADIENT_BG 规则建议图表等容器改用纯色背景 */
+      const gradient = /gradient\(/i.test(cs.backgroundImage || '');
+      /* 图表文字前景（blend 到容器有效背景上）——图表文字对比度规则输入 */
+      let chartTextFgs = null;
+      let chartTopRisk = null;
+      let chartDataExplicit = null;
+      let chartDataColors = null;
+      let chartHasMark = null;
+      let chartMarkExplicit = null;
+      let chartSeries = null;
+      let yRange = null;
+      if (media) {
+        const cols = collectChartTextColors(child);
+        if (cols) {
+          const fgs = [];
+          for (const c of cols) {
+            const p = parseCol(c);
+            if (p) fgs.push(blend(p, bg).map((v) => Math.round(v)));
+          }
+          if (fgs.length) chartTextFgs = fgs;
+        }
+        if (child.hasAttribute('data-echarts')) {
+          chartTopRisk = computeChartTopRisk(child);
+          const dc = collectChartDataColors(child);
+          if (dc) {
+            chartDataExplicit = dc.explicit;
+            chartDataColors = dc.colors;
+            chartHasMark = dc.hasMark;
+            chartMarkExplicit = dc.markExplicit;
+          }
+          chartSeries = collectChartSeries(child);
+          yRange = chartYRange(child);
+        }
+      }
       out.push({
         tag: child.tagName.toLowerCase(),
         id: child.id || '',
@@ -150,7 +420,19 @@ const COLLECT = (vw) => {
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },
         pos: cs.position,
-        interactive: child.matches(INTERACTIVE),
+        interactive,
+        media,
+        gradient,
+        chartTextFgs,
+        chartTopRisk,
+        chartDataExplicit,
+        chartDataColors,
+        chartHasMark,
+        chartMarkExplicit,
+        chartSeries,
+        yRange,
+        /* 交互元素内文字垂直居中偏移 px（无文本/不可测为 null） */
+        vcenterDelta: interactive ? measureTextDelta(child) : null,
         textClip: child.scrollWidth > child.clientWidth + 1,
         fontSize: parseFloat(cs.fontSize) || null,
         lineHeight: cs.lineHeight === 'normal' ? null : f2(parseFloat(cs.lineHeight) / parseFloat(cs.fontSize)),

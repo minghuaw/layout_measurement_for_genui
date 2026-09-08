@@ -10,6 +10,8 @@
     "golden": "node tests/golden.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.4.1",
     "playwright": "^1.62.1"
   }
 }

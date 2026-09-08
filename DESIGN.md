@@ -70,7 +70,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 
 ---
 
-## 3. 五层美学度量体系【已实现，22 现有 + 26 新增 = 48 维度】
+## 3. 五层美学度量体系【已实现，22 现有 + 37 新增 = 59 维度】
 
 体系按"基础规范 → 质感精致"五层递进，`severity`（error/warn/info）与 `layer`（L1-L5）正交：
 
@@ -81,6 +81,8 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | OVERLAP | 同父兄弟矩形相交（浮点判定防亚像素误报） | 已实现 |
 | TAP_TARGET | 可交互元素最小边 < 44px | 已实现 |
 | CONTRAST_LOW | 有效前景/背景对比度 < 4.5:1（≥24px 大字 3:1），消息含建议色 | 已实现 |
+| CHART_TEXT_CONTRAST | data-echarts 内图表文字（axisLabel/textStyle）对图表容器有效背景对比 < 4.5:1（此前图表配色不入规则） | 新增 |
+| CHART_DEGENERATE | 图表容器高度塌陷（宽≥150px 时高<40px，%高度链断） | 新增 |
 | FOCUS_INVISIBLE | interactive 元素显式 `outline:none` 且无 `:focus-visible` 替代（WCAG 2.4.7/F78，需 CSSOM 扫描） | 新增 |
 | MIN_FONT_SIZE | 字号 < 10px | 新增 |
 | GREY_ON_COLOR | 彩色背景上的纯灰字（Refactoring UI） | 新增 |
@@ -97,16 +99,23 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | WEIGHT_INCONSISTENT | 同组字重不一致 | 新增 |
 | FONT_FAMILY_BLOAT | 字族数 > 2 | 新增 |
 | GRAY_SHADE_BLOAT | 文字灰阶档数 > 5 | 新增 |
+| CONTROL_TEXT_CENTER | 交互控件内文字相对盒子中心垂直偏移 >4px（如加大高度后文字贴顶） | 新增 |
+| CHART_TOP_CLIP | 图表未显式 grid.containLabel:true（仅加大 grid.top 仍可能裁切），y 轴顶部刻度/轴名有裁切风险 | 新增 |
+| CHART_OVER_PARENT | 图表容器底部超出其外层卡片（容器含内边距/边框时子级同高会溢出） | 新增 |
 
 ### L3 空间节奏（留白与比例；不违规但"不舒服"）
 | 规则 | 判据 | 状态 |
 |---|---|---|
-| VOID_BAND / CARD_VOID | 文本叶子 y 投影断档 ≥96px / 卡片内容包络 <60% 或底部空洞 | 已实现 |
+| VOID_BAND / CARD_VOID | 文本叶子 y 投影断档 ≥96px / 卡片内容包络 <60% 或底部空洞（VOID_BAND 投影计入图表/媒体占位，避免把无文本区块当空白带） | 已实现 |
 | ASPECT_INCONSISTENT / EXTREME | 列表卡片 h/w 极差 >0.3 / 单卡 >3 或 <0.15 | 已实现 |
 | IMG_SIZE_INCONSISTENT | 同列表缩略图尺寸极差 >2px | 已实现 |
 | LINE_LENGTH | 文本块行长越界（中文 20-45 字 / 45-75ch，限定 p 且文本 ≥20 字） | 新增 |
 | DENSITY_EXTREME | 单屏元素密度 <3 或 >60 | 新增 |
 | BALANCE_OFF | 左右视觉重量（面积×暗度）失衡 >25%（Ngo balance 因子） | 新增 |
+| MEDIA_GUTTER | 图表/媒体窄于同行内容包络（两侧共 ≥96px 空白） | 新增 |
+| RELATED_SPLIT | 数值与其带符号变化量（+x%/-x(y%)）同行却相距过远/纵向错位（通用模式，无领域假设） | 新增 |
+| CHART_OVER_TALL | 图表容器过高（≥220px 且 >~30% 视口高），绘图只占上部、内部留白大（canvas 内空白 DOM 不可见） | 新增 |
+| CHART_Y_RANGE | 数值纵轴从 0 起或范围过宽（数据只占轴高小部分），画布下方大量空白——建议设置 yAxis.min/max 紧贴数据 | 新增 |
 
 ### L4 色彩和谐（配色章法；从不出错到有修养）
 | 规则 | 判据 | 状态 |
@@ -116,6 +125,8 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | GARISH_SATURATION / ACCENT_BLOAT | 高饱和面积 >20% / 强调色 >6 种 | 已实现 |
 | GRAY_UNTINTED | 纯中性灰（无色调）出现在有色调 UI（"Greys don't have to be grey"） | 新增 |
 | SHADE_UNSYSTEMATIC | 同色相明暗档离散不成系统 | 新增 |
+| CHART_DATA_COLOR | 图表系列/线条色或阈值标记（markLine/markPoint）未显式设置或与页面强调色偏差过大（ECharts 默认色板=随机色） | 新增 |
+| GRADIENT_BG | 图表/媒体容器使用渐变背景（纯色表面页面不一致；渐变不可可靠度量文字对比） | 新增 |
 
 ### L5 质感精致（高端效果系统化；锦上添花）
 | 规则 | 判据 | 状态 |
@@ -279,12 +290,12 @@ lightweight_layout_eng/
 │  │                                    #   （默认 < config.json < METRICS_CONFIG < env）+ 零依赖校验器
 │  │
 │  ├── rules/                           # ★ 声明层："检查什么"——纯数据+谓词，无遍历无魔法数字
-│  │   ├── layer-basic.mjs              #   L1 基础规范 ×10
-│  │   ├── layer-order.mjs              #   L2 结构秩序 ×13
-│  │   ├── layer-rhythm.mjs             #   L3 空间节奏 ×8
-│  │   ├── layer-harmony.mjs            #   L4 色彩和谐 ×6
+│  │   ├── layer-basic.mjs              #   L1 基础规范 ×12
+│  │   ├── layer-order.mjs              #   L2 结构秩序 ×16
+│  │   ├── layer-rhythm.mjs             #   L3 空间节奏 ×12
+│  │   ├── layer-harmony.mjs            #   L4 色彩和谐 ×8
 │  │   ├── layer-refine.mjs             #   L5 质感精致 ×11（阴影/毛玻璃/动效/字阶…）
-│  │   └── index.mjs                    #   注册表：聚合导出 RULES（48 条）
+│  │   └── index.mjs                    #   注册表：聚合导出 RULES（49 条）
 │  │
 │  │
 │   ├── engine/                         # ★ 执行层："怎么检查"——通用机器，不认识具体规则

@@ -1,5 +1,5 @@
 /**
- * layer-order.mjs —— L2 结构秩序（13 条）
+ * layer-order.mjs —— L2 结构秩序（16 条）
  *
  * 语义：一致性与对齐（不齐=业余感）。多数规则跑在 textGroup / listGroup 执行器上，
  *   即"同类元素应统一"——左缘/宽度/圆角/字号/颜色/字重/边框一致，间距成系统。
@@ -201,5 +201,46 @@ export const orderRules = [
       return null;
     },
     message: (h) => `文字灰阶 ${h.shades.length} 种 (${h.shades.join('/')})，应收敛到 3-5 档`
+  },
+  /* ---- 交互控件文字垂直居中（观测：加大高度后文字贴顶） ---- */
+  {
+    id: 'CONTROL_TEXT_CENTER', layer: 'L2', severity: 'warn', runner: 'node',
+    theory: '交互控件（按钮/链接）内文字应垂直居中',
+    when: (n) => n.interactive && !!n.text && n.rect.h >= 28 && typeof n.vcenterDelta === 'number',
+    detect: (n, T) => (Math.abs(n.vcenterDelta) > T.MAX ? n : null),
+    message: (n, T) => {
+      const side = n.vcenterDelta < 0 ? '偏上' : '偏下';
+      return `${label(n)} (${r0(n.rect.w)}×${r0(n.rect.h)}) 文字垂直偏移 ${r0(Math.abs(n.vcenterDelta))}px（${side}），建议 inline-flex + items-center 使文字垂直居中`;
+    }
+  },
+  {
+    id: 'CHART_TOP_CLIP', layer: 'L2', severity: 'warn', runner: 'page',
+    theory: '图表 y 轴顶部（最大值刻度/轴名）裁切风险——顶部空间依赖默认边距',
+    detect: (F, T) => {
+      const hits = F.allNodes.filter((n) =>
+        n.chartTopRisk === true && n.rect.h >= T.H_MIN && n.rect.h <= T.H_MAX);
+      return hits.length ? hits : null;
+    },
+    message: (h) => `${label(h)} (${r0(h.rect.w)}×${r0(h.rect.h)}) y 轴顶部刻度/轴名可能被裁切——请给 data-echarts 显式 grid.containLabel:true（仅加大 grid.top 不够），让 ECharts 自动为坐标轴标签保留顶部空间`
+  },
+  {
+    id: 'CHART_OVER_PARENT', layer: 'L2', severity: 'warn', runner: 'page',
+    theory: '图表/媒体节点底部超出其外层卡片（容器含内边距/边框时子级同高会溢出）',
+    detect: (F, T) => {
+      const hits = [];
+      const parentOf = new Map();
+      for (const n of F.allNodes) for (const c of n.children || []) parentOf.set(c, n);
+      for (const n of F.allNodes) {
+        if (!(n.chartTextFgs || n.tag === 'canvas')) continue;
+        const p = parentOf.get(n);
+        if (!p) continue;
+        const cardLike = p.bgOwn || (p.bw || 0) >= 1 || (p.radius || 0) > 0;
+        if (!cardLike) continue;
+        const over = n.rect.y + n.rect.h - (p.rect.y + p.rect.h);
+        if (over > T.TOL) hits.push({ n, p, over: r0(over) });
+      }
+      return hits.length ? hits : null;
+    },
+    message: (h) => `${label(h.n)} 图表容器底部超出其外层卡片 ${label(h.p)} ${h.over}px——外层含内边距/边框时子级高度不应与其总高相同；请压缩图表高度或去掉冲突的内边距，使图表完整落在卡片内`
   }
 ];

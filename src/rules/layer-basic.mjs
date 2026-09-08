@@ -1,5 +1,5 @@
 /**
- * layer-basic.mjs —— L1 基础规范（10 条）
+ * layer-basic.mjs —— L1 基础规范（12 条）
  *
  * 语义：页面可用底线，违反即"坏页面"（绝大多数 severity=error）。
  * 每条规则形状：{ id, layer, severity, runner, theory, when?, detect, message }
@@ -8,7 +8,7 @@
  *   - detect：返回 null（不命中）或单对象/数组（命中，对象即 message 的输入 h）
  *   - message：由命中对象渲染为带 CSS 修复线索 + 理论依据的消息串（LLM 回流文本）
  */
-import { hex, contrastRatio, suggestAccessible, rgbToHsl } from '../color.mjs';
+import { hex, contrastRatio, rgbToHsl, parseHex } from '../color.mjs';
 import { label, r0 } from '../engine/util.mjs';
 
 export const basicRules = [
@@ -67,11 +67,51 @@ export const basicRules = [
       const ratio = contrastRatio(n.fg, n.bg);
       const need = (n.fontSize || 16) >= T.LARGE_FS ? T.RATIO_LARGE : T.RATIO_NORMAL;
       if (ratio < need - 0.02) {
-        return { n, ratio, need, sugg: suggestAccessible(n.fg, n.bg, need) };
+        return { n, ratio, need };
       }
       return null;
     },
-    message: (h) => `${label(h.n)} 文字 ${hex(h.n.fg)} 对背景 ${hex(h.n.bg)} 对比度 ${h.ratio.toFixed(2)}:1 (<${h.need}:1 WCAG AA)，建议改为 ${h.sugg}`
+    message: (h) => `${label(h.n)} 文字 ${hex(h.n.fg)} 对背景 ${hex(h.n.bg)} 对比度 ${h.ratio.toFixed(2)}:1 (<${h.need}:1 WCAG AA)`
+  },
+  {
+    id: 'CHART_TEXT_CONTRAST', layer: 'L1', severity: 'warn', runner: 'page',
+    theory: '图表文字（axisLabel/textStyle）对图表背景的可读性（WCAG AA）——图表颜色此前不在任何规则内',
+    detect: (F, T) => {
+      const hits = [];
+      const pageText = F.palette && F.palette.textTop && F.palette.textTop.length
+        ? F.palette.textTop[0].hex : null;
+      for (const c of F.chartTexts || []) {
+        if (c.gradient) continue; // 渐变背景不可靠度量，交给 GRADIENT_BG
+        for (const fg of c.chartTextFgs || []) {
+          const ratio = contrastRatio(fg, c.bg);
+          if (ratio < T.RATIO - 0.02) {
+            const hit = { n: c, fg, ratio };
+            // 若页面文字主色在图表背景上同样达标，则给出可直接套用的建议色（也是图表与页面文字的色一致性）
+            if (pageText) {
+              const pg = parseHex(pageText);
+              const pr = contrastRatio(pg, c.bg);
+              if (pr >= T.RATIO - 0.02) { hit.suggest = pageText; hit.suggestRatio = pr; }
+            }
+            hits.push(hit);
+            break;
+          }
+        }
+      }
+      return hits.length ? hits : null;
+    },
+    message: (h) => h.suggest
+      ? `${label(h.n)} 图表文字 ${hex(h.fg)} 对背景 ${hex(h.n.bg)} 对比度 ${h.ratio.toFixed(2)}:1 (<4.5:1 WCAG AA)。建议把 data-echarts 的 axisLabel / textStyle 颜色改为页面文字主色 ${h.suggest}（该色与背景对比 ${h.suggestRatio.toFixed(2)}:1 ≥4.5，同时与页面正文用色一致）`
+      : `${label(h.n)} 图表文字 ${hex(h.fg)} 对背景 ${hex(h.n.bg)} 对比度 ${h.ratio.toFixed(2)}:1 (<4.5:1 WCAG AA)，建议提高图表文字与背景对比`
+  },
+  {
+    id: 'CHART_DEGENERATE', layer: 'L1', severity: 'warn', runner: 'page',
+    theory: '图表容器高度塌陷（% 高度链在重组中失效）会留下大片空白的根因',
+    detect: (F, T) => {
+      const hits = F.allNodes.filter((n) =>
+        (n.chartTextFgs || n.tag === 'canvas') && n.rect.w >= T.W_MIN && n.rect.h < T.H_MAX);
+      return hits.length ? hits : null;
+    },
+    message: (h) => `${label(h)} 图表容器高度 ${r0(h.rect.h)}px（宽 ${r0(h.rect.w)}px）已塌陷——高度链可能失效，须让图表填满其容器（避免 % 高度断链或固定极矮高度）`
   },
   {
     id: 'MIN_FONT_SIZE', layer: 'L1', severity: 'error', runner: 'node',
