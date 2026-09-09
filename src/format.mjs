@@ -18,6 +18,7 @@ export function formatReport(name, data, issues, configEcho) {
   const lines = [];
   lines.push(`=== Layout Report: ${name}.html ===`);
   lines.push(`Page ${pi.viewport.w}×${pi.viewport.h} contentH=${pi.scrollHeight} scrollW=${pi.scrollWidth}`);
+  if (pi.url) lines.push(`URL: ${pi.url}`);
   if (configEcho) lines.push(`Config: ${configEcho}`);
   lines.push(paletteLine(computePalette(data.tree, pi)));
   buildTree(data.tree, '', lines);

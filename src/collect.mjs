@@ -278,6 +278,8 @@ const COLLECT = (vw) => {
     innerW: window.innerWidth,
     scrollWidth: scrollEl.scrollWidth,
     scrollHeight: scrollEl.scrollHeight,
+    /** 实测 URL（重定向后的最终地址，含 query/hash）——报告 URL: 行溯源输入 */
+    url: location.href,
     /** body 自身底色（树从 body.children 开始，body 底色需单独带回供面积归因补全） */
     bodyBg: bodyOwn && bodyOwn.a > 0 ? blend(bodyOwn, [255, 255, 255]).map((v) => Math.round(v)) : null
   };

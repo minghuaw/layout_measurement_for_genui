@@ -49,6 +49,7 @@ node src/run.mjs overflow
 ```
 === Layout Report: good.html ===
 Page 375×812 contentH=917 scrollW=375          # 页面尺寸 / 内容高度 / 横向滚动宽
+URL: file:///…/good.html                       # 实测地址（http(s) 含 query/hash；file 模式为本地路径）
 Config: defaults                               # 配置来源（defaults 或 <文件> (N 处覆盖)）
 Palette bg:#fff 86% | accent:#2563eb 5% ...    # 调色板单行（背景/文本/强调/和声）
 ├─ header.header (0,0 375×79)                  # 事实树（标签+矩形+紧凑元标记）

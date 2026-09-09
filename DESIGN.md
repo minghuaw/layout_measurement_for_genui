@@ -184,6 +184,7 @@ alpha 合成链、WCAG 亮度/对比度、建议色二分搜索、HSL、鲜艳�
 ```
 === Layout Report: good.html ===
 Page 375×812 contentH=917 scrollW=375
+URL: https://…/model-detail?model_id=fassier-f750
 Config: metrics.config.json (3 处覆盖)
 Palette bg:#ffffff 86%|#f5f6fa 8% | accent:#2563eb 5% | accentArea:5% | accentHues:0°/210° 和声OK
 ├─ header.header (0,0 375×79)
