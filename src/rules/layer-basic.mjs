@@ -62,7 +62,7 @@ export const basicRules = [
   {
     id: 'CONTRAST_LOW', layer: 'L1', severity: 'error', runner: 'node',
     theory: 'WCAG AA 对比度',
-    when: (n) => !!n.text,
+    when: (n) => !!n.text && !n.gradStops,
     detect: (n, T) => {
       const ratio = contrastRatio(n.fg, n.bg);
       const need = (n.fontSize || 16) >= T.LARGE_FS ? T.RATIO_LARGE : T.RATIO_NORMAL;
@@ -72,6 +72,30 @@ export const basicRules = [
       return null;
     },
     message: (h) => `${label(h.n)} 文字 ${hex(h.n.fg)} 对背景 ${hex(h.n.bg)} 对比度 ${h.ratio.toFixed(2)}:1 (<${h.need}:1 WCAG AA)`
+  },
+  {
+    id: 'GRADIENT_CONTRAST', layer: 'L1', severity: 'error', runner: 'node',
+    theory: '渐变背景上文字的 WCAG AA 对比度（按最不利 stop 校正）——CONTRAST_LOW 只读纯色背景，渐变此前不可度量',
+    when: (n) => !!n.text && !!n.gradStops,
+    detect: (n, T) => {
+      const need = (n.fontSize || 16) >= T.LARGE_FS ? T.RATIO_LARGE : T.RATIO_NORMAL;
+      let worst = Infinity;
+      let stopHex = '';
+      for (const s of n.gradStops) {
+        const r = contrastRatio(n.fg, s);
+        if (r < worst) { worst = r; stopHex = hex(s); }
+      }
+      if (worst < need - 0.02) return { n, ratio: worst, need, stopHex };
+      return null;
+    },
+    message: (h) => `${loc(h.n)} 文字 ${hex(h.n.fg)} 对渐变背景对比度仅 ${h.ratio.toFixed(2)}:1（最不利 stop ${h.stopHex}）(<${h.need}:1 WCAG AA) — 校正文字与该 stop 的对比，或改用纯色背景`
+  },
+  {
+    id: 'IMG_BROKEN', layer: 'L1', severity: 'error', runner: 'node',
+    theory: '图像加载失败（complete && naturalWidth===0）——破图直接影响可用性；懒加载未触发时 complete=false 天然排除',
+    when: (n) => n.imgBroken,
+    detect: (n) => (n.imgBroken ? { n } : null),
+    message: (h) => `${loc(h.n)}${h.n.alt ? '“' + h.n.alt + '”' : ''} 图像加载失败 (src …${h.n.imgSrcTail}) — 修复 URL；若资源不存在，改用 alt 占位（色块 + “${h.n.alt || '语义文本'}”使其美观可读）`
   },
   {
     id: 'CHART_TEXT_CONTRAST', layer: 'L1', severity: 'warn', runner: 'page',

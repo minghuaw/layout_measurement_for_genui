@@ -27,6 +27,8 @@ export const DEFAULTS = {
     OVERLAP:           { enabled: true, thresholds: { MIN_W: 0.5, MIN_H: 0.5 } },
     TAP_TARGET:        { enabled: true, thresholds: { TAP_MIN: 44 } },
     CONTRAST_LOW:      { enabled: true, thresholds: { RATIO_NORMAL: 4.5, RATIO_LARGE: 3, LARGE_FS: 24 } },
+    GRADIENT_CONTRAST: { enabled: true, thresholds: { RATIO_NORMAL: 4.5, RATIO_LARGE: 3, LARGE_FS: 24 } },
+    IMG_BROKEN:        { enabled: true, thresholds: {} },
     MIN_FONT_SIZE:     { enabled: true, thresholds: { MIN_FS: 10 } },
     FOCUS_INVISIBLE:   { enabled: true, thresholds: {} },
     GREY_ON_COLOR:     { enabled: true, thresholds: { BG_MIN_S: 0.15, FG_MAX_S: 0.03 } },

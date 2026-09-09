@@ -19,13 +19,13 @@ export const harmonyRules = [
         out.push({ kind: 'bg', hex: p.bgTop[0].hex, share: p.bgTop[0].share });
       }
       if (p.accentArea > T.MAX_ACCENT) {
-        out.push({ kind: 'accent', share: p.accentArea, hexes: p.accentTop.map((x) => x.hex) });
+        out.push({ kind: 'accent', share: p.accentArea, hexes: p.accentTop.map((x) => x.hex), els: p.accentEls || [] });
       }
       return out;
     },
     message: (h) => h.kind === 'bg'
       ? `主导背景 ${h.hex} 仅占 ${pct(h.share)}（60-30-10 法则建议主导色 ≥50%），背景色过于碎片化`
-      : `强调色面积占 ${pct(h.share)}（60-30-10 法则建议 ≤10-15%）：${h.hexes.join('/')}，建议大面积使用中性色`
+      : `强调色面积占 ${pct(h.share)}（60-30-10 法则建议 ≤10-15%）：${h.hexes.join('/')}${h.els.length ? '，主要来源: ' + h.els.map((e) => `${e.tag}${e.cls ? '.' + e.cls : ''}@y${e.y}(${pct(e.share)})`).join(', ') : ''}，建议用中性色替换装饰性强调或减少强调元素数量`
   },
   /* ---- 和声与克制 ---- */
   {

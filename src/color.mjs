@@ -96,6 +96,7 @@ export function computePalette(tree, pageInfo) {
   const bgMap = new Map();
   const textMap = new Map();
   const accentMap = new Map();
+  const accentEls = [];
   let vividArea = 0;
   const vividList = [];
   const vividSet = new Map();
@@ -116,7 +117,10 @@ export function computePalette(tree, pageInfo) {
         vividList.push({ hex: hex(n.bg), area });
         addMap(vividSet, hex(n.bg), area);
       }
-      if (n.bgOwn && (vivid || n.interactive)) addMap(accentMap, hex(n.bg), area);
+      if (n.bgOwn && (vivid || n.interactive)) {
+        addMap(accentMap, hex(n.bg), area);
+        accentEls.push({ tag: n.tag, cls: n.cls, y: Math.round(n.rect.y), hex: hex(n.bg), area });
+      }
       walk(n.children);
     }
   };
@@ -136,6 +140,8 @@ export function computePalette(tree, pageInfo) {
     bgTop: topN(bgMap, 2).map(([h, a]) => ({ hex: h, share: a / total })),
     textTop: topN(textMap, 2).map(([h, a]) => ({ hex: h, share: a / total })),
     accentTop: topN(accentMap, 3).map(([h, a]) => ({ hex: h, share: a / total })),
+    accentEls: accentEls.sort((a, b) => b.area - a.area).slice(0, 3)
+      .map((e) => ({ tag: e.tag, cls: e.cls, y: e.y, hex: e.hex, share: e.area / total })),
     accentArea: [...accentMap.values()].reduce((s, v) => s + v, 0) / total,
     vividArea: vividArea / total,
     vividTop: vividList.sort((a, b) => b.area - a.area).slice(0, 3),

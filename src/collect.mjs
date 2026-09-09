@@ -284,6 +284,15 @@ const COLLECT = (vw) => {
 
   /** 数值保留两位小数（防亚像素抖动，判定层再决定取整时机） */
   const f2 = (n) => Math.round(n * 100) / 100;
+  /** 解析 linear-gradient 中的颜色 stop（≤4 个，rgba/hex；radial/解析失败返回 null）——GRADIENT_CONTRAST 输入 */
+  const parseGradStops = (s) => {
+    if (!s || !/linear-gradient\(/i.test(s)) return null;
+    const inner = s.slice(s.toLowerCase().indexOf('linear-gradient('));
+    const colors = inner.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/gi) || [];
+    if (colors.length < 2 || colors.length > 4) return null;
+    const stops = colors.map(parseCol).filter(Boolean);
+    return stops.length >= 2 ? stops : null;
+  };
   /** 直接文本摘要：压空白、截断到 40 字（树体积控制） */
   const clip = (s) => {
     s = (s || '').replace(/\s+/g, ' ').trim();
@@ -350,17 +359,17 @@ const COLLECT = (vw) => {
    * 跳过：非渲染标签 / display:none / visibility:hidden
    * 零尺寸节点：自身不入树，子节点上提（hoist），避免树断裂
    */
-  const walk = (el, parentBg) => {
+  const walk = (el, parentBg, parentStops) => {
     const out = [];
     const ordMap = {};
     for (const child of el.children) {
       if (SKIP.has(child.tagName)) continue;
       const cs = getComputedStyle(child);
       if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-      const kids = walk(child, parentBg);
       const r = child.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) {
-        out.push(...kids);
+        /* 零尺寸节点自身不渲染：子节点上提并完整继承父级背景/渐变上下文 */
+        out.push(...walk(child, parentBg, parentStops));
         continue;
       }
       /* 有效背景/前景：自身背景 alpha>0 则叠加父级，否则继承父级；
@@ -388,9 +397,20 @@ const COLLECT = (vw) => {
       const aria = child.getAttribute('aria-label') || '';
       const tagKey = child.tagName;
       ordMap[tagKey] = (ordMap[tagKey] || 0) + 1;
-      /* 渐变背景（linear/radial-gradient）——度量只读 background-color，渐变不可度量对比度；
-         GRADIENT_BG 规则建议图表等容器改用纯色背景 */
+      /* 渐变背景（linear/radial-gradient）——有效 stop 颜色供 GRADIENT_CONTRAST：
+         自身渐变优先（blend 到自身有效底色）；无自身渐变且自身底非不透明时继承祖先渐变；
+         自身不透明纯底遮住祖先渐变 → null（不再向下传递） */
       const gradient = /gradient\(/i.test(cs.backgroundImage || '');
+      const ownStops = gradient ? parseGradStops(cs.backgroundImage) : null;
+      const ownStopsB = ownStops ? ownStops.map((c) => blend(c, bg).map((v) => Math.round(v))) : null;
+      const inheritedStops = (bgOwn && own.a >= 1) ? null : (parentStops || null);
+      const gradStops = ownStopsB || inheritedStops;
+      const childStops = ownStopsB || inheritedStops;
+      /* 图像加载状态（IMG_BROKEN 输入）：complete && naturalWidth===0 = 已请求且失败；
+         懒加载未触发时 complete=false，天然排除，无误报 */
+      const isImg = child.tagName === 'IMG';
+      const imgBroken = isImg ? (child.complete && child.naturalWidth === 0) : false;
+      const imgSrcTail = isImg ? (child.getAttribute('src') || '').slice(-24) : '';
       /* 图表文字前景（blend 到容器有效背景上）——图表文字对比度规则输入 */
       let chartTextFgs = null;
       let chartTopRisk = null;
@@ -423,6 +443,7 @@ const COLLECT = (vw) => {
           yRange = chartYRange(child);
         }
       }
+      const kids = walk(child, bg, childStops);
       out.push({
         tag: child.tagName.toLowerCase(),
         id: child.id || '',
@@ -432,6 +453,9 @@ const COLLECT = (vw) => {
         alt,
         aria,
         ord: ordMap[tagKey],
+        imgBroken,
+        imgSrcTail,
+        gradStops: gradStops || null,
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },
         pos: cs.position,
@@ -471,7 +495,6 @@ const COLLECT = (vw) => {
     }
     return out;
   };
-
   /**
    * scanCssom —— 样式表伪类扫描（P1 反馈类规则的输入）
    * 统计 :hover / :focus(-visible) / outline 移除三类选择器；
@@ -502,7 +525,7 @@ const COLLECT = (vw) => {
     return out;
   };
 
-  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, [255, 255, 255]) };
+  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, [255, 255, 255], null) };
 };
 
 /**

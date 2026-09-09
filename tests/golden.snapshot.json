@@ -39,6 +39,8 @@
     "LINE_HEIGHT_TIGHT"
   ],
   "img-chaos": [
+    "IMG_BROKEN",
+    "ASPECT_INCONSISTENT",
     "IMG_SIZE_INCONSISTENT"
   ],
   "ratio-chaos": [
