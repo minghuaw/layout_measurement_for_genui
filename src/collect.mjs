@@ -352,6 +352,7 @@ const COLLECT = (vw) => {
    */
   const walk = (el, parentBg) => {
     const out = [];
+    const ordMap = {};
     for (const child of el.children) {
       if (SKIP.has(child.tagName)) continue;
       const cs = getComputedStyle(child);
@@ -377,6 +378,16 @@ const COLLECT = (vw) => {
       for (const n of child.childNodes) if (n.nodeType === 3) text += n.textContent;
       const interactive = child.matches(INTERACTIVE);
       const media = child.matches(MEDIA);
+      /* 定位锚点（ISSUE 消息 pinpoint 元素用）：
+         tid = 首个 data-test* 属性值（跨框架测试定位约定，data-testid / data-test / ember data-test-*）
+         alt = 图像替代文本（IMG_BROKEN 占位建议输入）；aria = aria-label
+         ord = 同标签渲染兄弟序号（1 起，树内计数，与 textGroups 分组口径一致） */
+      const testAttr = child.getAttributeNames().find((a) => a.startsWith('data-test'));
+      const tid = testAttr ? (child.getAttribute(testAttr) || '') : '';
+      const alt = child.tagName === 'IMG' ? (child.getAttribute('alt') || '') : '';
+      const aria = child.getAttribute('aria-label') || '';
+      const tagKey = child.tagName;
+      ordMap[tagKey] = (ordMap[tagKey] || 0) + 1;
       /* 渐变背景（linear/radial-gradient）——度量只读 background-color，渐变不可度量对比度；
          GRADIENT_BG 规则建议图表等容器改用纯色背景 */
       const gradient = /gradient\(/i.test(cs.backgroundImage || '');
@@ -417,6 +428,10 @@ const COLLECT = (vw) => {
         id: child.id || '',
         cls: child.classList.length ? Array.from(child.classList).slice(0, 2).join('.') : '',
         role: child.getAttribute('role') || '',
+        tid,
+        alt,
+        aria,
+        ord: ordMap[tagKey],
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },
         pos: cs.position,

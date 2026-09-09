@@ -6,7 +6,7 @@
  * 判据数值一律来自 config.mjs 的 T（DIFF/SPREAD/MAX 等），本文件无魔法数字。
  */
 import { hex, rgbToHsl } from '../color.mjs';
-import { label, r0, spread } from '../engine/util.mjs';
+import { label, loc, r0, spread } from '../engine/util.mjs';
 
 /** isStacked —— 判断一组兄弟是否纵向堆叠布局（排除横向并排导致的左缘差异天然成立） */
 function isStacked(items) {
@@ -74,14 +74,21 @@ export const orderRules = [
     id: 'FONT_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'textGroup',
     theory: '排版层级一致性',
     detect: (arr, T, F, key) => {
-      const sizes = arr.map((n) => n.fontSize).filter((v) => v !== null);
+      const sized = arr.filter((n) => n.fontSize !== null);
+      const sizes = sized.map((n) => n.fontSize);
       const uniq = [...new Set(sizes.map((v) => r0(v)))];
       if (uniq.length > 1 && spread(sizes) > T.DIFF) {
-        return { n: arr.length, tag: key.split('|')[0], uniq, pt: arr[0]._pt };
+        /* 多数值 = 多数派；异常元素 = 偏离多数值者（定位串列举，≤3） */
+        const counts = {};
+        for (const v of sizes) { const k = r0(v); counts[k] = (counts[k] || 0) + 1; }
+        const mode = Number(Object.keys(counts).reduce((a, b) => (counts[a] >= counts[b] ? a : b)));
+        const outliers = sized.filter((n) => r0(n.fontSize) !== mode).slice(0, 3)
+          .map((n) => `${loc(n)}(${r0(n.fontSize)}px)`);
+        return { n: arr.length, tag: key.split('|')[0], uniq, pt: arr[0]._pt, outliers };
       }
       return null;
     },
-    message: (h) => `${h.n} 个同类 ${h.tag} 字号不一致: ${h.uniq.join('/')}px (容器 ${h.pt})`
+    message: (h) => `${h.n} 个同类 ${h.tag} 字号不一致: ${h.uniq.join('/')}px (容器 ${h.pt})${h.outliers.length ? '；异常: ' + h.outliers.join(', ') : ''}`
   },
   {
     id: 'COLOR_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'textGroup',
@@ -89,11 +96,17 @@ export const orderRules = [
     detect: (arr, T, F, key) => {
       const ckeys = [...new Set(arr.map((n) => `${n.fg[0] >> 4}-${n.fg[1] >> 4}-${n.fg[2] >> 4}`))];
       if (ckeys.length > 1) {
-        return { n: arr.length, tag: key.split('|')[0], hexes: [...new Set(arr.map((n) => hex(n.fg)))], pt: arr[0]._pt };
+        /* 多数色 = 出现最多者；偏离元素按定位串列举（≤3） */
+        const counts = {};
+        for (const n of arr) { const h = hex(n.fg); counts[h] = (counts[h] || 0) + 1; }
+        const mode = Object.keys(counts).reduce((a, b) => (counts[a] >= counts[b] ? a : b));
+        const outliers = arr.filter((n) => hex(n.fg) !== mode).slice(0, 3)
+          .map((n) => `${loc(n)}(${hex(n.fg)})`);
+        return { n: arr.length, tag: key.split('|')[0], hexes: [...new Set(arr.map((n) => hex(n.fg)))], pt: arr[0]._pt, outliers };
       }
       return null;
     },
-    message: (h) => `${h.n} 个同类 ${h.tag} 颜色不一致: ${h.hexes.join('/')}，应统一为同一颜色 (容器 ${h.pt})`
+    message: (h) => `${h.n} 个同类 ${h.tag} 颜色不一致: ${h.hexes.join('/')}，应统一为同一颜色 (容器 ${h.pt})${h.outliers.length ? '；偏离多数色: ' + h.outliers.join(', ') : ''}`
   },
   /* ---- 间距/系统化 ---- */
   {
@@ -171,10 +184,17 @@ export const orderRules = [
     theory: '字重层级一致性',
     detect: (arr, T, F, key) => {
       const ws = [...new Set(arr.map((n) => n.fw || 400))];
-      if (ws.length > 1) return { n: arr.length, tag: key.split('|')[0], ws, pt: arr[0]._pt };
+      if (ws.length > 1) {
+        const counts = {};
+        for (const n of arr) { const w = n.fw || 400; counts[w] = (counts[w] || 0) + 1; }
+        const mode = Number(Object.keys(counts).reduce((a, b) => (counts[a] >= counts[b] ? a : b)));
+        const outliers = arr.filter((n) => (n.fw || 400) !== mode).slice(0, 3)
+          .map((n) => `${loc(n)}(${n.fw || 400})`);
+        return { n: arr.length, tag: key.split('|')[0], ws, pt: arr[0]._pt, outliers };
+      }
       return null;
     },
-    message: (h) => `${h.n} 个同类 ${h.tag} 字重不一致: ${h.ws.join('/')} (容器 ${h.pt})`
+    message: (h) => `${h.n} 个同类 ${h.tag} 字重不一致: ${h.ws.join('/')} (容器 ${h.pt})${h.outliers.length ? '；异常: ' + h.outliers.join(', ') : ''}`
   },
   /* ---- 全局收敛（page 类） ---- */
   {

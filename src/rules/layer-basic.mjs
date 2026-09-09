@@ -9,7 +9,7 @@
  *   - message：由命中对象渲染为带 CSS 修复线索 + 理论依据的消息串（LLM 回流文本）
  */
 import { hex, contrastRatio, rgbToHsl, parseHex } from '../color.mjs';
-import { label, r0 } from '../engine/util.mjs';
+import { label, loc, r0 } from '../engine/util.mjs';
 
 export const basicRules = [
   /* ---- 视口/尺寸底线 ---- */
@@ -48,7 +48,7 @@ export const basicRules = [
       if (w >= T.MIN_W && h >= T.MIN_H) return { a, b, w: r0(w), h: r0(h), parent };
       return null;
     },
-    message: (h) => `${label(h.a)} 与 ${label(h.b)} 重叠 ${h.w}×${h.h}px (容器 ${h.parent})`
+    message: (h) => `${loc(h.a)} 与 ${loc(h.b)} 重叠 ${h.w}×${h.h}px (容器 ${h.parent})`
   },
   /* ---- 交互可用性 ---- */
   {
