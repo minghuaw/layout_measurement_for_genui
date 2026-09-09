@@ -145,6 +145,17 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 
 **消息工程**（贯穿五层）：消息一律带 CSS 级修复线索 + 理论依据（含建议色/建议值），如 `p.desc 文字 #ccc 对背景 #fff 对比度 1.61:1 (<4.5:1 WCAG AA)，建议改为 #5f5f5f`。
 
+**定位锚**（贯穿五层）：元素标签格式 `tag#id.cls[tid]`（tid = 首个 `data-test*`
+属性值，跨框架测试定位约定）；需要 pinpoint 的消息（分组一致性 / OVERLAP /
+GRADIENT_CONTRAST / IMG_BROKEN 等）追加 `“文本≤10”@y<px>` 定位串，分组规则
+列出**异常元素**（偏离多数派者，≤3 个）而非只给取值分布。示例（真实输出）：
+
+```
+[FONT_INCONSISTENT] 5 个同类 span 字号不一致: 13/11/38/17px (容器 div)；异常: span“磨耳朵星球”@y19(13px), span“0”@y177(38px), span“天”@y200(17px)
+```
+
+`[TYPE]` 行前缀解析不受影响 → compare.mjs / style_eval.mjs / 实验脚本零改动。
+
 ### 3.x 颜色核心库（src/color.mjs）【已实现】
 alpha 合成链、WCAG 亮度/对比度、建议色二分搜索、HSL、鲜艳度、面积归因（背景/文本/强调三角色制）、和声判定（30° 聚簇 + 三角最小环间距 ≥60°）。
 
@@ -197,7 +208,7 @@ Layers: L1=1 L2=1 L3=0 L4=0 L5=0
 |---|---|---|
 | good | 无（对照） | 0 |
 | overflow / overlap / mixed | 容器 500px+nowrap / 负 margin 重叠 / 混合 7 类 | 4 / 2 / 7 |
-| font / align / card / cramped / img-chaos | 字号、左缘、宽/圆角/padding、行高、缩略图 | 3 / 2 / 2 / 4 / 1 |
+| font / align / card / cramped / img-chaos | 字号、左缘、宽/圆角/padding、行高、缩略图 + 故意破图（`assets/missing.png`，触发 IMG_BROKEN + ASPECT_INCONSISTENT） | 3 / 2 / 2 / 4 / 3 |
 | ratio-chaos / void-band / sparse-card | 固定高混乱 / 150px 空白带 / min-height 空洞 | 5 / 3 / 5 |
 | contrast / color / palette-chaos | 低对比 / 异色+色板膨胀 / 60-30-10+和声+高饱和 | 9 / 9 / 7 |
 
@@ -292,12 +303,12 @@ lightweight_layout_eng/
 │  │                                    #   （默认 < config.json < METRICS_CONFIG < env）+ 零依赖校验器
 │  │
 │  ├── rules/                           # ★ 声明层："检查什么"——纯数据+谓词，无遍历无魔法数字
-│  │   ├── layer-basic.mjs              #   L1 基础规范 ×12
+│  │   ├── layer-basic.mjs              #   L1 基础规范 ×14
 │  │   ├── layer-order.mjs              #   L2 结构秩序 ×16
 │  │   ├── layer-rhythm.mjs             #   L3 空间节奏 ×12
 │  │   ├── layer-harmony.mjs            #   L4 色彩和谐 ×8
 │  │   ├── layer-refine.mjs             #   L5 质感精致 ×11（阴影/毛玻璃/动效/字阶…）
-│  │   └── index.mjs                    #   注册表：聚合导出 RULES（49 条）
+│  │   └── index.mjs                    #   注册表：聚合导出 RULES（61 条）
 │  │
 │  │
 │   ├── engine/                         # ★ 执行层："怎么检查"——通用机器，不认识具体规则
@@ -373,7 +384,7 @@ npm run golden                                      # Golden 基线对比（先�
 
 - **单样本结论**：每类缺陷仅 1 个夹具、temperature=0 单次运行，无重复稳健性
 - **阈值经验值**：60-30-10/96px/0.3 等为工程估值，未做敏感度标定（配置层落地后可低成本标定）
-- **HSL 色彩空间**：感知均匀性弱于 OKLCH；图片内文字、渐变上文字不可测（需截图像素分析）
+- **HSL 色彩空间**：感知均匀性弱于 OKLCH；图片内文字不可测（需截图像素分析）。渐变上文字已可测（GRADIENT_CONTRAST：linear-gradient stop 解析 + 沿继承链向下传递，不透明纯底截断；radial/多重背景仍不可测）。延后项与检测技法（滚动状态/裁切/交互可供性）见 [BACKLOG.md](BACKLOG.md)
 - **模型瓶颈**：负 margin 重叠、44px 点击区、min-height 空洞在 8B 上残留
 - **多轮闭环**：当前均单轮；"修复→再度量→再修复"迭代器与终止条件是下一步
 - **维度信源**：新增 22 条的判据来源为 Refactoring UI 战术目录、Tailwind 阴影/毛玻璃刻度、WCAG 2.2（Focus Visible/F78）、Ngo et al. 2000 美学因子
