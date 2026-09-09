@@ -24,7 +24,10 @@ export const DEFAULTS = {
     OVERFLOW:          { enabled: true, thresholds: {} },
     ELEMENT_OVERFLOW:  { enabled: true, thresholds: { EDGE_TOL: 1 } },
     TEXT_CLIP:         { enabled: true, thresholds: { TOL: 1 } },
-    OVERLAP:           { enabled: true, thresholds: { MIN_W: 0.5, MIN_H: 0.5 } },
+    /* MIN_AREA_PCT: 交叠面积占较小元素面积比门槛（工程估值，可标定）——
+       挑战集实测：负 margin 紧贴设计 ≤6.8%，真实缺陷 ≥15.5%，取 10% 分界
+       EXEMPT_POS: 定位分层豁免名单——absolute/fixed 交叠视为有意分层不报 */
+    OVERLAP:           { enabled: true, thresholds: { MIN_W: 0.5, MIN_H: 0.5, MIN_AREA_PCT: 0.1, EXEMPT_POS: ['absolute', 'fixed'] } },
     TAP_TARGET:        { enabled: true, thresholds: { TAP_MIN: 44 } },
     CONTRAST_LOW:      { enabled: true, thresholds: { RATIO_NORMAL: 4.5, RATIO_LARGE: 3, LARGE_FS: 24 } },
     MIN_FONT_SIZE:     { enabled: true, thresholds: { MIN_FS: 10 } },

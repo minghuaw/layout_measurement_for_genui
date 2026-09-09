@@ -123,10 +123,10 @@ const COLLECT = (vw) => {
       if (SKIP.has(child.tagName)) continue;
       const cs = getComputedStyle(child);
       if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-      const kids = walk(child, parentBg);
       const r = child.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) {
-        out.push(...kids);
+        /* 零尺寸节点：自身不入树，子节点上提（hoist），背景链不变 */
+        out.push(...walk(child, parentBg));
         continue;
       }
       /* 有效背景/前景：自身背景 alpha>0 则叠加父级，否则继承父级；
@@ -134,6 +134,9 @@ const COLLECT = (vw) => {
       const own = parseCs(cs.backgroundColor);
       const bgOwn = !!own && own.a > 0;
       const bg = bgOwn ? blend(own, parentBg) : parentBg;
+      /* 背景链逐层向下传递：子树以本节点合成后的有效背景为底（而非 parentBg），
+         否则彩色容器内的文本会被误算成祖先底色（如蓝底横幅上白字被算成白底） */
+      const kids = walk(child, bg);
       const fgRaw = parseCs(cs.color);
       const fg = fgRaw ? blend(fgRaw, bg) : bg;
       const shadow = parseShadow(cs.boxShadow);

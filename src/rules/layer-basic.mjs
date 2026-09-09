@@ -40,15 +40,22 @@ export const basicRules = [
   },
   {
     id: 'OVERLAP', layer: 'L1', severity: 'error', runner: 'pair',
-    theory: '元素矩形互斥',
+    theory: '元素矩形互斥（区分有意分层与意外碰撞）',
     detect: (a, b, T, F, parent) => {
+      /* 豁免一：定位分层——任一兄弟 absolute/fixed 即视为有意分层
+         （背景层/渐变遮罩/角标/FAB/悬浮组件），布局语义上不算缺陷 */
+      if (T.EXEMPT_POS.includes(a.pos) || T.EXEMPT_POS.includes(b.pos)) return null;
       const ra = a.rect, rb = b.rect;
       const w = Math.min(ra.x + ra.w, rb.x + rb.w) - Math.max(ra.x, rb.x);
       const h = Math.min(ra.y + ra.h, rb.y + rb.h) - Math.max(ra.y, rb.y);
-      if (w >= T.MIN_W && h >= T.MIN_H) return { a, b, w: r0(w), h: r0(h), parent };
-      return null;
+      if (w < T.MIN_W || h < T.MIN_H) return null;
+      /* 豁免二：浅交叠——交叠面积占较小元素面积比例过低时视为
+         "视觉紧贴"设计（负 margin 微堆叠），不构成可用性缺陷 */
+      const ratio = (w * h) / Math.min(ra.w * ra.h, rb.w * rb.h);
+      if (ratio < T.MIN_AREA_PCT) return null;
+      return { a, b, w: r0(w), h: r0(h), ratio: Math.round(ratio * 100), parent };
     },
-    message: (h) => `${label(h.a)} 与 ${label(h.b)} 重叠 ${h.w}×${h.h}px (容器 ${h.parent})`
+    message: (h) => `${label(h.a)} 与 ${label(h.b)} 重叠 ${h.w}×${h.h}px 占较小元素 ${h.ratio}% (容器 ${h.parent})`
   },
   /* ---- 交互可用性 ---- */
   {
