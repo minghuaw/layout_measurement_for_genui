@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const DIR = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(DIR, '..');
 const SNAP = join(DIR, 'golden.snapshot.json');
-const NAMES = ['good', 'overflow', 'overlap', 'mixed', 'font-chaos', 'align-chaos', 'card-chaos', 'cramped', 'img-chaos', 'ratio-chaos', 'void-band', 'sparse-card', 'contrast-chaos', 'color-chaos', 'palette-chaos'];
+const NAMES = ['good', 'overflow', 'overlap', 'mixed', 'font-chaos', 'align-chaos', 'card-chaos', 'cramped', 'img-chaos', 'ratio-chaos', 'void-band', 'sparse-card', 'contrast-chaos', 'color-chaos', 'palette-chaos', 'fp-absolute-layering', 'fp-badge-overlay', 'fp-negative-margin-stack', 'fp-hero-overlay', 'fp-decoration-layer', 'fp-fab', 'fp-gradient-overlay-card'];
 
 function parseIssues(path) {
   const lines = readFileSync(path, 'utf8').split('\n');

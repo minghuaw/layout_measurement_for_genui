@@ -27,6 +27,9 @@ siblings in the same container + any non-static positioned element** whose
 rect intersects ≥30% of the image rect, with covering-element effective
 background alpha > ~0.5 (translucent scrims auto-exempt). COLLECT already
 captures rect/position/background alpha — no new collection needed.
+**Acceptance fixtures**: `fixtures/fp-*.html` (7, from the OVERLAP_challenge
+set) — golden-pinned known false positives; when this refinement lands, the
+fp-* OVERLAP entries dropping from the snapshot diff IS the verification.
 
 ### A2. IMG_CLIPPED (image cut by overflow) — low priority, high false-positive risk
 `object-fit: cover` intentional cropping is the mainstream pattern (heroes,

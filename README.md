@@ -85,7 +85,7 @@ npm test          # 配置层 14 项用例（tests/config.test.mjs）
 npm run golden    # Golden 基线对比（15 夹具计数 + type 序列，需先 npm run collect）
 ```
 
-Golden 基线：`0/4/2/7/3/2/2/4/3/5/3/5/9/9/7`（good 恒为 0）。
+Golden 基线：`0/4/2/7/3/2/2/4/3/5/3/5/9/9/7/8/12/3/3/7/3/33`（good 恒为 0；fp-* 为 OVERLAP 已知误报挑战夹具）。
 
 ## 修复实验与风格转换
 

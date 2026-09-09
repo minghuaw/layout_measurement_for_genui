@@ -92,5 +92,88 @@
     "COLOR_DOMINANCE",
     "GARISH_SATURATION",
     "HARMONY_OFF"
+  ],
+  "fp-absolute-layering": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "COLOR_INCONSISTENT"
+  ],
+  "fp-badge-overlay": [
+    "TEXT_CLIP",
+    "TEXT_CLIP",
+    "TEXT_CLIP",
+    "TEXT_CLIP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW"
+  ],
+  "fp-negative-margin-stack": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP"
+  ],
+  "fp-hero-overlay": [
+    "OVERLAP",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW"
+  ],
+  "fp-decoration-layer": [
+    "ELEMENT_OVERFLOW",
+    "ELEMENT_OVERFLOW",
+    "TEXT_CLIP",
+    "TEXT_CLIP",
+    "OVERLAP",
+    "OVERLAP",
+    "GLASS_NO_BLUR"
+  ],
+  "fp-fab": [
+    "OVERLAP",
+    "SPACING",
+    "SHADOW_OVERKILL"
+  ],
+  "fp-gradient-overlay-card": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "VOID_BAND",
+    "VOID_BAND",
+    "VOID_BAND",
+    "VOID_BAND",
+    "CARD_VOID"
   ]
 }

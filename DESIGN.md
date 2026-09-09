@@ -211,6 +211,7 @@ Layers: L1=1 L2=1 L3=0 L4=0 L5=0
 | good | 无（对照） | 0 |
 | overflow / overlap / mixed | 容器 500px+nowrap / 负 margin 重叠 / 混合 7 类 | 4 / 2 / 7 |
 | font / align / card / cramped / img-chaos | 字号、左缘、宽/圆角/padding、行高、缩略图 + 故意破图（`assets/missing.png`，触发 IMG_BROKEN + ASPECT_INCONSISTENT） | 3 / 2 / 2 / 4 / 3 |
+| fp-*（7 个挑战夹具，源自 OVERLAP_challenge 集） | **合法叠层设计**：absolute 分层 / 角标 / 负 margin 堆叠 / hero scrim / 装饰层 / FAB / 渐变蒙版卡——OVERLAP 已知误报，A1 精化验收材料（见 BACKLOG.md） | 8 / 12 / 3 / 3 / 7 / 3 / 33 |
 | ratio-chaos / void-band / sparse-card | 固定高混乱 / 150px 空白带 / min-height 空洞 | 5 / 3 / 5 |
 | contrast / color / palette-chaos | 低对比 / 异色+色板膨胀 / 60-30-10+和声+高饱和 | 9 / 9 / 7 |
 

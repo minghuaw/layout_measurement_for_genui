@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>装饰色块层-背景装饰+前景内容</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #222; padding-bottom: 12px; }
+.header { padding: 16px; background: #fff; }
+.header h1 { font-size: 20px; }
+.header p { margin-top: 4px; font-size: 13px; color: #5f6368; }
+
+/* 场景说明：每个 section 内放一个 absolute 定位的装饰色块（圆形/方块），
+   与实际内容是同父兄弟，矩形重叠。这是 Material Design 和
+   品牌设计页常用的装饰手法。 */
+.feature-list { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.feature { position: relative; border-radius: 12px; overflow: hidden; }
+.deco-circle { position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(79, 140, 255, .12); z-index: 0; }
+.feature-body { position: relative; z-index: 1; padding: 16px 14px; background: #fff; border-radius: 12px; }
+.feature-body .icon-row { display: flex; align-items: center; gap: 10px; }
+.feature-body .icon-box { width: 40px; height: 40px; border-radius: 8px; background: #eef4ff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.feature-body h3 { font-size: 15px; }
+.feature-body p { margin-top: 6px; font-size: 13px; color: #6b7280; line-height: 1.4; }
+
+.card-list { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.card { background: #fff; border-radius: 12px; padding: 14px; }
+.card-head { display: flex; gap: 12px; }
+.thumb { width: 64px; height: 64px; border-radius: 8px; background: linear-gradient(135deg, #4f8cff, #8fc0ff); flex-shrink: 0; }
+.card-info { flex: 1; min-width: 0; }
+.card-info h3 { font-size: 15px; line-height: 1.4; }
+.card-info .desc { margin-top: 6px; font-size: 13px; color: #6b7280; line-height: 1.4; }
+.card-foot { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+.price { color: #d93036; font-size: 17px; font-weight: 600; }
+.price small { font-size: 12px; font-weight: 400; }
+.btn { height: 44px; padding: 0 18px; border: none; border-radius: 8px; background: #2563eb; color: #fff; font-size: 14px; }
+
+.tabbar { margin-top: 12px; display: flex; background: #fff; border-radius: 12px; }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 56px; text-decoration: none; color: #6b7280; font-size: 10px; }
+.tabbar .icon { font-size: 18px; }
+</style>
+</head>
+<body>
+<header class="header">
+  <h1>功能中心</h1>
+  <p>探索 App 的核心功能</p>
+</header>
+
+<div class="feature-list">
+  <div class="feature">
+    <div class="deco-circle"></div>
+    <div class="feature-body">
+      <div class="icon-row">
+        <div class="icon-box">🎵</div>
+        <h3>智能推荐</h3>
+      </div>
+      <p>基于你的偏好，精准推荐感兴趣的内容。</p>
+    </div>
+  </div>
+  <div class="feature">
+    <div class="deco-circle"></div>
+    <div class="feature-body">
+      <div class="icon-row">
+        <div class="icon-box">📊</div>
+        <h3>数据洞察</h3>
+      </div>
+      <p>可视化你的使用习惯，帮你更好地管理时间。</p>
+    </div>
+  </div>
+</div>
+
+<main class="card-list">
+  <article class="card">
+    <div class="card-head">
+      <div class="thumb"></div>
+      <div class="card-info">
+        <h3>无线降噪耳机</h3>
+        <p class="desc">主动降噪，30 小时续航，沉浸式音乐体验。</p>
+      </div>
+    </div>
+    <div class="card-foot">
+      <div class="price"><small>¥</small>299</div>
+      <button class="btn">查看详情</button>
+    </div>
+  </article>
+  <article class="card">
+    <div class="card-head">
+      <div class="thumb"></div>
+      <div class="card-info">
+        <h3>智能手环 Pro</h3>
+        <p class="desc">心率监测、血氧检测，14 天超长续航。</p>
+      </div>
+    </div>
+    <div class="card-foot">
+      <div class="price"><small>¥</small>199</div>
+      <button class="btn">查看详情</button>
+    </div>
+  </article>
+</main>
+
+<nav class="tabbar">
+  <a href="#"><span class="icon">🏠</span><span>首页</span></a>
+  <a href="#"><span class="icon">🧭</span><span>发现</span></a>
+  <a href="#"><span class="icon">☆</span><span>收藏</span></a>
+  <a href="#"><span class="icon">⚙</span><span>我的</span></a>
+</nav>
+</body>
+</html>
