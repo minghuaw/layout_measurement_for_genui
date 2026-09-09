@@ -95,7 +95,7 @@ export const basicRules = [
     theory: '图像加载失败（complete && naturalWidth===0）——破图直接影响可用性；懒加载未触发时 complete=false 天然排除',
     when: (n) => n.imgBroken,
     detect: (n) => (n.imgBroken ? { n } : null),
-    message: (h) => `${loc(h.n)}${h.n.alt ? '“' + h.n.alt + '”' : ''} 图像加载失败 (src …${h.n.imgSrcTail}) — 修复 URL；若资源不存在，改用 alt 占位（色块 + “${h.n.alt || '语义文本'}”使其美观可读）`
+    message: (h) => `${loc(h.n)}${h.n.alt ? '“' + h.n.alt + '”' : ''} 图像加载失败 (src …${h.n.imgSrcTail}) — 尝试修复 URL（检查资源是否存在/路径拼写）；若资源不存在，改用 alt 占位（色块 + “${h.n.alt || '语义文本'}”使其美观可读）`
   },
   {
     id: 'CHART_TEXT_CONTRAST', layer: 'L1', severity: 'warn', runner: 'page',
