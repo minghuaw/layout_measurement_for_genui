@@ -101,6 +101,7 @@ export function buildFacts(data, cfg) {
   }
 
   return {
+    tree: data.tree,
     allNodes,
     containers,
     textGroups: [...textGroups.entries()],

@@ -7,7 +7,7 @@ losses. Historical note: the open ideas scattered in `steven/NOTES.md`
 
 ## A. Deferred rule ideas
 
-### A1. OVERLAP refinement (precise image-covered detection)
+### A1. OVERLAP refinement (precise image-covered detection) — IMPLEMENTED as `IMG_COVERED` (L1, layer-basic.mjs): solid-opaque covers (bgOwn, non-gradient, alpha>=0.5) of >=30% of an img, same-container later/positioned siblings + global fixed/sticky, ancestor-excluded. Remaining gap: cover descendants, stacking contexts, scroll-state (see B).
 Basic geometric overlap is already covered by the existing `OVERLAP` rule
 (L1, same-container sibling pairs) — the toilet baseline's
 `img 与 div 重叠 375×176px` was its hit. Three structural blind spots remain:

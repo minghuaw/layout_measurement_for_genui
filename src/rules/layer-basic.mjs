@@ -9,7 +9,7 @@
  *   - message：由命中对象渲染为带 CSS 修复线索 + 理论依据的消息串（LLM 回流文本）
  */
 import { hex, contrastRatio, rgbToHsl, parseHex } from '../color.mjs';
-import { label, loc, r0 } from '../engine/util.mjs';
+import { label, loc, r0, pct } from '../engine/util.mjs';
 
 export const basicRules = [
   /* ---- 视口/尺寸底线 ---- */
@@ -49,6 +49,51 @@ export const basicRules = [
       return null;
     },
     message: (h) => `${loc(h.a)} 与 ${loc(h.b)} 重叠 ${h.w}×${h.h}px (容器 ${h.parent})`
+  },
+  {
+    id: 'IMG_COVERED', layer: 'L1', severity: 'error', runner: 'page',
+    theory: '图像被不透明元素大面积遮挡（内容不可见）。候选 = 同容器更晚兄弟（DOM 序绘制在上）+ 更早的定位兄弟（定位绘制在 static 之上）+ 全局 fixed/sticky；祖先排除（包含≠遮挡）；渐变 scrim 与半透明元素豁免（合法设计）。已知边界见 BACKLOG.md A1',
+    detect: (F, T) => {
+      const area = (r) => Math.max(0, r.w) * Math.max(0, r.h);
+      const interFrac = (a, b) => {
+        const w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+        const h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+        return (w <= 0 || h <= 0) ? 0 : (w * h) / Math.max(1, area(a));
+      };
+      const isSolid = (c) => c.bgOwn && !c.gradient && c.bgOwnAlpha >= T.COVER_ALPHA;
+      const best = new Map();
+      const imgs = [];
+      const covers = [];
+      const test = (img, cover, anc) => {
+        if (cover === img || anc.has(cover) || !isSolid(cover)) return;
+        const frac = interFrac(img.rect, cover.rect);
+        if (frac < T.MIN_COVER) return;
+        const cur = best.get(img);
+        if (!cur || frac > cur.frac) best.set(img, { img, cover, frac });
+      };
+      const dfs = (nodes, anc) => {
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i];
+          if (n.tag === 'img') {
+            imgs.push({ n, anc });
+            /* 同容器候选：更晚兄弟（DOM 序绘制在上）+ 更早的定位兄弟（定位绘制在 static 之上） */
+            for (let j = i + 1; j < nodes.length; j++) test(n, nodes[j], anc);
+            for (let j = 0; j < i; j++) if (nodes[j].pos !== 'static') test(n, nodes[j], anc);
+          }
+          if (n.pos === 'fixed' || n.pos === 'sticky') covers.push(n);
+          const next = new Set(anc);
+          next.add(n);
+          dfs(n.children, next);
+        }
+      };
+      dfs(F.tree, new Set());
+      /* 全局 fixed/sticky 候选：排除 img 祖先后逐对测试 */
+      for (const { n, anc } of imgs) {
+        for (const c of covers) test(n, c, anc);
+      }
+      return [...best.values()];
+    },
+    message: (h) => `${loc(h.img)}${h.img.alt ? '“' + h.img.alt + '”' : ''} 被 ${loc(h.cover)} 遮挡 ${pct(h.frac)} — 移开/移动遮挡元素或调整层级；若为有意设计请忽略`
   },
   /* ---- 交互可用性 ---- */
   {
