@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图文排布错误-信息面板压住图片</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #222; padding-bottom: 12px; }
+.header { padding: 16px; background: #fff; }
+.header h1 { font-size: 20px; }
+.header p { margin-top: 4px; font-size: 13px; color: #5f6368; }
+
+/* 缺陷植入：信息面板 margin-left: -120px 直接压在 160px 宽的配图上，
+   交叠占比较小元素（图片）约 75%，图文互斥关系被破坏，属真实缺陷 */
+.featured { margin: 12px; background: #fff; border-radius: 12px; padding: 14px; }
+.media-row { display: flex; }
+.media-thumb { width: 160px; height: 120px; border-radius: 8px; background: #dbeafe; flex-shrink: 0; }
+.media-info { flex: 1; min-width: 0; margin-left: -120px; padding: 12px; background: #fff; border-radius: 8px; }
+.media-info h2 { font-size: 16px; line-height: 1.4; }
+.media-info p { margin-top: 6px; font-size: 13px; color: #6b7280; line-height: 1.4; }
+.media-info .meta { margin-top: 8px; font-size: 12px; color: #5f6368; }
+
+.card-list { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.card { background: #fff; border-radius: 12px; padding: 14px; }
+.card-head { display: flex; gap: 12px; }
+.thumb { width: 64px; height: 64px; border-radius: 8px; background: #dbeafe; flex-shrink: 0; }
+.card-info { flex: 1; min-width: 0; }
+.card-info h3 { font-size: 15px; line-height: 1.4; }
+.card-info .desc { margin-top: 6px; font-size: 13px; color: #6b7280; line-height: 1.4; }
+.card-foot { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+.price { color: #d93036; font-size: 17px; font-weight: 600; }
+.price small { font-size: 12px; font-weight: 400; }
+.btn { height: 44px; padding: 0 18px; border: none; border-radius: 8px; background: #2563eb; color: #fff; font-size: 14px; }
+
+.tabbar { margin-top: 12px; display: flex; background: #fff; border-radius: 12px; }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 56px; text-decoration: none; color: #6b7280; font-size: 10px; }
+.tabbar .icon { font-size: 18px; }
+</style>
+</head>
+<body>
+<header class="header">
+  <h1>热门内容</h1>
+  <p>精选值得一读的文章</p>
+</header>
+<section class="featured">
+  <div class="media-row">
+    <div class="media-thumb"></div>
+    <div class="media-info">
+      <h2>2026 年前端开发趋势展望</h2>
+      <p>从 AI 辅助编码到边缘计算，聊聊接下来会发生什么。</p>
+      <div class="meta">技术 · 5 分钟阅读</div>
+    </div>
+  </div>
+</section>
+<main class="card-list">
+  <article class="card">
+    <div class="card-head">
+      <div class="thumb"></div>
+      <div class="card-info">
+        <h3>如何设计一个好看又好用的卡片</h3>
+        <p class="desc">从间距、圆角、阴影三个维度拆解卡片设计。</p>
+      </div>
+    </div>
+    <div class="card-foot">
+      <div class="price"><small>¥</small>19</div>
+      <button class="btn">查看详情</button>
+    </div>
+  </article>
+  <article class="card">
+    <div class="card-head">
+      <div class="thumb"></div>
+      <div class="card-info">
+        <h3>用 CSS 画出好看的几何图案</h3>
+        <p class="desc">从渐变到 conic-gradient，探索纯 CSS 的视觉表现力。</p>
+      </div>
+    </div>
+    <div class="card-foot">
+      <div class="price"><small>¥</small>25</div>
+      <button class="btn">查看详情</button>
+    </div>
+  </article>
+</main>
+<nav class="tabbar">
+  <a href="#"><span class="icon">🏠</span><span>首页</span></a>
+  <a href="#"><span class="icon">🧭</span><span>发现</span></a>
+  <a href="#"><span class="icon">☆</span><span>收藏</span></a>
+  <a href="#"><span class="icon">⚙</span><span>我的</span></a>
+</nav>
+</body>
+</html>
