@@ -83,7 +83,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | CONTRAST_LOW | 有效前景/背景对比度 < 4.5:1（≥24px 大字 3:1），消息含建议色；渐变背景让位 GRADIENT_CONTRAST | 已实现 |
 | GRADIENT_CONTRAST | 渐变背景上文字对比度按最不利 stop 校正（stop 沿继承链向下传递，不透明纯底截断） | 新增 |
 | IMG_BROKEN | 图像加载失败（complete && naturalWidth===0），建议修 URL 或改 alt 占位（懒加载天然排除） | 新增 |
-| IMG_COVERED | 图像被不透明元素遮挡 ≥30% 面积（同容器后续兄弟/定位元素/全局 fixed+sticky；祖先排除；渐变 scrim 与半透明豁免） | 新增 |
+| MEDIA_COVERED | 富媒体（img/video/canvas/svg/iframe/object/echarts 容器 + url 背景图容器）被不透明元素遮挡 ≥30% 面积（同容器后续兄弟/定位元素/全局 fixed+sticky；祖先排除；渐变 scrim 与半透明豁免） | 新增 |
 | CHART_TEXT_CONTRAST | data-echarts 内图表文字（axisLabel/textStyle）对图表容器有效背景对比 < 4.5:1（此前图表配色不入规则） | 新增 |
 | CHART_DEGENERATE | 图表容器高度塌陷（宽≥150px 时高<40px，%高度链断） | 新增 |
 | FOCUS_INVISIBLE | interactive 元素显式 `outline:none` 且无 `:focus-visible` 替代（WCAG 2.4.7/F78，需 CSSOM 扫描） | 新增 |

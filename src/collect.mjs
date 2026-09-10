@@ -416,6 +416,9 @@ const COLLECT = (vw) => {
       const isImg = child.tagName === 'IMG';
       const imgBroken = isImg ? (child.complete && child.naturalWidth === 0) : false;
       const imgSrcTail = isImg ? (child.getAttribute('src') || '').slice(-24) : '';
+      /* 富媒体背景容器（url 背景图）——MEDIA_COVERED 覆盖判定输入
+         （修复模型惯用 img→backgroundImage 重构，纯 img 判定会漏检重构后页面） */
+      const bgUrl = /url\(/i.test(cs.backgroundImage || '');
       /* 图表文字前景（blend 到容器有效背景上）——图表文字对比度规则输入 */
       let chartTextFgs = null;
       let chartTopRisk = null;
@@ -460,6 +463,7 @@ const COLLECT = (vw) => {
         ord: ordMap[tagKey],
         imgBroken,
         imgSrcTail,
+        bgUrl,
         gradStops: gradStops || null,
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },

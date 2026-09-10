@@ -1,5 +1,6 @@
 node_modules/
 reports/
+fixtures/*.report.txt
 
 # Playwright
 /test-results/
