@@ -39,10 +39,11 @@ export function formatReport(name, data, issues, configEcho) {
       }
       lines.push(`  [${is.type}] ${is.msg}`);
     }
-    const counts = {};
-    for (const is of issues) counts[is.layer] = (counts[is.layer] || 0) + 1;
-    lines.push(`Layers: ${Object.keys(LAYERS).map((l) => `${l}=${counts[l] || 0}`).join(' ')}`);
   }
+  /* 分层健康度行始终输出（含 0 issue 情形，此前误置于 else 分支内） */
+  const counts = {};
+  for (const is of issues) counts[is.layer] = (counts[is.layer] || 0) + 1;
+  lines.push(`Layers: ${Object.keys(LAYERS).map((l) => `${l}=${counts[l] || 0}`).join(' ')}`);
   return lines.join('\n') + '\n';
 }
 
