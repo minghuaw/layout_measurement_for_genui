@@ -6,13 +6,15 @@
 export const r0 = (n) => Math.round(n);
 /** 数组极差 max-min（≥2 元素才有意义；一致性规则的核心统计量） */
 export const spread = (arr) => (arr.length >= 2 ? Math.max(...arr) - Math.min(...arr) : 0);
-/** 节点标签 "tag#id.cls[tid]"（报告树与消息文案共用；tid = data-test* 锚点值） */
+/** 节点标签 "tag#id.cls[tid]#ord"（报告树与消息文案共用；tid = data-test* 锚点值，
+ *  ord = 同标签渲染兄弟序号 —— 对应 .map() 迭代序，源码可对应） */
 export const label = (n) =>
-  n.tag + (n.id ? '#' + n.id : '') + (n.cls ? '.' + n.cls : '') + (n.tid ? '[' + n.tid + ']' : '');
-/** 元素定位串：label + 文本锚（≤10 字） + y 坐标 —— ISSUE 消息 pinpoint 元素用 */
+  n.tag + (n.id ? '#' + n.id : '') + (n.cls ? '.' + n.cls : '') + (n.tid ? '[' + n.tid + ']' : '') + (n.ord ? '#' + n.ord : '');
+/** 元素定位串：label + 文本锚（≤10 字）——全部为源码可对应锚点（文本/testid/类名/序号）；
+ *  像素坐标不进消息（生成模型只见源码不见渲染，几何信息在事实树中查询） */
 export const loc = (n) => {
   const t = (n.text || '').replace(/\s+/g, ' ').trim().slice(0, 10);
-  return label(n) + (t ? '“' + t + '”' : '') + '@y' + r0(n.rect.y);
+  return label(n) + (t ? '“' + t + '”' : '');
 };
 /** 比率 → 百分数串（Palette 行 / 面积占比消息） */
 export const pct = (v) => Math.round(v * 100) + '%';

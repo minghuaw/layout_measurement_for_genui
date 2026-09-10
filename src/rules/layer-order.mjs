@@ -145,16 +145,20 @@ export const orderRules = [
     theory: '圆角应落在设计刻度（Tailwind rounded 刻度）',
     detect: (F, T) => {
       const off = {};
+      const ex = [];
       for (const n of F.allNodes) {
         const r = n.radius || 0;
         if (r < 1) continue;
-        if (!T.SCALE.some((s) => Math.abs(s - r) <= 1)) off[r0(r)] = (off[r0(r)] || 0) + 1;
+        if (!T.SCALE.some((s) => Math.abs(s - r) <= 1)) {
+          off[r0(r)] = (off[r0(r)] || 0) + 1;
+          if (ex.length < 3) ex.push(`${loc(n)}(${r0(r)}px)`);
+        }
       }
       const distinct = Object.keys(off);
-      if (distinct.length >= T.MIN_DISTINCT) return { distinct, total: Object.values(off).reduce((a, b) => a + b, 0) };
+      if (distinct.length >= T.MIN_DISTINCT) return { distinct, total: Object.values(off).reduce((a, b) => a + b, 0), ex };
       return null;
     },
-    message: (h, T) => `出现 ${h.distinct.length} 种刻度外圆角 (${h.distinct.join('/')}px，共 ${h.total} 处)，应收敛到设计刻度 ${T.SCALE.join('/')}`
+    message: (h, T) => `出现 ${h.distinct.length} 种刻度外圆角 (${h.distinct.join('/')}px，共 ${h.total} 处)，应收敛到设计刻度 ${T.SCALE.join('/')}；如: ${h.ex.join(', ')}`
   },
   /* ---- 边框与字重 ---- */
   {

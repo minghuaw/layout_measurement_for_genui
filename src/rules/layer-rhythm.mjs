@@ -4,7 +4,7 @@
  * 语义：留白与比例（不违规但"不舒服"）。判定对象为空白带、卡片饱满度、
  *   宽高比、行/屏幕密度、左右视觉重量；多为从宽阈值（宁可漏报不可误报）。
  */
-import { label, r0, spread, pct } from '../engine/util.mjs';
+import { label, loc, r0, spread, pct } from '../engine/util.mjs';
 
 /** collectTextNodes —— 递归收集子树内所有带文本的节点（CARD_VOID 内容包络计算用） */
 function collectTextNodes(n, out) {
@@ -25,6 +25,7 @@ export const rhythmRules = [
     theory: '卡片内容饱满度',
     detect: (g, T) => {
       let voidCount = 0;
+      const voids = [];
       for (const item of g.items) {
         const texts = [];
         collectTextNodes(item, texts);
@@ -35,12 +36,13 @@ export const rhythmRules = [
         const bottomGap = item.rect.y + item.rect.h - bottom;
         if (contentH / item.rect.h < T.RATIO || (bottomGap >= T.BOTTOM && bottomGap >= item.rect.h * T.BOTTOM_PCT)) {
           voidCount++;
+          if (voids.length < 3) voids.push(loc(item));
         }
       }
-      if (voidCount >= 2) return { voidCount, total: g.items.length, key: g.key, parent: g.parent };
+      if (voidCount >= 2) return { voidCount, total: g.items.length, key: g.key, parent: g.parent, voids };
       return null;
     },
-    message: (h) => `${h.voidCount}/${h.total} 个 ${h.key} 内容占比过低（大面积空白）(容器 ${h.parent})`
+    message: (h) => `${h.voidCount}/${h.total} 个 ${h.key} 内容占比过低（大面积空白）(容器 ${h.parent})${h.voids.length ? '；如: ' + h.voids.join(', ') : ''}`
   },
   /* ---- 比例 ---- */
   {
@@ -49,11 +51,16 @@ export const rhythmRules = [
     detect: (g, T) => {
       const ratios = g.items.map((n) => n.rect.h / n.rect.w);
       if (spread(ratios) > T.SPREAD) {
-        return { n: g.items.length, key: g.key, ratios: ratios.map((v) => v.toFixed(2)), parent: g.parent };
+        /* 偏离中位数最远的成员定位串（≤3），便于源码定位 */
+        const rs = [...ratios].sort((a, b) => a - b);
+        const med = rs.length % 2 ? rs[(rs.length - 1) / 2] : (rs[rs.length / 2 - 1] + rs[rs.length / 2]) / 2;
+        const sorted = [...g.items].sort((a, b) => Math.abs(b.rect.h / b.rect.w - med) - Math.abs(a.rect.h / a.rect.w - med));
+        const outliers = sorted.slice(0, 3).map((n) => `${loc(n)}(${(n.rect.h / n.rect.w).toFixed(2)})`);
+        return { n: g.items.length, key: g.key, ratios: ratios.map((v) => v.toFixed(2)), parent: g.parent, outliers };
       }
       return null;
     },
-    message: (h) => `${h.n} 个 ${h.key} 宽高比不一致: ${h.ratios.join('/')} (容器 ${h.parent})`
+    message: (h) => `${h.n} 个 ${h.key} 宽高比不一致: ${h.ratios.join('/')} (容器 ${h.parent})${h.outliers.length ? '；偏离: ' + h.outliers.join(', ') : ''}`
   },
   {
     id: 'ASPECT_EXTREME', layer: 'L3', severity: 'warn', runner: 'listGroup',
@@ -61,11 +68,12 @@ export const rhythmRules = [
     detect: (g, T) => {
       const extremes = g.items.filter((n) => n.rect.h / n.rect.w > T.MAX || n.rect.h / n.rect.w < T.MIN);
       if (extremes.length) {
-        return { count: extremes.length, key: g.key, ratios: extremes.map((n) => (n.rect.h / n.rect.w).toFixed(2)), parent: g.parent };
+        const members = extremes.slice(0, 3).map((n) => `${loc(n)}(${(n.rect.h / n.rect.w).toFixed(2)})`);
+        return { count: extremes.length, key: g.key, ratios: extremes.map((n) => (n.rect.h / n.rect.w).toFixed(2)), parent: g.parent, members };
       }
       return null;
     },
-    message: (h) => `${h.count} 个 ${h.key} 宽高比失调: ${h.ratios.join('/')} (容器 ${h.parent})`
+    message: (h) => `${h.count} 个 ${h.key} 宽高比失调: ${h.ratios.join('/')} (容器 ${h.parent})${h.members.length ? '；如: ' + h.members.join(', ') : ''}`
   },
   {
     id: 'IMG_SIZE_INCONSISTENT', layer: 'L3', severity: 'warn', runner: 'listGroup',
@@ -81,11 +89,12 @@ export const rhythmRules = [
         if (t.length) thumbs.push(t[0]);
       }
       if (thumbs.length >= 2 && spread(thumbs.map((n) => n.rect.w)) > T.DIFF) {
-        return { n: g.items.length, key: g.key, thumbs: thumbs.map((n) => r0(n.rect.w)) };
+        const members = thumbs.slice(0, 3).map((n) => `${loc(n)}(${r0(n.rect.w)}px)`);
+        return { n: g.items.length, key: g.key, thumbs: thumbs.map((n) => r0(n.rect.w)), members };
       }
       return null;
     },
-    message: (h) => `${h.n} 个 ${h.key} 的缩略图尺寸不一致: ${h.thumbs.join('/')}px`
+    message: (h) => `${h.n} 个 ${h.key} 的缩略图尺寸不一致: ${h.thumbs.join('/')}px${h.members.length ? '；如: ' + h.members.join(', ') : ''}`
   },
   {
     id: 'LINE_LENGTH', layer: 'L3', severity: 'warn', runner: 'node',
@@ -96,7 +105,7 @@ export const rhythmRules = [
       if (cpl < T.MIN_CPL || cpl > T.MAX_CPL) return { n, cpl: cpl.toFixed(1) };
       return null;
     },
-    message: (h, T) => `${label(h.n)} 每行约 ${h.cpl} 字，超出舒适行长 (${T.MIN_CPL}-${T.MAX_CPL})，应限制内容宽度`
+    message: (h, T) => `${loc(h.n)} 每行约 ${h.cpl} 字，超出舒适行长 (${T.MIN_CPL}-${T.MAX_CPL})，应限制内容宽度`
   },
   /* ---- 页面密度与平衡 ---- */
   {

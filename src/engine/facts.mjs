@@ -38,9 +38,10 @@ export function buildFacts(data, cfg) {
   if (data.tree.length >= 2) containers.push({ children: data.tree, parentLabel: 'body' });
 
 /** 一次深度遍历：填充内部字段 + 收集 allNodes / containers / 溢出层级标记 */
-  const walk = (nodes, parentTag, pe) => {
+  const walk = (nodes, parentTag, pe, parentLabel) => {
     for (const n of nodes) {
-      n._pt = parentTag;
+      n._pt = parentTag;                 /* 父标签名（textGroups 分组键：跨模板实例的一致性检查用） */
+      n._pLabel = parentLabel || parentTag; /* 父完整定位串（含 ord —— ISSUE 消息容器上下文用） */
       n._pe = pe;
       n._clipInner = n.textClip ? !hasClip(n.children) : false;
       const right = n.rect.x + n.rect.w;
@@ -48,10 +49,10 @@ export function buildFacts(data, cfg) {
       n._outerExceeds = exceeds && !pe;
       allNodes.push(n);
       if (n.children.length >= 2) containers.push({ children: n.children, parentLabel: label(n) });
-      walk(n.children, n.tag, pe || exceeds);
+      walk(n.children, n.tag, pe || exceeds, label(n));
     }
   };
-  walk(data.tree, 'body', false);
+  walk(data.tree, 'body', false, 'body');
 
   /* 排版分组：同类标签+父标签+类名的有文本节点归组（FONT/COLOR/WEIGHT 等一致性规则输入） */
   const textGroups = new Map();

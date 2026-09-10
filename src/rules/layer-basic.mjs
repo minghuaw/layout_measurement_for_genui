@@ -28,7 +28,7 @@ export const basicRules = [
     message: (n, T, F) => {
       const vw = F.pageInfo.viewport.w;
       const right = n.rect.x + n.rect.w;
-      return `${label(n)} 右边缘 ${r0(right)}px 超出视口 ${vw}px (+${r0(right - vw)}px)`;
+      return `${loc(n)} 右边缘 ${r0(right)}px 超出视口 ${vw}px (+${r0(right - vw)}px) (容器 ${n._pLabel})`;
     }
   },
   {
@@ -36,7 +36,7 @@ export const basicRules = [
     theory: '文本完整显示',
     when: (n) => n._clipInner,
     detect: (n) => n,
-    message: (n) => `${label(n)} 文本超出容器宽度未换行 (scrollW>clientW) "${n.text}"`
+    message: (n) => `${loc(n)} 文本超出容器宽度未换行 (scrollW>clientW) "${n.text}" (容器 ${n._pLabel})`
   },
   {
     id: 'OVERLAP', layer: 'L1', severity: 'error', runner: 'pair',
@@ -124,7 +124,7 @@ export const basicRules = [
       }
       return null;
     },
-    message: (h) => `${label(h.n)} 文字 ${hex(h.n.fg)} 对背景 ${hex(h.n.bg)} 对比度 ${h.ratio.toFixed(2)}:1 (<${h.need}:1 WCAG AA)`
+    message: (h) => `${loc(h.n)} 文字 ${hex(h.n.fg)} 对背景 ${hex(h.n.bg)} 对比度 ${h.ratio.toFixed(2)}:1 (<${h.need}:1 WCAG AA) (容器 ${h.n._pLabel})`
   },
   {
     id: 'GRADIENT_CONTRAST', layer: 'L1', severity: 'error', runner: 'node',

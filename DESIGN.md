@@ -146,13 +146,17 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 
 **消息工程**（贯穿五层）：消息一律带 CSS 级修复线索 + 理论依据（含建议色/建议值），如 `p.desc 文字 #ccc 对背景 #fff 对比度 1.61:1 (<4.5:1 WCAG AA)，建议改为 #5f5f5f`。
 
-**定位锚**（贯穿五层）：元素标签格式 `tag#id.cls[tid]`（tid = 首个 `data-test*`
-属性值，跨框架测试定位约定）；需要 pinpoint 的消息（分组一致性 / OVERLAP /
-GRADIENT_CONTRAST / IMG_BROKEN 等）追加 `“文本≤10”@y<px>` 定位串，分组规则
-列出**异常元素**（偏离多数派者，≤3 个）而非只给取值分布。示例（真实输出）：
+**定位锚**（贯穿五层；源码可对应——生成模型只见源码不见渲染，**像素不进消息**，
+几何坐标仅保留在事实树中）：元素标签格式 `tag#id.cls[tid]#ord`（tid = 首个
+`data-test*` 属性值，跨框架约定；ord = 同标签渲染兄弟序号，对应 `.map()` 迭代序）。
+消息定位串 = label + `“文本≤10”`；需要容器上下文的规则追加 `(容器 <父定位串>)`
+——同名卡片/同文案元素靠父容器 ord 区分。分组一致性规则列出**异常元素**（偏离
+多数派者，≤3 个）而非只给取值分布。示例（真实输出，两张同名卡片的同文案元素
+靠 `button[hot-card]#1/#5` 区分）：
 
 ```
-[FONT_INCONSISTENT] 5 个同类 span 字号不一致: 13/11/38/17px (容器 div)；异常: span“磨耳朵星球”@y19(13px), span“0”@y177(38px), span“天”@y200(17px)
+[CONTRAST_LOW] p#2“3 分钟” 文字 #7e908c 对背景 #ffffff 对比度 3.36:1 (<4.5:1 WCAG AA) (容器 button[hot-card]#1)
+[CONTRAST_LOW] p#2“3 分钟” 文字 #7e908c 对背景 #ffffff 对比度 3.36:1 (<4.5:1 WCAG AA) (容器 button[hot-card]#5)
 ```
 
 `[TYPE]` 行前缀解析不受影响 → compare.mjs / style_eval.mjs / 实验脚本零改动。
