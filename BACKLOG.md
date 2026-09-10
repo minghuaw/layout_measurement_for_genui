@@ -87,6 +87,19 @@ The contributor list can emit identical entries (reading home:
 identical label+hex contributors (summing shares) or add a distinguishing
 anchor (x or per-card testid) so each contributor is uniquely identifiable.
 
+### A7. RADIUS_SCALE_OFF — pill/circle false signal (deferred; caused a real regression)
+**Observed (workout/kitchen r0.2, 2026-09-10)**: the rule flags `999px`/`9999px`
+as off-scale, so models "fix" the shared `--radius-full`/`--radius-pill` token by
+clamping it to `24px`. Small pills stay round (CSS clamps to half the side), but
+any element **larger than ~48px** turns from a circle into a rounded square
+(workout home `RunLane` 180×180 dial: computed `999px → 24px`); because the token
+is shared, the regression reaches pages the round never touched.
+Candidate fix: exempt "fully rounded" radii in `RADIUS_SCALE_OFF`
+(`layer-order.mjs`) — skip nodes where `radius >= min(w,h)/2` (or a large
+sentinel ≥100px), mirroring the scroll-region exemption now in the overflow
+rules. Deferred from the 2026-09-10 SIZE_INCONSISTENT/TEXT_CLIP change set;
+affects recorded r0.2 for hainan/workout/reading/kitchen (pill token clamped).
+
 ## B. Detection techniques (engine capabilities, for future investigations)
 
 ### B1. Clip detection

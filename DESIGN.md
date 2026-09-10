@@ -77,7 +77,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 ### L1 基础规范（页面可用底线；违反即"坏页面"）
 | 规则 | 判据 | 状态 |
 |---|---|---|
-| OVERFLOW / ELEMENT_OVERFLOW / TEXT_CLIP | 滚动宽超视口 / 元素右缘超视口（只报最外层；**横向滚动容器内元素豁免**——computed overflow-x ∈ auto/scroll 的祖先链内，轮播/横滑行右缘越界是有意设计）/ 文本裁切（只报最内层） | 已实现 |
+| OVERFLOW / ELEMENT_OVERFLOW / TEXT_CLIP | 滚动宽超视口 / 元素右缘超视口（只报最外层；**横向滚动容器自身及 overflow-x ∈ auto/scroll 祖先链内元素豁免**——轮播/横滑行越界属有意设计、可由滚动抵达）/ 文本裁切（只报最内层；**自身 overflow-x ∈ auto/scroll 的溢出豁免**，横滑区不算裁切） | 已实现 |
 | OVERLAP | 同父兄弟矩形相交且交叠面积占较小元素 ≥10% 方报（浮点防亚像素误报；absolute/fixed 定位分层豁免，负 margin 微堆叠 ≤10% 视为视觉紧贴设计） | 已实现（v1.2 语义增强） |
 | TAP_TARGET | 可交互元素最小边 < 44px | 已实现 |
 | CONTRAST_LOW | 有效前景/背景对比度 < 4.5:1（≥24px 大字 3:1），消息含建议色；渐变背景让位 GRADIENT_CONTRAST | 已实现 |
@@ -95,7 +95,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 ### L2 结构秩序（一致性与对齐；不齐=业余感）
 | 规则 | 判据 | 状态 |
 |---|---|---|
-| ALIGN / SIZE / RADIUS_INCONSISTENT | 列表组左缘极差 >4px / 宽 >6px / 圆角 >2px | 已实现 |
+| ALIGN / SIZE / RADIUS_INCONSISTENT | 列表组左缘极差 >4px / 尺寸极差 >6px / 圆角 >2px。SIZE 含**可见卡片盒**：解析每项「绘制表面（自身底色/渐变/背景图/阴影/媒体，圆角边框不计）最大子盒」，严格同 tag 方可比——捕捉被透明包裹层拉伸掩盖的内部卡片尺寸不一致 | 已实现（卡片盒增强） |
 | FONT_INCONSISTENT / COLOR_INCONSISTENT | 排版分组字号极差 >1px / 颜色不一致 | 已实现 |
 | SPACING / LINE_HEIGHT_TIGHT | 间距极差 >24px / 行高 <1.2 | 已实现 |
 | RADIUS_SCALE_OFF | 全页圆角值不落在设计刻度 {4,8,12,16,20,24}（圆角系统化，不止组内一致） | 新增 |

@@ -11,6 +11,7 @@
  *
  * 注意：此处会向 geo 节点挂 `_` 前缀内部字段（_pt/_pe/_clipInner/_outerExceeds），
  *   collect.mjs 落盘 geometry.json 时以 replacer 剥除，保证产物只含纯净事实。
+ *   （_inHScroll/_isScrollX 由 collect.mjs 计算，同为内部字段。）
  */
 import { computePalette } from '../color.mjs';
 import { label } from './util.mjs';

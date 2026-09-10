@@ -83,8 +83,8 @@ export const basicRules = [
   },
   {
     id: 'ELEMENT_OVERFLOW', layer: 'L1', severity: 'error', runner: 'node',
-    theory: '视口适配底线（横向滚动容器内元素豁免——overflow-x: auto/scroll 祖先链内的轮播/横滑行属有意设计）',
-    when: (n) => n._outerExceeds && !n._inHScroll,
+    theory: '视口适配底线（横向滚动容器自身及其 overflow-x: auto/scroll 祖先链内元素豁免——轮播/横滑行属有意设计，右缘越界可由滚动抵达）',
+    when: (n) => n._outerExceeds && !n._inHScroll && !n._isScrollX,
     detect: (n) => n,
     message: (n, T, F) => {
       const vw = F.pageInfo.viewport.w;
@@ -94,7 +94,7 @@ export const basicRules = [
   },
   {
     id: 'TEXT_CLIP', layer: 'L1', severity: 'error', runner: 'node',
-    theory: '文本完整显示',
+    theory: '文本完整显示（自身可横向滚动 auto/scroll 的溢出豁免——属横滑区，可滚动抵达）',
     when: (n) => n._clipInner,
     detect: (n) => n,
     message: (n) => `${loc(n)} 文本超出容器宽度未换行 (scrollW>clientW) "${n.text}" (容器 ${n._pLabel})`

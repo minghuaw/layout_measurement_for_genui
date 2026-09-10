@@ -18,9 +18,11 @@
     "TAP_TARGET",
     "TAP_TARGET",
     "TAP_TARGET",
+    "SIZE_INCONSISTENT",
     "SPACING"
   ],
   "font-chaos": [
+    "SIZE_INCONSISTENT",
     "FONT_INCONSISTENT",
     "FONT_INCONSISTENT",
     "FONT_INCONSISTENT"
@@ -41,10 +43,12 @@
   ],
   "img-chaos": [
     "IMG_BROKEN",
+    "SIZE_INCONSISTENT",
     "ASPECT_INCONSISTENT",
     "IMG_SIZE_INCONSISTENT"
   ],
   "ratio-chaos": [
+    "SIZE_INCONSISTENT",
     "VOID_BAND",
     "VOID_BAND",
     "CARD_VOID",
@@ -52,6 +56,7 @@
     "ASPECT_EXTREME"
   ],
   "void-band": [
+    "SIZE_INCONSISTENT",
     "VOID_BAND",
     "VOID_BAND",
     "VOID_BAND"
@@ -72,7 +77,8 @@
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
-    "CONTRAST_LOW"
+    "CONTRAST_LOW",
+    "SIZE_INCONSISTENT"
   ],
   "color-chaos": [
     "CONTRAST_LOW",
@@ -211,5 +217,12 @@
     "RADIUS_SCALE_OFF",
     "FONT_FAMILY_BLOAT",
     "ASPECT_INCONSISTENT"
+  ],
+  "tp-card-size-mismatch": [
+    "TEXT_CLIP",
+    "SIZE_INCONSISTENT",
+    "VOID_BAND",
+    "CARD_VOID",
+    "BALANCE_OFF"
   ]
 }

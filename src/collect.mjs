@@ -471,9 +471,12 @@ const COLLECT = (vw) => {
         imgBroken,
         imgSrcTail,
         bgUrl,
-        /* 内部事实（`_` 前缀，geometry.json 落盘剥除）：处于横向滚动容器内
-           ——ELEMENT_OVERFLOW 豁免输入（轮播/横滑行有意设计的右缘越界） */
+        /* 内部事实（`_` 前缀，geometry.json 落盘剥除）：
+           _inHScroll  处于横向滚动容器「内」（严格祖先）——ELEMENT_OVERFLOW 豁免输入
+           _isScrollX  自身即横向滚动容器（overflow-x auto/scroll）——ELEMENT_OVERFLOW/
+                       TEXT_CLIP 容器自身豁免输入（可滚动溢出属有意设计，非缺陷） */
         _inHScroll: inHScroll,
+        _isScrollX: ownHScroll,
         gradStops: gradStops || null,
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },
@@ -491,7 +494,10 @@ const COLLECT = (vw) => {
         yRange,
         /* 交互元素内文字垂直居中偏移 px（无文本/不可测为 null） */
         vcenterDelta: interactive ? measureTextDelta(child) : null,
-        textClip: child.scrollWidth > child.clientWidth + 1,
+        /* 文本裁切：横向内容溢出「且自身不可滚动」——overflow-x auto/scroll 的溢出
+           是横滑区（轮播/横滑行）有意设计，可由滚动抵达，不算裁切（TEXT_CLIP 豁免）；
+           自身 overflow 为 visible/hidden/clip 的溢出才计入 */
+        textClip: child.scrollWidth > child.clientWidth + 1 && !ownHScroll,
         fontSize: parseFloat(cs.fontSize) || null,
         lineHeight: cs.lineHeight === 'normal' ? null : f2(parseFloat(cs.lineHeight) / parseFloat(cs.fontSize)),
         radius: parseFloat(cs.borderTopLeftRadius) || 0,

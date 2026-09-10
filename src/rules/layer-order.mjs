@@ -35,6 +35,27 @@ function collectTextNodes(n, out) {
   for (const c of n.children) collectTextNodes(c, out);
 }
 
+/** paintsSurface —— 节点是否绘制可见表面（自身底色/渐变/背景图/阴影/媒体）。
+    圆角、边框单独不计——否则会选中「透明包裹层」（如 background:transparent 的 button），
+    其尺寸由行拉伸决定、掩盖内部真实卡片盒的差异。 */
+function paintsSurface(n) {
+  return !!(n.bgOwn || n.gradient || n.bgUrl || n.shadow || n.media);
+}
+
+/** visibleBox —— 解析列表项的「可见卡片盒」：子树内绘制表面的最大面积节点（同面积取最外层）；
+    无绘制表面则回退为节点自身。返回 { node, resolved }（resolved=false 表示未找到可见子盒）。 */
+function visibleBox(n) {
+  let best = null;
+  (function walk(m) {
+    if (paintsSurface(m)) {
+      const area = m.rect.w * m.rect.h;
+      if (!best || area > best.area) best = { node: m, area };
+    }
+    for (const c of m.children) walk(c);
+  })(n);
+  return best ? { node: best.node, resolved: true } : { node: n, resolved: false };
+}
+
 export const orderRules = [
   /* ---- 几何一致性（listGroup 类） ---- */
   {
@@ -51,13 +72,25 @@ export const orderRules = [
   },
   {
     id: 'SIZE_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'listGroup',
-    theory: '尺寸一致性',
+    theory: '尺寸一致性（含可见卡片盒：绘制表面的最大子盒；严格同 tag 才可比）',
     detect: (g, T) => {
       const ws = g.items.map((n) => n.rect.w);
       if (spread(ws) > T.DIFF) return { n: g.items.length, key: g.key, ws: ws.map(r0), parent: g.parent };
+      /* 可见卡片盒尺寸：解析每项「绘制表面最大子盒」（严格守卫：全部 resolved 且同 tag，
+         避免 div 卡片 vs img 缩略图 vs span 徽标 的跨结构误报） */
+      const boxes = g.items.map(visibleBox);
+      if (boxes.every((b) => b.resolved) && new Set(boxes.map((b) => b.node.tag)).size === 1) {
+        const bw = boxes.map((b) => b.node.rect.w);
+        const bh = boxes.map((b) => b.node.rect.h);
+        if (spread(bw) > T.DIFF || spread(bh) > T.DIFF) {
+          return { n: g.items.length, key: g.key, parent: g.parent, bw: bw.map(r0), bh: bh.map(r0) };
+        }
+      }
       return null;
     },
-    message: (h) => `${h.n} 个 ${h.key} 宽度不一致: ${h.ws.join('/')}px (容器 ${h.parent})`
+    message: (h) => h.bw
+      ? `${h.n} 个 ${h.key} 可见卡片盒尺寸不一致: 宽 ${h.bw.join('/')} 高 ${h.bh.join('/')}px (容器 ${h.parent})`
+      : `${h.n} 个 ${h.key} 宽度不一致: ${h.ws.join('/')}px (容器 ${h.parent})`
   },
   {
     id: 'RADIUS_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'listGroup',
