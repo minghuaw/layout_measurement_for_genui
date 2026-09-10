@@ -77,7 +77,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 ### L1 基础规范（页面可用底线；违反即"坏页面"）
 | 规则 | 判据 | 状态 |
 |---|---|---|
-| OVERFLOW / ELEMENT_OVERFLOW / TEXT_CLIP | 滚动宽超视口 / 元素右缘超视口（只报最外层）/ 文本裁切（只报最内层） | 已实现 |
+| OVERFLOW / ELEMENT_OVERFLOW / TEXT_CLIP | 滚动宽超视口 / 元素右缘超视口（只报最外层；**横向滚动容器内元素豁免**——computed overflow-x ∈ auto/scroll 的祖先链内，轮播/横滑行右缘越界是有意设计）/ 文本裁切（只报最内层） | 已实现 |
 | OVERLAP | 同父兄弟矩形相交且交叠面积占较小元素 ≥10% 方报（浮点防亚像素误报；absolute/fixed 定位分层豁免，负 margin 微堆叠 ≤10% 视为视觉紧贴设计） | 已实现（v1.2 语义增强） |
 | TAP_TARGET | 可交互元素最小边 < 44px | 已实现 |
 | CONTRAST_LOW | 有效前景/背景对比度 < 4.5:1（≥24px 大字 3:1），消息含建议色；渐变背景让位 GRADIENT_CONTRAST | 已实现 |

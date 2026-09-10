@@ -358,10 +358,13 @@ const COLLECT = (vw) => {
   /**
    * walk —— 深度优先构建事实树
    * parentBg：父级有效背景（alpha 合成链，逐层向下传递）
+   * parentStops：父级渐变 stop（继承链，不透明纯底截断）
+   * inHScroll：任一严格祖先 computed overflow-x ∈ {auto, scroll}——该节点处于
+   *   横向滚动容器内（轮播/横滑行属有意设计，其右缘越界是可滚动内容而非缺陷）
    * 跳过：非渲染标签 / display:none / visibility:hidden
    * 零尺寸节点：自身不入树，子节点上提（hoist），避免树断裂
    */
-  const walk = (el, parentBg, parentStops) => {
+  const walk = (el, parentBg, parentStops, inHScroll) => {
     const out = [];
     const ordMap = {};
     for (const child of el.children) {
@@ -370,8 +373,8 @@ const COLLECT = (vw) => {
       if (cs.display === 'none' || cs.visibility === 'hidden') continue;
       const r = child.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) {
-        /* 零尺寸节点自身不渲染：子节点上提并完整继承父级背景/渐变上下文 */
-        out.push(...walk(child, parentBg, parentStops));
+        /* 零尺寸节点自身不渲染：子节点上提并完整继承父级背景/渐变/横滚上下文 */
+        out.push(...walk(child, parentBg, parentStops, inHScroll));
         continue;
       }
       /* 有效背景/前景：自身背景 alpha>0 则叠加父级，否则继承父级；
@@ -419,6 +422,10 @@ const COLLECT = (vw) => {
       /* 富媒体背景容器（url 背景图）——MEDIA_COVERED 覆盖判定输入
          （修复模型惯用 img→backgroundImage 重构，纯 img 判定会漏检重构后页面） */
       const bgUrl = /url\(/i.test(cs.backgroundImage || '');
+      /* 本节点自身是否横向可滚动（overflow-x auto/scroll）——传给子节点参与 _inHScroll 链；
+         注意 overflow-y 非 visible 时 overflow-x 计算值会回退为 auto（CSS 规范），此时
+         横向越界内容确实可滚，豁免语义成立。自身 overflow-x 不作用于自身（严格祖先才算） */
+      const ownHScroll = /auto|scroll/i.test(cs.overflowX || '');
       /* 图表文字前景（blend 到容器有效背景上）——图表文字对比度规则输入 */
       let chartTextFgs = null;
       let chartTopRisk = null;
@@ -451,7 +458,7 @@ const COLLECT = (vw) => {
           yRange = chartYRange(child);
         }
       }
-      const kids = walk(child, bg, childStops);
+      const kids = walk(child, bg, childStops, inHScroll || ownHScroll);
       out.push({
         tag: child.tagName.toLowerCase(),
         id: child.id || '',
@@ -464,6 +471,9 @@ const COLLECT = (vw) => {
         imgBroken,
         imgSrcTail,
         bgUrl,
+        /* 内部事实（`_` 前缀，geometry.json 落盘剥除）：处于横向滚动容器内
+           ——ELEMENT_OVERFLOW 豁免输入（轮播/横滑行有意设计的右缘越界） */
+        _inHScroll: inHScroll,
         gradStops: gradStops || null,
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },
@@ -534,7 +544,7 @@ const COLLECT = (vw) => {
     return out;
   };
 
-  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, [255, 255, 255], null) };
+  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, [255, 255, 255], null, false) };
 };
 
 /**

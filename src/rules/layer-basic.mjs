@@ -83,8 +83,8 @@ export const basicRules = [
   },
   {
     id: 'ELEMENT_OVERFLOW', layer: 'L1', severity: 'error', runner: 'node',
-    theory: '视口适配底线',
-    when: (n) => n._outerExceeds,
+    theory: '视口适配底线（横向滚动容器内元素豁免——overflow-x: auto/scroll 祖先链内的轮播/横滑行属有意设计）',
+    when: (n) => n._outerExceeds && !n._inHScroll,
     detect: (n) => n,
     message: (n, T, F) => {
       const vw = F.pageInfo.viewport.w;
