@@ -114,6 +114,18 @@ gradients whose non-neutral stops occupy < ~10% of the box. Related: the same
 stop-extent gap can over-report on gradient scrims. Recorded as a deferred item; the
 decor family-guide r0.2 result (54) is dominated by this FP class.
 
+### A9. RESOLVED (2026-09-10) — gradient overlay covering text (undetected issue #1, decor)
+`coverScan` excluded gradient backgrounds (`!c.gradient` in `isOpaque`), so a positioned
+fade-to-bg scrim overlaying **static** text was never a cover candidate — the decor home
+`p` "200㎡ 三代同堂…" under `linear-gradient(180deg, transparent 40%, var(--bg) 100%)`
+was neither reported nor fixed. Fix: `parseGradInfo` (collect.mjs) captures the gradient
+direction + **raw** stop positions/alpha (including the `color(srgb …)` form browsers emit
+for `color-mix`); `coverScan({ allowGradient: true })` — **TEXT_COVERED only** — treats a
+gradient as a cover when the victim's span projected onto the gradient axis is
+≥ `MIN_COVER` opaque (non-axis-aligned / no positions → skipped). `MEDIA_COVERED` keeps
+gradients excluded (image + legibility scrim is intentional). Fixtures:
+`tp-gradient-scrim-cover`, `fp-scrim-above-text`, `fp-translucent-scrim`.
+
 ## B. Detection techniques (engine capabilities, for future investigations)
 
 ### B1. Clip detection

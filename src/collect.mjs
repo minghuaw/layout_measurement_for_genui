@@ -73,6 +73,14 @@ const COLLECT = (vw) => {
         a: parseInt(x.slice(6, 8), 16) / 255
       };
     }
+    /* CSS color() 函数（浏览器把 color-mix(...) 计算为该形式，如 color(srgb 0 0 0 / 0)）——
+       通道按 0-1（或百分比）解析；用于渐变 stop 的原始颜色/透明度提取 */
+    const cm = h.match(/^color\(\s*[a-z0-9-]+\s+([\d.]+%?)\s+([\d.]+%?)\s+([\d.]+%?)\s*(?:\/\s*([\d.]+%?)\s*)?\)$/i);
+    if (cm) {
+      const to255 = (v) => (v.endsWith('%') ? (parseFloat(v) / 100) * 255 : parseFloat(v) * 255);
+      const a = cm[4] === undefined ? 1 : (cm[4].endsWith('%') ? parseFloat(cm[4]) / 100 : parseFloat(cm[4]));
+      return { r: Math.round(to255(cm[1])), g: Math.round(to255(cm[2])), b: Math.round(to255(cm[3])), a };
+    }
     return parseCs(h);
   };
 
@@ -295,6 +303,68 @@ const COLLECT = (vw) => {
     const stops = colors.map(parseCol).filter(Boolean);
     return stops.length >= 2 ? stops : null;
   };
+  /**
+   * parseGradInfo —— 解析 linear-gradient 的「方向 + 原始 stop（颜色含 alpha + 位置）」，
+   * 供渐变遮罩覆盖检测（TEXT_COVERED）：需未与底色合成的 alpha 与 stop 位置，才能算出
+   * 渐变在受害者所在位置的透明度。radial / 解析失败 / 非轴对齐（非 0/90/180/270deg）
+   * 返回 null（规则侧跳过，避免误报）。返回 { deg, stops:[{ rgba:{r,g,b,a}, pos:0..1 }] }
+   * （pos 归一化并升序；px 位置按元素轴向尺寸换算）。
+   */
+  const parseGradInfo = (s, rect) => {
+    const gm = s && s.match(/(?<![a-z-])linear-gradient\(/i);
+    if (!gm) return null;
+    const start = gm.index + gm[0].length;
+    let depth = 1, end = start;
+    while (end < s.length && depth > 0) {
+      const ch = s[end];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+      end++;
+    }
+    const inner = s.slice(start, end - 1);
+    /* 顶层逗号切分（保护 rgba(...) 内的逗号） */
+    const parts = [];
+    let cur = '', d = 0;
+    for (const ch of inner) {
+      if (ch === '(') d++;
+      else if (ch === ')') d--;
+      if (ch === ',' && d === 0) { parts.push(cur); cur = ''; } else cur += ch;
+    }
+    if (cur.trim()) parts.push(cur);
+    if (parts.length < 2) return null;
+    /* 方向：<deg> 或 to <side>；缺省 180deg（to bottom），首段即 stop */
+    let deg = 180, i = 0;
+    const first = parts[0].trim();
+    const dm = first.match(/^(-?\d+(?:\.\d+)?)deg$/i);
+    const kwMap = { 'to top': 0, 'to bottom': 180, 'to right': 90, 'to left': 270 };
+    if (dm) { deg = parseFloat(dm[1]); i = 1; }
+    else if (kwMap[first.toLowerCase()] !== undefined) { deg = kwMap[first.toLowerCase()]; i = 1; }
+    const norm = ((deg % 360) + 360) % 360;
+    if (![0, 90, 180, 270].includes(norm)) return null;
+    const extent = (norm === 90 || norm === 270) ? (rect?.w || 0) : (rect?.h || 0);
+    const stops = [];
+    for (; i < parts.length; i++) {
+      const p = parts[i].trim();
+      const cm = p.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)|color\([^)]*\)/i);
+      if (!cm) continue;
+      const rgba = parseCol(cm[0]);
+      if (!rgba) continue;
+      const rest = p.slice(cm.index + cm[0].length);
+      const pm = rest.match(/(-?\d+(?:\.\d+)?)(%|px)?/);
+      let pos = null;
+      if (pm) {
+        const v = parseFloat(pm[1]);
+        pos = pm[2] === 'px' ? (extent > 0 ? v / extent : null) : v / 100;
+      }
+      stops.push({ rgba, pos });
+    }
+    if (stops.length < 2) return null;
+    const n = stops.length;
+    stops.forEach((st, k) => { if (st.pos === null || !isFinite(st.pos)) st.pos = k / (n - 1); });
+    stops.forEach((st) => { st.pos = Math.min(1, Math.max(0, st.pos)); });
+    stops.sort((a, b) => a.pos - b.pos);
+    return { deg: norm, stops };
+  };
   /** 直接文本摘要：压空白、截断到 40 字（树体积控制） */
   const clip = (s) => {
     s = (s || '').replace(/\s+/g, ' ').trim();
@@ -410,6 +480,9 @@ const COLLECT = (vw) => {
          自身不透明纯底遮住祖先渐变 → null（不再向下传递） */
       const gradient = /gradient\(/i.test(cs.backgroundImage || '');
       const ownStops = gradient ? parseGradStops(cs.backgroundImage) : null;
+      /* 渐变遮罩覆盖检测输入（TEXT_COVERED）：方向 + 原始 stop（含 alpha/位置），
+         内部字段（_ 前缀，落盘 geometry.json 时剥除） */
+      const gradInfo = gradient ? parseGradInfo(cs.backgroundImage, { w: r.width, h: r.height }) : null;
       const ownStopsB = ownStops ? ownStops.map((c) => blend(c, bg).map((v) => Math.round(v))) : null;
       const inheritedStops = (bgOwn && own.a >= 1) ? null : (parentStops || null);
       const gradStops = ownStopsB || inheritedStops;
@@ -478,6 +551,7 @@ const COLLECT = (vw) => {
         _inHScroll: inHScroll,
         _isScrollX: ownHScroll,
         gradStops: gradStops || null,
+        _gradInfo: gradInfo || null,
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },
         pos: cs.position,

@@ -224,5 +224,10 @@
     "VOID_BAND",
     "CARD_VOID",
     "BALANCE_OFF"
-  ]
+  ],
+  "tp-gradient-scrim-cover": [
+    "TEXT_COVERED"
+  ],
+  "fp-scrim-above-text": [],
+  "fp-translucent-scrim": []
 }

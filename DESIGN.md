@@ -84,7 +84,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | GRADIENT_CONTRAST | 渐变背景上文字对比度按最不利 stop 校正（stop 沿继承链向下传递，不透明纯底截断） | 新增 |
 | IMG_BROKEN | 图像加载失败（complete && naturalWidth===0），建议修 URL 或改 alt 占位（懒加载天然排除） | 新增 |
 | MEDIA_COVERED | 富媒体（img/video/canvas/svg/iframe/object/echarts 容器 + url 背景图容器）被不透明元素遮挡 ≥30% 面积（共享 coverScan：绘制模型=定位元素盖过 static 内容，受害者锚点=最近定位祖先；祖先排除；渐变 scrim 与半透明豁免） | 新增 |
-| TEXT_COVERED | 文本被不透明元素/富媒体遮挡 ≥30% 面积（同 coverScan，受害者=直接文本元素；L1 warn） | 新增 |
+| TEXT_COVERED | 文本被不透明元素/富媒体/**渐变遮罩**遮挡 ≥30% 面积（同 coverScan，受害者=直接文本元素；渐变遮罩按受害者在渐变轴上的 stop 透明度插值判定——非轴对齐/无位置信息跳过；MEDIA_COVERED 不启用渐变，避免「图上叠渐隐」误报；L1 warn） | 新增（渐变遮罩） |
 | CHART_TEXT_CONTRAST | data-echarts 内图表文字（axisLabel/textStyle）对图表容器有效背景对比 < 4.5:1（此前图表配色不入规则） | 新增 |
 | CHART_DEGENERATE | 图表容器高度塌陷（宽≥150px 时高<40px，%高度链断） | 新增 |
 | FOCUS_INVISIBLE | interactive 元素显式 `outline:none` 且无 `:focus-visible` 替代（WCAG 2.4.7/F78，需 CSSOM 扫描） | 新增 |

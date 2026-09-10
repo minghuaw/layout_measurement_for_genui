@@ -23,19 +23,63 @@ import { label, loc, r0, pct } from '../engine/util.mjs';
  * （包含≠遮挡）；遮挡物不透明 = 自身实心底色（非渐变、alpha≥COVER_ALPHA）、
  * 自身为不透明媒体（img/video/canvas）或子树含充满它的不透明媒体（≥80%，
  * hainan round-0 relative 容器 + 满幅 img 盖住 static h1 的案例即此类）。
+ * 当 opts.allowGradient 时（TEXT_COVERED 专用），另接受「渐变遮罩」——定位元素带
+ * linear-gradient，且受害者在渐变轴上的不透明占比 ≥ MIN_COVER（stop 透明度按位置
+ * 插值；非轴对齐/无 gradInfo 跳过）。MEDIA_COVERED 不开此项（图片上叠渐隐多为有意设计）。
  * 交叠 ≥ MIN_COVER（占受害者面积）；每受害者仅报最大覆盖者。
  */
-const coverScan = (F, T, isVictim) => {
+const coverScan = (F, T, isVictim, opts = {}) => {
+  const allowGradient = !!opts.allowGradient;
   const area = (r) => Math.max(0, r.w) * Math.max(0, r.h);
   const interFrac = (a, b) => {
     const w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
     const h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
     return (w <= 0 || h <= 0) ? 0 : (w * h) / Math.max(1, area(a));
   };
+  /* gradCoverFrac —— 渐变遮罩在受害者区域的「不透明占比」：把受害者投影到渐变轴
+     （仅轴对齐 0/90/180/270deg；其余返回 0 跳过），逐点插值 stop alpha，
+     返回 alpha ≥ COVER_ALPHA 的采样占比。用于把「渐隐到底色」的遮罩层识别为遮挡物
+     （decor home：static <p> 被 absolute 渐变遮罩压住）。 */
+  const gradCoverFrac = (c, vr) => {
+    const gi = c._gradInfo;
+    if (!gi || !gi.stops || gi.stops.length < 2) return 0;
+    const rect = c.rect;
+    const deg = gi.deg;
+    const vert = deg === 0 || deg === 180;
+    if (vert ? !(rect.h > 0) : !(rect.w > 0)) return 0;
+    const proj = vert
+      ? (deg === 180 ? (y) => (y - rect.y) / rect.h : (y) => (rect.y + rect.h - y) / rect.h)
+      : (deg === 90 ? (x) => (x - rect.x) / rect.w : (x) => (rect.x + rect.w - x) / rect.w);
+    const a0 = vert ? proj(vr.y) : proj(vr.x);
+    const a1 = vert ? proj(vr.y + vr.h) : proj(vr.x + vr.w);
+    const lo = Math.min(a0, a1), hi = Math.max(a0, a1);
+    const stops = gi.stops;
+    const alphaAt = (f) => {
+      if (f <= stops[0].pos) return stops[0].rgba.a;
+      const last = stops[stops.length - 1];
+      if (f >= last.pos) return last.rgba.a;
+      for (let i = 1; i < stops.length; i++) {
+        if (f <= stops[i].pos) {
+          const s0 = stops[i - 1], s1 = stops[i];
+          const t = (f - s0.pos) / Math.max(1e-6, s1.pos - s0.pos);
+          return s0.rgba.a + (s1.rgba.a - s0.rgba.a) * t;
+        }
+      }
+      return last.rgba.a;
+    };
+    const N = 20;
+    let hit = 0;
+    for (let k = 0; k < N; k++) {
+      const f = lo + (hi - lo) * ((k + 0.5) / N);
+      if (alphaAt(f) >= T.COVER_ALPHA) hit++;
+    }
+    return hit / N;
+  };
   const OPAQUE_MEDIA = ['img', 'video', 'canvas'];
-  const isOpaque = (c) =>
+  const isOpaque = (c, vr) =>
     (c.bgOwn && !c.gradient && c.bgOwnAlpha >= T.COVER_ALPHA) ||
     OPAQUE_MEDIA.includes(c.tag) ||
+    (allowGradient && c.gradient && gradCoverFrac(c, vr) >= T.MIN_COVER) ||
     (function filledWithMedia(n) {
       for (const ch of n.children) {
         if ((OPAQUE_MEDIA.includes(ch.tag) || (ch.bgOwn && !ch.gradient)) && interFrac(n.rect, ch.rect) >= 0.8) return true;
@@ -62,11 +106,14 @@ const coverScan = (F, T, isVictim) => {
   dfs(F.tree, new Set(), -Infinity);
   for (const { n, anc, anchorSeq } of victims) {
     for (const c of covers) {
-      if (c === n || anc.has(c) || c._seq <= anchorSeq || !isOpaque(c)) continue;
-      const frac = interFrac(n.rect, c.rect);
+      if (c === n || anc.has(c) || c._seq <= anchorSeq || !isOpaque(c, n.rect)) continue;
+      const geo = interFrac(n.rect, c.rect);
+      if (geo < T.MIN_COVER) continue;
+      /* 渐变遮罩：遮挡比例 = 几何交叠 × 该区域的不透明占比 */
+      const frac = (allowGradient && c.gradient) ? geo * gradCoverFrac(c, n.rect) : geo;
       if (frac < T.MIN_COVER) continue;
       const cur = best.get(n);
-      if (!cur || frac > cur.frac) best.set(n, { victim: n, cover: c, frac });
+      if (!cur || frac > cur.frac) best.set(n, { victim: n, cover: c, frac, grad: !!c.gradient });
     }
   }
   return [...best.values()];
@@ -127,10 +174,10 @@ export const basicRules = [
   },
   {
     id: 'TEXT_COVERED', layer: 'L1', severity: 'warn', runner: 'page',
-    theory: '文本被不透明元素/富媒体大面积遮挡（内容不可见）——含祖先层级候选（hainan round-0 relative hero 容器 + 满幅 img 盖住 static h1 顶部的真实案例）。共享 coverScan',
-    detect: (F, T) => coverScan(F, T, (n) => !!n.text)
-      .map((h) => ({ text: h.victim, cover: h.cover, frac: h.frac })),
-    message: (h) => `${loc(h.text)} 文字被 ${loc(h.cover)} 遮挡 ${pct(h.frac)} — 移开/移动遮挡元素或调整层级；若为有意设计请忽略`
+    theory: '文本被不透明元素/富媒体/渐变遮罩大面积遮挡（内容不可见）——含祖先层级候选（hainan round-0 relative hero 容器 + 满幅 img 盖住 static h1 顶部的真实案例）；渐变遮罩按受害者所在位置的 stop 透明度判定（decor home static p 被渐隐遮罩压住）。共享 coverScan',
+    detect: (F, T) => coverScan(F, T, (n) => !!n.text, { allowGradient: true })
+      .map((h) => ({ text: h.victim, cover: h.cover, frac: h.frac, grad: h.grad })),
+    message: (h) => `${loc(h.text)} 文字被 ${loc(h.cover)}${h.grad ? ' 的渐变遮罩' : ''}遮挡 ${pct(h.frac)} — 移开/移动遮挡元素或调整层级；若为有意设计请忽略`
   },
   /* ---- 交互可用性 ---- */
   {
