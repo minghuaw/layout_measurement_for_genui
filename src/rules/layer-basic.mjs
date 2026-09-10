@@ -157,7 +157,7 @@ export const basicRules = [
   },
   {
     id: 'GRADIENT_CONTRAST', layer: 'L1', severity: 'error', runner: 'node',
-    theory: '渐变背景上文字的 WCAG AA 对比度（按最不利 stop 校正）——CONTRAST_LOW 只读纯色背景，渐变此前不可度量',
+    theory: '渐变背景上文字的 WCAG AA 对比度（按渐变各色中最差的一档校正）——CONTRAST_LOW 只读纯色背景，渐变此前不可度量',
     when: (n) => !!n.text && !!n.gradStops,
     detect: (n, T) => {
       const need = (n.fontSize || 16) >= T.LARGE_FS ? T.RATIO_LARGE : T.RATIO_NORMAL;
@@ -170,7 +170,7 @@ export const basicRules = [
       if (worst < need - 0.02) return { n, ratio: worst, need, stopHex };
       return null;
     },
-    message: (h) => `${loc(h.n)} 文字 ${hex(h.n.fg)} 对渐变背景对比度仅 ${h.ratio.toFixed(2)}:1（最不利 stop ${h.stopHex}）(<${h.need}:1 WCAG AA) — 校正文字与该 stop 的对比，或改用纯色背景`
+    message: (h) => `${loc(h.n)} 文字色 ${hex(h.n.fg)} 与渐变背景色 ${h.stopHex} 对比度仅 ${h.ratio.toFixed(2)}:1（渐变各色中最低的一档，未达 WCAG AA ${h.need}:1）—— 建议调整文字色或该渐变颜色，或改用纯色背景`
   },
   {
     id: 'IMG_BROKEN', layer: 'L1', severity: 'error', runner: 'node',
