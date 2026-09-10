@@ -379,6 +379,9 @@ const COLLECT = (vw) => {
       const own = parseCs(cs.backgroundColor);
       const bgOwn = !!own && own.a > 0;
       const bg = bgOwn ? blend(own, parentBg) : parentBg;
+      /* 背景链逐层向下传递：子树以本节点合成后的有效背景为底（而非 parentBg），
+         否则彩色容器内的文本会被误算成祖先底色（如蓝底横幅上白字被算成白底）
+         —— 本仓库版本已含此修复（kids 携带 bg + childStops，见 walk 尾部） */
       const fgRaw = parseCs(cs.color);
       const fg = fgRaw ? blend(fgRaw, bg) : bg;
       const shadow = parseShadow(cs.boxShadow);
