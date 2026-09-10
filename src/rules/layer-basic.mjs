@@ -11,6 +11,67 @@
 import { hex, contrastRatio, rgbToHsl, parseHex } from '../color.mjs';
 import { label, loc, r0, pct } from '../engine/util.mjs';
 
+/**
+ * coverScan —— 覆盖检测共享扫描（MEDIA_COVERED / TEXT_COVERED 共用）
+ *
+ * 绘制模型（同层叠上下文内）：定位元素（pos ≠ static）整体绘制在 static 内容之上
+ * （static 兄弟的背景绘制阶段早于文本/被包含内容，因此 static 元素从不遮挡
+ * static 文本与媒体——负 margin 卡片堆叠的"后来卡盖住先前卡"实为背景交叠，
+ * 文本仍绘制在上层，故不在此规则语义内，见 BACKLOG.md B）。
+ * 受害者绘制锚点 = 最近的定位祖先（自身定位则为其自身序号；无则 -∞，
+ * 即任意定位元素均可遮挡）。候选 = 定位元素且树序 > 受害者锚点；祖先排除
+ * （包含≠遮挡）；遮挡物不透明 = 自身实心底色（非渐变、alpha≥COVER_ALPHA）、
+ * 自身为不透明媒体（img/video/canvas）或子树含充满它的不透明媒体（≥80%，
+ * hainan round-0 relative 容器 + 满幅 img 盖住 static h1 的案例即此类）。
+ * 交叠 ≥ MIN_COVER（占受害者面积）；每受害者仅报最大覆盖者。
+ */
+const coverScan = (F, T, isVictim) => {
+  const area = (r) => Math.max(0, r.w) * Math.max(0, r.h);
+  const interFrac = (a, b) => {
+    const w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+    const h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+    return (w <= 0 || h <= 0) ? 0 : (w * h) / Math.max(1, area(a));
+  };
+  const OPAQUE_MEDIA = ['img', 'video', 'canvas'];
+  const isOpaque = (c) =>
+    (c.bgOwn && !c.gradient && c.bgOwnAlpha >= T.COVER_ALPHA) ||
+    OPAQUE_MEDIA.includes(c.tag) ||
+    (function filledWithMedia(n) {
+      for (const ch of n.children) {
+        if ((OPAQUE_MEDIA.includes(ch.tag) || (ch.bgOwn && !ch.gradient)) && interFrac(n.rect, ch.rect) >= 0.8) return true;
+        if (filledWithMedia(ch)) return true;
+      }
+      return false;
+    })(c);
+  const best = new Map();
+  const victims = [];
+  const covers = [];
+  let seq = 0;
+  const dfs = (nodes, anc, anchorSeq) => {
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      n._seq = seq++;
+      const positioned = n.pos !== 'static';
+      if (isVictim(n)) {
+        victims.push({ n, anc: new Set(anc), anchorSeq: positioned ? n._seq : anchorSeq });
+      }
+      if (positioned) covers.push(n);
+      dfs(n.children, new Set(anc).add(n), positioned ? n._seq : anchorSeq);
+    }
+  };
+  dfs(F.tree, new Set(), -Infinity);
+  for (const { n, anc, anchorSeq } of victims) {
+    for (const c of covers) {
+      if (c === n || anc.has(c) || c._seq <= anchorSeq || !isOpaque(c)) continue;
+      const frac = interFrac(n.rect, c.rect);
+      if (frac < T.MIN_COVER) continue;
+      const cur = best.get(n);
+      if (!cur || frac > cur.frac) best.set(n, { victim: n, cover: c, frac });
+    }
+  }
+  return [...best.values()];
+};
+
 export const basicRules = [
   /* ---- 视口/尺寸底线 ---- */
   {
@@ -59,49 +120,17 @@ export const basicRules = [
   },
   {
     id: 'MEDIA_COVERED', layer: 'L1', severity: 'error', runner: 'page',
-    theory: '富媒体被不透明元素大面积遮挡（内容不可见）：img/video/canvas/svg/iframe/object/echarts 容器 + url 背景图容器。候选 = 同容器更晚兄弟（DOM 序绘制在上）+ 更早的定位兄弟（定位绘制在 static 之上）+ 全局 fixed/sticky；祖先排除（包含≠遮挡）；渐变 scrim 与半透明元素豁免（合法设计）。已知边界见 BACKLOG.md A1',
-    detect: (F, T) => {
-      const area = (r) => Math.max(0, r.w) * Math.max(0, r.h);
-      const interFrac = (a, b) => {
-        const w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
-        const h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
-        return (w <= 0 || h <= 0) ? 0 : (w * h) / Math.max(1, area(a));
-      };
-      const isSolid = (c) => c.bgOwn && !c.gradient && c.bgOwnAlpha >= T.COVER_ALPHA;
-      const isMedia = (n) => n.media || n.bgUrl;
-      const best = new Map();
-      const medias = [];
-      const covers = [];
-      const test = (media, cover, anc) => {
-        if (cover === media || anc.has(cover) || !isSolid(cover)) return;
-        const frac = interFrac(media.rect, cover.rect);
-        if (frac < T.MIN_COVER) return;
-        const cur = best.get(media);
-        if (!cur || frac > cur.frac) best.set(media, { media, cover, frac });
-      };
-      const dfs = (nodes, anc) => {
-        for (let i = 0; i < nodes.length; i++) {
-          const n = nodes[i];
-          if (isMedia(n)) {
-            medias.push({ n, anc });
-            /* 同容器候选：更晚兄弟（DOM 序绘制在上）+ 更早的定位兄弟（定位绘制在 static 之上） */
-            for (let j = i + 1; j < nodes.length; j++) test(n, nodes[j], anc);
-            for (let j = 0; j < i; j++) if (nodes[j].pos !== 'static') test(n, nodes[j], anc);
-          }
-          if (n.pos === 'fixed' || n.pos === 'sticky') covers.push(n);
-          const next = new Set(anc);
-          next.add(n);
-          dfs(n.children, next);
-        }
-      };
-      dfs(F.tree, new Set());
-      /* 全局 fixed/sticky 候选：排除媒体祖先后逐对测试 */
-      for (const { n, anc } of medias) {
-        for (const c of covers) test(n, c, anc);
-      }
-      return [...best.values()];
-    },
+    theory: '富媒体被不透明元素大面积遮挡（内容不可见）：img/video/canvas/svg/iframe/object/echarts 容器 + url 背景图容器。共享 coverScan（绘制模型与候选见其注释）',
+    detect: (F, T) => coverScan(F, T, (n) => n.media || n.bgUrl)
+      .map((h) => ({ media: h.victim, cover: h.cover, frac: h.frac })),
     message: (h) => `${loc(h.media)}${h.media.alt ? '“' + h.media.alt + '”' : ''} 被 ${loc(h.cover)} 遮挡 ${pct(h.frac)} — 移开/移动遮挡元素或调整层级；若为有意设计请忽略`
+  },
+  {
+    id: 'TEXT_COVERED', layer: 'L1', severity: 'warn', runner: 'page',
+    theory: '文本被不透明元素/富媒体大面积遮挡（内容不可见）——含祖先层级候选（hainan round-0 relative hero 容器 + 满幅 img 盖住 static h1 顶部的真实案例）。共享 coverScan',
+    detect: (F, T) => coverScan(F, T, (n) => !!n.text)
+      .map((h) => ({ text: h.victim, cover: h.cover, frac: h.frac })),
+    message: (h) => `${loc(h.text)} 文字被 ${loc(h.cover)} 遮挡 ${pct(h.frac)} — 移开/移动遮挡元素或调整层级；若为有意设计请忽略`
   },
   /* ---- 交互可用性 ---- */
   {

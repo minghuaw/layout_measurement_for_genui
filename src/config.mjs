@@ -33,6 +33,7 @@ export const DEFAULTS = {
     GRADIENT_CONTRAST: { enabled: true, thresholds: { RATIO_NORMAL: 4.5, RATIO_LARGE: 3, LARGE_FS: 24 } },
     IMG_BROKEN:        { enabled: true, thresholds: {} },
     MEDIA_COVERED:     { enabled: true, thresholds: { MIN_COVER: 0.3, COVER_ALPHA: 0.5 } },
+    TEXT_COVERED:      { enabled: true, thresholds: { MIN_COVER: 0.3, COVER_ALPHA: 0.5 } },
     MIN_FONT_SIZE:     { enabled: true, thresholds: { MIN_FS: 10 } },
     FOCUS_INVISIBLE:   { enabled: true, thresholds: {} },
     GREY_ON_COLOR:     { enabled: true, thresholds: { BG_MIN_S: 0.15, FG_MAX_S: 0.03 } },

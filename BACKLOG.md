@@ -68,7 +68,7 @@ tolerance → stretched/distorted image. Img nodes are already collected;
 adding natural-size capture is the only prerequisite. Shares data with the
 safe subset of A2.
 
-### A5. TEXT_COVERED (cross-container text covering) — deferred, trigger-conditioned
+### A5. TEXT_COVERED (cross-container text covering) — IMPLEMENTED (2026-09-09, L1 warn, layer-basic.mjs): geometric coverScan shared with MEDIA_COVERED — paint model = positioned elements paint above static content; victim anchor = nearest positioned ancestor (hainan round-0 relative-hero-over-static-h1 is the demonstrated TP); candidates = positioned elements with tree-order seq > anchor. The straddle variant (text visually on top, crossing a media boundary) and overflow-clipping remain covered by A2/A6 notes.
 The one gap the refined OVERLAP v1.2 (same-container pair runner) cannot see:
 `fixed`/`sticky` elements from **other subtrees** visually covering text at
 scroll-0 (the original toilet sticky-topbar-over-image complaint class).
