@@ -227,6 +227,32 @@ export const basicRules = [
     message: (h) => `${loc(h.n)}${h.n.alt ? '“' + h.n.alt + '”' : ''} 图像加载失败 (src …${h.n.imgSrcTail}) — 尝试修复 URL（检查资源是否存在/路径拼写）；若资源不存在，改用 alt 占位（色块 + “${h.n.alt || '语义文本'}”使其美观可读）`
   },
   {
+    id: 'SVG_ICON_HINT', layer: 'L1', severity: 'info', runner: 'node',
+    theory: 'SVG 图标经 <img> 引入时颜色固定在资源内、无法随主题/背景调整（currentColor 在 <img> 中解析为黑色）——疑似图标时提示改用 mask-image + background-color 控制颜色，以保证对比',
+    when: (n) => n.tag === 'img' && n.imgSvg,
+    detect: (n, T, F) => {
+      /* 图标相似度启发：尺寸小 + 上下文（交互元素内 / alt 为空 / 页头页脚） */
+      if (Math.min(n.rect.w, n.rect.h) > T.ICON_MAX) return null;
+      if (!(n._inInteractive || n.alt === '' || n._inChrome)) return null;
+      /* 建议图标色：优先页面文字主色 → 页面强调色 → 黑白（与图表规则同源；取首个 ≥ RATIO） */
+      const p = F.palette || {};
+      const cands = [];
+      if (p.textTop && p.textTop[0]) cands.push(p.textTop[0].hex);
+      if (p.accentTop && p.accentTop[0]) cands.push(p.accentTop[0].hex);
+      cands.push('#ffffff', '#000000');
+      let best = null;
+      for (const hx of cands) {
+        const rgb = parseHex(hx);
+        if (!rgb) continue;
+        const r = contrastRatio(rgb, n.bg);
+        if (!best || r > best.ratio) best = { hex: hx, ratio: r };
+        if (r >= T.RATIO) break;
+      }
+      return { n, bg: hex(n.bg), suggest: best ? best.hex : null, ratio: best ? best.ratio : 0, need: T.RATIO };
+    },
+    message: (h) => `${loc(h.n)}（${r0(h.n.rect.w)}×${r0(h.n.rect.h)}，疑似图标）— 若此处确为图标，建议改用 mask-image 渲染、用 background-color 控制颜色：<img> 引入的 SVG 颜色固定在资源内、无法随背景调整，难以保证图标与背景的对比。当前背景 ${h.bg} 上建议图标色 ${h.suggest}（对比 ${h.ratio.toFixed(2)}:1 ≥${h.need}:1）`
+  },
+  {
     id: 'CHART_TEXT_CONTRAST', layer: 'L1', severity: 'warn', runner: 'page',
     theory: '图表文字（axisLabel/textStyle）对图表背景的可读性（WCAG AA）——图表颜色此前不在任何规则内',
     detect: (F, T) => {

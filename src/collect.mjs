@@ -451,7 +451,7 @@ const COLLECT = (vw) => {
     if (w <= 0 || h <= 0) return 0;
     return (w * h) / Math.max(1, a.width * a.height);
   };
-  const walk = (el, parentBg, parentStops, inHScroll) => {
+  const walk = (el, parentBg, parentStops, inHScroll, inInteractive, inChrome) => {
     const out = [];
     const ordMap = {};
     /* 定位背景层栈：最近的「定位 + 有背景」兄弟（提供后续定位兄弟的可见底色/渐变） */
@@ -463,7 +463,7 @@ const COLLECT = (vw) => {
       const r = child.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) {
         /* 零尺寸节点自身不渲染：子节点上提并完整继承父级背景/渐变/横滚上下文 */
-        out.push(...walk(child, parentBg, parentStops, inHScroll));
+        out.push(...walk(child, parentBg, parentStops, inHScroll, inInteractive, inChrome));
         continue;
       }
       const positioned = cs.position !== 'static';
@@ -488,6 +488,7 @@ const COLLECT = (vw) => {
       let text = '';
       for (const n of child.childNodes) if (n.nodeType === 3) text += n.textContent;
       const interactive = child.matches(INTERACTIVE);
+      const isChrome = child.tagName === 'HEADER' || child.tagName === 'NAV';
       const media = child.matches(MEDIA);
       /* 定位锚点（ISSUE 消息 pinpoint 元素用）：
          tid = 首个 data-test* 属性值（跨框架测试定位约定，data-testid / data-test / ember data-test-*）
@@ -516,6 +517,8 @@ const COLLECT = (vw) => {
       const isImg = child.tagName === 'IMG';
       const imgBroken = isImg ? (child.complete && child.naturalWidth === 0) : false;
       const imgSrcTail = isImg ? (child.getAttribute('src') || '').slice(-24) : '';
+      /* SVG 图标提示输入：<img> 的 src 是否 SVG（<img> 引入的 SVG 颜色固定、无法随主题/背景调整） */
+      const imgSvg = isImg ? /\.svg(\?|#|$)/i.test(child.getAttribute('src') || '') : false;
       /* 富媒体背景容器（url 背景图）——MEDIA_COVERED 覆盖判定输入
          （修复模型惯用 img→backgroundImage 重构，纯 img 判定会漏检重构后页面） */
       const bgUrl = /url\(/i.test(cs.backgroundImage || '');
@@ -555,7 +558,7 @@ const COLLECT = (vw) => {
           yRange = chartYRange(child);
         }
       }
-      const kids = walk(child, bg, childStops, inHScroll || ownHScroll);
+      const kids = walk(child, bg, childStops, inHScroll || ownHScroll, inInteractive || interactive, inChrome || isChrome);
       /* 本节点作为定位背景层：定位 + 有背景（实心/渐变/媒体/背景图）→ 供后续定位兄弟取用 */
       if (positioned && (bgOwn || ownStopsB || media || bgUrl)) {
         layer = { rect: r, bg, stops: childStops };
@@ -571,12 +574,15 @@ const COLLECT = (vw) => {
         ord: ordMap[tagKey],
         imgBroken,
         imgSrcTail,
+        imgSvg,
         bgUrl,
         /* 内部事实（`_` 前缀，geometry.json 落盘剥除）：
            _inHScroll  处于横向滚动容器「内」（严格祖先）——ELEMENT_OVERFLOW 豁免输入
            _isScrollX  自身即横向滚动容器（overflow-x auto/scroll）——ELEMENT_OVERFLOW/
                        TEXT_CLIP 容器自身豁免输入（可滚动溢出属有意设计，非缺陷） */
         _inHScroll: inHScroll,
+        _inInteractive: inInteractive,
+        _inChrome: inChrome,
         _isScrollX: ownHScroll,
         gradStops: gradStops || null,
         _gradInfo: gradInfo || null,
@@ -655,7 +661,7 @@ const COLLECT = (vw) => {
   /* body 自身渐变 stop → walk 初始 parentStops（供后代 GRADIENT_CONTRAST 继承） */
   const bodyStops = /gradient/i.test(bodyCs.backgroundImage) ? parseGradStops(bodyCs.backgroundImage) : null;
   const bodyStopsB = bodyStops ? bodyStops.map((c) => blend(c, baseBg).map((v) => Math.round(v))) : null;
-  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, baseBg, bodyStopsB, false) };
+  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, baseBg, bodyStopsB, false, false, false) };
 };
 
 /**

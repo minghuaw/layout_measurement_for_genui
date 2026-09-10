@@ -237,5 +237,18 @@
     "GRADIENT_CONTRAST",
     "GRADIENT_CONTRAST",
     "DENSITY_EXTREME"
+  ],
+  "tp-icon-img-hint": [
+    "TAP_TARGET",
+    "SVG_ICON_HINT",
+    "BALANCE_OFF"
+  ],
+  "fp-icon-large-svg": [
+    "DENSITY_EXTREME",
+    "BALANCE_OFF"
+  ],
+  "fp-icon-mask": [
+    "TAP_TARGET",
+    "BALANCE_OFF"
   ]
 }

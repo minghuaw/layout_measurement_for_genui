@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const DIR = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(DIR, '..');
 const SNAP = join(DIR, 'golden.snapshot.json');
-const NAMES = ['good', 'overflow', 'overlap', 'mixed', 'font-chaos', 'align-chaos', 'card-chaos', 'cramped', 'img-chaos', 'ratio-chaos', 'void-band', 'sparse-card', 'contrast-chaos', 'color-chaos', 'palette-chaos', 'fp-absolute-layering', 'fp-badge-overlay', 'fp-negative-margin-stack', 'fp-hero-overlay', 'fp-decoration-layer', 'fp-fab', 'fp-gradient-overlay-card', 'tp-avatar-pile', 'tp-margin-overlap-cards', 'tp-price-collision', 'tp-relative-shift-card', 'tp-section-cover', 'tp-tag-pileup', 'tp-hainan', 'tp-card-size-mismatch', 'tp-gradient-scrim-cover', 'fp-scrim-above-text', 'fp-translucent-scrim', 'tp-body-bg-dark-text', 'tp-body-bg-gradient'];
+const NAMES = ['good', 'overflow', 'overlap', 'mixed', 'font-chaos', 'align-chaos', 'card-chaos', 'cramped', 'img-chaos', 'ratio-chaos', 'void-band', 'sparse-card', 'contrast-chaos', 'color-chaos', 'palette-chaos', 'fp-absolute-layering', 'fp-badge-overlay', 'fp-negative-margin-stack', 'fp-hero-overlay', 'fp-decoration-layer', 'fp-fab', 'fp-gradient-overlay-card', 'tp-avatar-pile', 'tp-margin-overlap-cards', 'tp-price-collision', 'tp-relative-shift-card', 'tp-section-cover', 'tp-tag-pileup', 'tp-hainan', 'tp-card-size-mismatch', 'tp-gradient-scrim-cover', 'fp-scrim-above-text', 'fp-translucent-scrim', 'tp-body-bg-dark-text', 'tp-body-bg-gradient', 'tp-icon-img-hint', 'fp-icon-large-svg', 'fp-icon-mask'];
 
 function parseIssues(path) {
   const lines = readFileSync(path, 'utf8').split('\n');

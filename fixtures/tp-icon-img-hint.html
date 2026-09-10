@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tp-icon-img-hint</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1e2a23; color: #ede3d0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; padding: 20px; }
+  .bar { display: flex; align-items: center; gap: 12px; }
+  /* 小尺寸 SVG 图标经 <img> 引入，位于 button 内 —— 疑似图标，触发 SVG_ICON_HINT */
+  .back { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 6px; border: 1px solid #48584c; background: #28352d; }
+  h1 { font-size: 22px; margin: 0; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <button class="back" aria-label="返回">
+      <img src="icon-assets/arrow-left.svg" alt="" width="20" height="20">
+    </button>
+    <h1>三代同堂</h1>
+  </div>
+</body>
+</html>

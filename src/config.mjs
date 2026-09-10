@@ -32,6 +32,7 @@ export const DEFAULTS = {
     CONTRAST_LOW:      { enabled: true, thresholds: { RATIO_NORMAL: 4.5, RATIO_LARGE: 3, LARGE_FS: 24 } },
     GRADIENT_CONTRAST: { enabled: true, thresholds: { RATIO_NORMAL: 4.5, RATIO_LARGE: 3, LARGE_FS: 24 } },
     IMG_BROKEN:        { enabled: true, thresholds: {} },
+    SVG_ICON_HINT:     { enabled: true, thresholds: { RATIO: 3, ICON_MAX: 48 } },
     MEDIA_COVERED:     { enabled: true, thresholds: { MIN_COVER: 0.3, COVER_ALPHA: 0.5 } },
     TEXT_COVERED:      { enabled: true, thresholds: { MIN_COVER: 0.3, COVER_ALPHA: 0.5 } },
     MIN_FONT_SIZE:     { enabled: true, thresholds: { MIN_FS: 10 } },
