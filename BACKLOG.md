@@ -126,6 +126,26 @@ gradient as a cover when the victim's span projected onto the gradient axis is
 gradients excluded (image + legibility scrim is intentional). Fixtures:
 `tp-gradient-scrim-cover`, `fp-scrim-above-text`, `fp-translucent-scrim`.
 
+### A10. RESOLVED (2026-09-10) — page background chain + positioned background-layer resolution
+Two related `CONTRAST_LOW` FP classes closed:
+1. **Page base bg ignored** — `walk` started at `body.children` with a white base, so pages
+   setting the background on `html`/`body` (no wrapper) measured text against white
+   (`body { background:#1e2a23; color:#ede3d0 }` → light-on-white FP). Fix: base =
+   white → html bg → body bg (alpha composited); `pageInfo.bodyBg` re-aligned to the same
+   composite; body gradient stops seeded as the initial `parentStops` (body-gradient
+   inheritance). Fixtures `tp-body-bg-dark-text` / `tp-body-bg-gradient`.
+2. **Positioned background-layer sibling not seen** — a node inside
+   `.card > .bg(abs,inset:0) + .body(rel,z-index)` resolved its bg to the ancestor chain
+   (body), not the `.bg` layer; exposed by fix 1 on `fp-absolute-layering`
+   (`#6b7280` on `#f5f6fa` = 4.48 vs 4.83 on `#fff`). Fix: the walk tracks the most recent
+   positioned sibling with a background (solid/gradient/media) covering ≥80% and uses its
+   effective bg/stops for later positioned siblings. `fp-absolute-layering` now resolves the
+   card text to `#fff` (no FP) and the section text to its gradient (`GRADIENT_CONTRAST`, TP).
+   Side effect: `fp-hero-overlay` / `fp-gradient-overlay-card` move `CONTRAST_LOW` →
+   `GRADIENT_CONTRAST` (text now correctly resolves to the gradient layer); the residual
+   there is the A8 worst-stop limitation (text sits at the dark end). Multi-layer scrim
+   compositing (scrim over an image layer) is approximated (last layer wins).
+
 ## B. Detection techniques (engine capabilities, for future investigations)
 
 ### B1. Clip detection

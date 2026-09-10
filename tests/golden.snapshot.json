@@ -101,8 +101,8 @@
     "HARMONY_OFF"
   ],
   "fp-absolute-layering": [
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
     "COLOR_INCONSISTENT"
   ],
   "fp-badge-overlay": [
@@ -117,8 +117,8 @@
   ],
   "fp-negative-margin-stack": [],
   "fp-hero-overlay": [
-    "CONTRAST_LOW",
-    "CONTRAST_LOW"
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST"
   ],
   "fp-decoration-layer": [
     "ELEMENT_OVERFLOW",
@@ -132,22 +132,22 @@
     "SHADOW_OVERKILL"
   ],
   "fp-gradient-overlay-card": [
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
-    "CONTRAST_LOW",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
     "VOID_BAND",
     "VOID_BAND",
     "VOID_BAND",
@@ -229,5 +229,13 @@
     "TEXT_COVERED"
   ],
   "fp-scrim-above-text": [],
-  "fp-translucent-scrim": []
+  "fp-translucent-scrim": [],
+  "tp-body-bg-dark-text": [
+    "DENSITY_EXTREME"
+  ],
+  "tp-body-bg-gradient": [
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "DENSITY_EXTREME"
+  ]
 }

@@ -41,6 +41,8 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 
 **事实与判定分离**：采集层只记录测量事实，判定全部在 Node 侧规则完成——同一份事实可支撑不同判定标准，也支撑"只回流事实"的实验臂。
 
+**有效背景链**：以「白 → html 底色 → body 底色」为页面基底（`walk` 初始 parentBg，`pageInfo.bodyBg` 同源，供面积归因）逐层 alpha 合成向下传递；容器内「定位 + 有背景」的兄弟（背景层模式：`.card > .bg(abs, inset:0) + .body(rel, z-index)`）会作为后续定位兄弟（及其子树）的可见底色/渐变——修正祖先链看不到兄弟背景层导致的底色错误（如卡片文字被算到 body 底色上）。
+
 ### 2.2 目标架构【已实现】
 
 ```

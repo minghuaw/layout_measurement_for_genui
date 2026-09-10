@@ -278,9 +278,18 @@ const COLLECT = (vw) => {
     return [f.r * a + b[0] * (1 - a), f.g * a + b[1] * (1 - a), f.b * a + b[2] * (1 - a)];
   };
 
-  /* ---- 页面级信息：视口基准 / 滚动尺寸 / body 底色 ---- */
+  /* ---- 页面级信息：视口基准 / 滚动尺寸 / 页面底色（html→body 合成） ---- */
   const scrollEl = document.scrollingElement || document.documentElement;
-  const bodyOwn = parseCs(getComputedStyle(document.body).backgroundColor);
+  const bodyCs = getComputedStyle(document.body);
+  const htmlOwn = parseCs(getComputedStyle(document.documentElement).backgroundColor);
+  const bodyOwn = parseCs(bodyCs.backgroundColor);
+  /* 页面基底色：白 → html 底色 → body 底色（逐层 alpha 合成）——作为 walk 初始 parentBg，
+     使「无自身背景」的节点合成到真实页面底色（而非固定白色），修正 body 底色被忽略
+     导致的 CONTRAST_LOW 等误报 */
+  let baseBg = [255, 255, 255];
+  if (htmlOwn && htmlOwn.a > 0) baseBg = blend(htmlOwn, baseBg);
+  if (bodyOwn && bodyOwn.a > 0) baseBg = blend(bodyOwn, baseBg);
+  baseBg = baseBg.map((v) => Math.round(v));
   const pageInfo = {
     viewport: vw,
     innerW: window.innerWidth,
@@ -288,8 +297,8 @@ const COLLECT = (vw) => {
     scrollHeight: scrollEl.scrollHeight,
     /** 实测 URL（重定向后的最终地址，含 query/hash）——报告 URL: 行溯源输入 */
     url: location.href,
-    /** body 自身底色（树从 body.children 开始，body 底色需单独带回供面积归因补全） */
-    bodyBg: bodyOwn && bodyOwn.a > 0 ? blend(bodyOwn, [255, 255, 255]).map((v) => Math.round(v)) : null
+    /** 页面底色（html→body 合成；树从 body.children 开始，用于面积归因补全 + 节点背景链起点） */
+    bodyBg: baseBg
   };
 
   /** 数值保留两位小数（防亚像素抖动，判定层再决定取整时机） */
@@ -433,10 +442,20 @@ const COLLECT = (vw) => {
    *   横向滚动容器内（轮播/横滑行属有意设计，其右缘越界是可滚动内容而非缺陷）
    * 跳过：非渲染标签 / display:none / visibility:hidden
    * 零尺寸节点：自身不入树，子节点上提（hoist），避免树断裂
+   * 定位背景层：容器内「定位 + 有背景」的兄弟（如 .card > .bg(abs, inset:0) + .body(rel, z-index)）
+   *   视觉上在后续定位兄弟之下——后续定位兄弟（及其子树）以该层为可见底色/渐变，而非祖先链底色
    */
+  const rectOverlapFrac = (a, b) => {
+    const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+    const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+    if (w <= 0 || h <= 0) return 0;
+    return (w * h) / Math.max(1, a.width * a.height);
+  };
   const walk = (el, parentBg, parentStops, inHScroll) => {
     const out = [];
     const ordMap = {};
+    /* 定位背景层栈：最近的「定位 + 有背景」兄弟（提供后续定位兄弟的可见底色/渐变） */
+    let layer = null; /* { rect, bg, stops } */
     for (const child of el.children) {
       if (SKIP.has(child.tagName)) continue;
       const cs = getComputedStyle(child);
@@ -447,11 +466,16 @@ const COLLECT = (vw) => {
         out.push(...walk(child, parentBg, parentStops, inHScroll));
         continue;
       }
+      const positioned = cs.position !== 'static';
+      /* 被最近的定位背景层覆盖的定位兄弟：以该层为底（修正「背景层为兄弟、祖先链看不到」的底色） */
+      const onLayer = positioned && layer && rectOverlapFrac(r, layer.rect) >= 0.8;
+      const baseBg = onLayer ? layer.bg : parentBg;
+      const baseStops = onLayer ? layer.stops : parentStops;
       /* 有效背景/前景：自身背景 alpha>0 则叠加父级，否则继承父级；
          前景 color 同样叠加到有效背景上（半透明文字场景） */
       const own = parseCs(cs.backgroundColor);
       const bgOwn = !!own && own.a > 0;
-      const bg = bgOwn ? blend(own, parentBg) : parentBg;
+      const bg = bgOwn ? blend(own, baseBg) : baseBg;
       /* 背景链逐层向下传递：子树以本节点合成后的有效背景为底（而非 parentBg），
          否则彩色容器内的文本会被误算成祖先底色（如蓝底横幅上白字被算成白底）
          —— 本仓库版本已含此修复（kids 携带 bg + childStops，见 walk 尾部） */
@@ -484,7 +508,7 @@ const COLLECT = (vw) => {
          内部字段（_ 前缀，落盘 geometry.json 时剥除） */
       const gradInfo = gradient ? parseGradInfo(cs.backgroundImage, { w: r.width, h: r.height }) : null;
       const ownStopsB = ownStops ? ownStops.map((c) => blend(c, bg).map((v) => Math.round(v))) : null;
-      const inheritedStops = (bgOwn && own.a >= 1) ? null : (parentStops || null);
+      const inheritedStops = (bgOwn && own.a >= 1) ? null : (baseStops || null);
       const gradStops = ownStopsB || inheritedStops;
       const childStops = ownStopsB || inheritedStops;
       /* 图像加载状态（IMG_BROKEN 输入）：complete && naturalWidth===0 = 已请求且失败；
@@ -532,6 +556,10 @@ const COLLECT = (vw) => {
         }
       }
       const kids = walk(child, bg, childStops, inHScroll || ownHScroll);
+      /* 本节点作为定位背景层：定位 + 有背景（实心/渐变/媒体/背景图）→ 供后续定位兄弟取用 */
+      if (positioned && (bgOwn || ownStopsB || media || bgUrl)) {
+        layer = { rect: r, bg, stops: childStops };
+      }
       out.push({
         tag: child.tagName.toLowerCase(),
         id: child.id || '',
@@ -624,7 +652,10 @@ const COLLECT = (vw) => {
     return out;
   };
 
-  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, [255, 255, 255], null, false) };
+  /* body 自身渐变 stop → walk 初始 parentStops（供后代 GRADIENT_CONTRAST 继承） */
+  const bodyStops = /gradient/i.test(bodyCs.backgroundImage) ? parseGradStops(bodyCs.backgroundImage) : null;
+  const bodyStopsB = bodyStops ? bodyStops.map((c) => blend(c, baseBg).map((v) => Math.round(v))) : null;
+  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, baseBg, bodyStopsB, false) };
 };
 
 /**

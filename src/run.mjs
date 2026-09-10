@@ -29,7 +29,7 @@ const DIR = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(DIR, '..');
 
 /** 实验夹具清单（15 缺陷注入 + 7 OVERLAP 误报挑战 + 7 真阳性 = 29；与 tests/golden.snapshot.json 顺序一致） */
-const ALL = ['good', 'overflow', 'overlap', 'mixed', 'font-chaos', 'align-chaos', 'card-chaos', 'cramped', 'img-chaos', 'ratio-chaos', 'void-band', 'sparse-card', 'contrast-chaos', 'color-chaos', 'palette-chaos', 'fp-absolute-layering', 'fp-badge-overlay', 'fp-negative-margin-stack', 'fp-hero-overlay', 'fp-decoration-layer', 'fp-fab', 'fp-gradient-overlay-card', 'tp-avatar-pile', 'tp-margin-overlap-cards', 'tp-price-collision', 'tp-relative-shift-card', 'tp-section-cover', 'tp-tag-pileup', 'tp-hainan', 'tp-card-size-mismatch', 'tp-gradient-scrim-cover', 'fp-scrim-above-text', 'fp-translucent-scrim'];
+const ALL = ['good', 'overflow', 'overlap', 'mixed', 'font-chaos', 'align-chaos', 'card-chaos', 'cramped', 'img-chaos', 'ratio-chaos', 'void-band', 'sparse-card', 'contrast-chaos', 'color-chaos', 'palette-chaos', 'fp-absolute-layering', 'fp-badge-overlay', 'fp-negative-margin-stack', 'fp-hero-overlay', 'fp-decoration-layer', 'fp-fab', 'fp-gradient-overlay-card', 'tp-avatar-pile', 'tp-margin-overlap-cards', 'tp-price-collision', 'tp-relative-shift-card', 'tp-section-cover', 'tp-tag-pileup', 'tp-hainan', 'tp-card-size-mismatch', 'tp-gradient-scrim-cover', 'fp-scrim-above-text', 'fp-translucent-scrim', 'tp-body-bg-dark-text', 'tp-body-bg-gradient'];
 
 /** 命令行解析：--full 旗标进入实验模式，其余非旗标参数为目标夹具（缺省全量） */
 const args = process.argv.slice(2);
