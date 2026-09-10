@@ -30,15 +30,27 @@ captures rect/position/background alpha — no new collection needed.
 **Acceptance fixtures**: `fixtures/fp-*.html` (7, from the OVERLAP_challenge
 set) — golden-pinned known false positives; when this refinement lands, the
 fp-* OVERLAP entries dropping from the snapshot diff IS the verification.
+(Provenance note: the OVERLAP_challenge README's suggested
+`run.mjs --fixture-dir` flag does not exist in this analyzer — the cases are
+wired via the standard run.mjs ALL / golden.mjs NAMES lists.)
 
 ### A2. IMG_CLIPPED (image cut by overflow) — low priority, high false-positive risk
-`object-fit: cover` intentional cropping is the mainstream pattern (heroes,
-thumbnails) and is nearly indistinguishable from harmful clipping at the DOM
-level. The generation-side prompt red-line ("do not clip image subjects with
-overflow:hidden") already covers the generated-page case. If detection is
-ever pursued, restrict to imgs **without object-fit whose rendered aspect
-ratio ≠ naturalWidth/naturalHeight ratio** (a distortion signal — see A4,
-shares data).
+**Observed root cause (reading project, 2026-09-09)**: the harmful clipping
+seen in practice is `object-fit: cover` **center-cropping** — scenario images
+with content baked in at the top (text/labels: 起床/早餐/出行/睡前) lose it to
+the symmetric crop. Detection would be feasible without content-vision:
+box-aspect vs `naturalWidth/Height`-aspect yields the exact clipped
+fraction/pixels, and `alt` presence discriminates content images (alt set)
+from decorative ones (alt="" → exempt); remedy = `object-position` / container
+aspect. Deferred as context only — no rule drafted; broken-image placeholders
+(the IMG_BROKEN alt suggestion) sidestep the crop case entirely.
+`object-fit: cover` intentional cropping is also the mainstream pattern
+(heroes, thumbnails) and is nearly indistinguishable from harmful clipping at
+the DOM level for the overflow-hidden variant. The generation-side prompt
+red-line ("do not clip image subjects with overflow:hidden") already covers
+the generated-page case. If detection is ever pursued, restrict to imgs
+**without object-fit whose rendered aspect ratio ≠ naturalWidth/naturalHeight
+ratio** (a distortion signal — see A4, shares data).
 
 ### A3. Interaction-affordance rule `AFFORDANCE_MISMATCH` (user-scheduled for a future experiment)
 "Looks clickable but isn't": computed `cursor: pointer` (or hover styling)
@@ -55,6 +67,25 @@ without interactive semantics — unreachable for assistive tech"), not
 tolerance → stretched/distorted image. Img nodes are already collected;
 adding natural-size capture is the only prerequisite. Shares data with the
 safe subset of A2.
+
+### A5. TEXT_COVERED (cross-container text covering) — deferred, trigger-conditioned
+The one gap the refined OVERLAP v1.2 (same-container pair runner) cannot see:
+`fixed`/`sticky` elements from **other subtrees** visually covering text at
+scroll-0 (the original toilet sticky-topbar-over-image complaint class).
+Trigger for building it: a real cross-container text-obscuring case appearing
+in experiment rounds. Implementation is a small delta on the existing
+`MEDIA_COVERED` DFS — the global fixed/sticky candidates pass already exists;
+add text-bearing victims (direct `n.text`) with the same ≥30% solid-opaque
+test. Note: the opaque-cover test deliberately does **not** transfer to
+click-blocking (a transparent `pointer-events:auto` overlay blocks clicks
+while looking like nothing) — that's why INTERACTIVE_BLOCKED stays a separate
+deferred idea.
+
+### A6. Minor polish — COLOR_DOMINANCE contributor dedupe
+The contributor list can emit identical entries (reading home:
+`button@y656(4%)` ×3 — three same-y carousel buttons). Candidate fix: merge
+identical label+hex contributors (summing shares) or add a distinguishing
+anchor (x or per-card testid) so each contributor is uniquely identifiable.
 
 ## B. Detection techniques (engine capabilities, for future investigations)
 
