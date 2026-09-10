@@ -39,6 +39,6 @@ if (mode === 'snapshot') {
     if (!ok) fail++;
     console.log(`${n.padEnd(14)} ${ok ? 'OK' : 'DIFF'}  expect=[${a}] actual=[${b}]`);
   }
-  console.log(fail === 0 ? '\nGOLDEN PASS (15/15)' : `\nGOLDEN FAIL (${fail}/15)`);
+  console.log(fail === 0 ? `\nGOLDEN PASS (${NAMES.length}/${NAMES.length})` : `\nGOLDEN FAIL (${fail}/${NAMES.length})`);
   process.exit(fail === 0 ? 0 : 1);
 }

@@ -94,11 +94,6 @@
     "HARMONY_OFF"
   ],
   "fp-absolute-layering": [
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "COLOR_INCONSISTENT"
@@ -108,22 +103,13 @@
     "TEXT_CLIP",
     "TEXT_CLIP",
     "TEXT_CLIP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "CONTRAST_LOW"
   ],
-  "fp-negative-margin-stack": [
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP"
-  ],
+  "fp-negative-margin-stack": [],
   "fp-hero-overlay": [
-    "OVERLAP",
     "CONTRAST_LOW",
     "CONTRAST_LOW"
   ],
@@ -132,28 +118,13 @@
     "ELEMENT_OVERFLOW",
     "TEXT_CLIP",
     "TEXT_CLIP",
-    "OVERLAP",
-    "OVERLAP",
     "GLASS_NO_BLUR"
   ],
   "fp-fab": [
-    "OVERLAP",
     "SPACING",
     "SHADOW_OVERKILL"
   ],
   "fp-gradient-overlay-card": [
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
-    "OVERLAP",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
@@ -175,5 +146,65 @@
     "VOID_BAND",
     "VOID_BAND",
     "CARD_VOID"
+  ],
+  "tp-avatar-pile": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP"
+  ],
+  "tp-margin-overlap-cards": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP"
+  ],
+  "tp-price-collision": [
+    "OVERLAP"
+  ],
+  "tp-relative-shift-card": [
+    "OVERLAP",
+    "SPACING",
+    "VOID_BAND"
+  ],
+  "tp-section-cover": [
+    "OVERLAP"
+  ],
+  "tp-tag-pileup": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP"
+  ],
+  "tp-hainan": [
+    "TEXT_CLIP",
+    "OVERLAP",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "FONT_INCONSISTENT",
+    "COLOR_INCONSISTENT",
+    "COLOR_INCONSISTENT",
+    "COLOR_INCONSISTENT",
+    "RADIUS_SCALE_OFF",
+    "FONT_FAMILY_BLOAT",
+    "ASPECT_INCONSISTENT"
   ]
 }
