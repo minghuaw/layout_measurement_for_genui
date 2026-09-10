@@ -100,6 +100,20 @@ sentinel ≥100px), mirroring the scroll-region exemption now in the overflow
 rules. Deferred from the 2026-09-10 SIZE_INCONSISTENT/TEXT_CLIP change set;
 affects recorded r0.2 for hainan/workout/reading/kitchen (pill token clamped).
 
+### A8. GRADIENT_CONTRAST — worst-stop false positives on decorative stripe gradients
+**Observed (decor family-guide r0.2, 2026-09-10)**: the model replaced solid section
+backgrounds with a 3px accent stripe expressed as a gradient
+(`linear-gradient(90deg, var(--danger) 3px, var(--surface) 3px)`). `GRADIENT_CONTRAST`
+then fired **52 times**, each using the **worst stop** (the 3px `--danger`/`--accent`
+stripe) as the text background — even though the text sits on the `--surface` part
+(after the 3px). The rule's stop model ignores **stop extent / position**, so a
+decorative left-edge stripe is treated as a full-width background.
+Candidate fix: when computing the worst-case stop, weight by the stop's **area/extent**
+along the gradient (skip stops whose band doesn't underlie the text rect), or exempt
+gradients whose non-neutral stops occupy < ~10% of the box. Related: the same
+stop-extent gap can over-report on gradient scrims. Recorded as a deferred item; the
+decor family-guide r0.2 result (54) is dominated by this FP class.
+
 ## B. Detection techniques (engine capabilities, for future investigations)
 
 ### B1. Clip detection
