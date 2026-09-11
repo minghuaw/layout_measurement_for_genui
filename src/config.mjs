@@ -41,6 +41,11 @@ export const DEFAULTS = {
     LINK_INDISTINCT:   { enabled: true, thresholds: {} },
     ALIGN_INCONSISTENT:{ enabled: true, thresholds: { DIFF: 4 } },
     SIZE_INCONSISTENT: { enabled: true, thresholds: { DIFF: 6 } },
+    /* GROUP_CHILD_ALIGN: 重复项内对应子元素几何一致性的容差 px（结构签名匹配） */
+    GROUP_CHILD_ALIGN: { enabled: true, thresholds: { TOL: 8 } },
+    /* GROUP_CHILD_ALIGN: 重复项内「对应子元素」几何一致性——子元素按 tag+首类签名+出现序匹配，
+       各维 (dx/dy/w/h) 相对自身项取值，偏离组内中位 >TOL 视为错位（每组建报首个偏离签名组） */
+    GROUP_CHILD_ALIGN: { enabled: true, thresholds: { TOL: 8 } },
     RADIUS_INCONSISTENT:{ enabled: true, thresholds: { DIFF: 2 } },
     FONT_INCONSISTENT: { enabled: true, thresholds: { DIFF: 1 } },
     COLOR_INCONSISTENT:{ enabled: true, thresholds: {} },

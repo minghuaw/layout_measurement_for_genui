@@ -93,6 +93,62 @@ export const orderRules = [
       : `${h.n} 个 ${h.key} 宽度不一致: ${h.ws.join('/')}px (容器 ${h.parent})`
   },
   {
+    id: 'GROUP_CHILD_ALIGN', layer: 'L2', severity: 'warn', runner: 'listGroup',
+    theory: '重复项内「对应子元素」几何一致性——子元素按 tag+首类签名+出现序跨项匹配，各维 (dx/dy/w/h) 相对自身项取值；偏离组内中位 >TOL 的项为错位（如某项文本过长换行，使其内图标/标题整体下移）。每组建报首个偏离签名组',
+    detect: (g, T) => {
+      const items = g.items;
+      if (items.length < 3) return null;
+      /* 1) 按「签名+出现序」跨项匹配子元素 */
+      const groups = new Map(); /* key -> { sig, occ, order, rows:[{item, child}] } */
+      let order = 0;
+      for (const item of items) {
+        const occ = new Map();
+        for (const child of item.children) {
+          const sig = child.tag + (child.cls ? '.' + child.cls.split('.')[0] : '');
+          const k = occ.get(sig) || 0;
+          occ.set(sig, k + 1);
+          const key = sig + '#' + k;
+          if (!groups.has(key)) groups.set(key, { sig, occ: k, order: order++, rows: [] });
+          groups.get(key).rows.push({ item, child });
+        }
+      }
+      /* 2) 逐签名组比对各维（相对自身项），偏离组内中位 >TOL 的项为错位 */
+      const median = (arr) => {
+        const s = [...arr].sort((a, b) => a - b);
+        return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+      };
+      const DIMS = [
+        ['dx', (it, c) => c.rect.x - it.rect.x], ['dy', (it, c) => c.rect.y - it.rect.y],
+        ['w', (it, c) => c.rect.w], ['h', (it, c) => c.rect.h],
+      ];
+      for (const key of [...groups.keys()].sort((a, b) => groups.get(a).order - groups.get(b).order)) {
+        const grp = groups.get(key);
+        if (grp.rows.length < 3) continue; /* 样本不足（<3），中位数不稳 */
+        const dev = [];
+        for (const [name, get] of DIMS) {
+          const vals = grp.rows.map((r) => get(r.item, r.child));
+          const med = median(vals);
+          const outliers = grp.rows
+            .map((r, i) => ({ r, d: Math.abs(vals[i] - med) }))
+            .filter((o) => o.d > T.TOL)
+            .sort((a, b) => b.d - a.d);
+          if (outliers.length) dev.push({ dim: name, vals, med, outliers });
+        }
+        if (!dev.length) continue;
+        /* 取偏离最大的一维渲染；每组建报首个偏离签名组（后续偏移多为同一换行的连锁） */
+        const top = dev.slice().sort((a, b) => b.outliers[0].d - a.outliers[0].d)[0];
+        return {
+          n: items.length, key: g.key, parent: g.parent,
+          sig: grp.sig + (grp.occ ? `（第${grp.occ + 1}个）` : ''),
+          dim: top.dim, vals: top.vals.map(r0), med: r0(top.med),
+          ex: top.outliers.slice(0, 3).map((o) => `${label(o.r.item)} > ${loc(o.r.child)}`),
+        };
+      }
+      return null;
+    },
+    message: (h) => `${h.n} 个 ${h.key} 内对应子元素几何不一致：${h.sig} ${h.dim} ${h.vals.join('/')}px，偏离中位 ${h.med}px（如 ${h.ex[0]}）— 重复项内对应子元素应几何一致，多由某项文本过长换行导致；建议统一/截断文本或固定子元素尺寸`
+  },
+  {
     id: 'RADIUS_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'listGroup',
     theory: '圆角一致性',
     detect: (g, T) => {

@@ -99,6 +99,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | 规则 | 判据 | 状态 |
 |---|---|---|
 | ALIGN / SIZE / RADIUS_INCONSISTENT | 列表组左缘极差 >4px / 尺寸极差 >6px / 圆角 >2px。SIZE 含**可见卡片盒**：解析每项「绘制表面（自身底色/渐变/背景图/阴影/媒体，圆角边框不计）最大子盒」，严格同 tag 方可比——捕捉被透明包裹层拉伸掩盖的内部卡片尺寸不一致 | 已实现（卡片盒增强） |
+| GROUP_CHILD_ALIGN | **重复项内对应子元素几何一致性**：子元素按「tag+首类签名+组内出现序」跨项匹配（容忍条件性子元素），各维 dx/dy/w/h 相对自身项取值，偏离组内中位 >TOL 的项为错位（如某项文本过长换行，使其头部行变高、图标垂直居中下坠）。每组建报首个偏离签名组（后续偏移为同一换行的连锁） | 新增 |
 | FONT_INCONSISTENT / COLOR_INCONSISTENT | 排版分组字号极差 >1px / 颜色不一致 | 已实现 |
 | SPACING / LINE_HEIGHT_TIGHT | 间距极差 >24px / 行高 <1.2 | 已实现 |
 | RADIUS_SCALE_OFF | 全页圆角值不落在设计刻度 {4,8,12,16,20,24}（圆角系统化，不止组内一致） | 新增 |

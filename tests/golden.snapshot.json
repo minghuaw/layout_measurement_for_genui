@@ -19,10 +19,12 @@
     "TAP_TARGET",
     "TAP_TARGET",
     "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "SPACING"
   ],
   "font-chaos": [
     "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "FONT_INCONSISTENT",
     "FONT_INCONSISTENT",
     "FONT_INCONSISTENT"
@@ -33,6 +35,7 @@
   ],
   "card-chaos": [
     "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "RADIUS_INCONSISTENT"
   ],
   "cramped": [
@@ -44,11 +47,13 @@
   "img-chaos": [
     "IMG_BROKEN",
     "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "ASPECT_INCONSISTENT",
     "IMG_SIZE_INCONSISTENT"
   ],
   "ratio-chaos": [
     "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "VOID_BAND",
     "VOID_BAND",
     "CARD_VOID",
@@ -57,6 +62,7 @@
   ],
   "void-band": [
     "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "VOID_BAND",
     "VOID_BAND",
     "VOID_BAND"
@@ -78,7 +84,8 @@
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
-    "SIZE_INCONSISTENT"
+    "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN"
   ],
   "color-chaos": [
     "CONTRAST_LOW",
@@ -221,6 +228,7 @@
   "tp-card-size-mismatch": [
     "TEXT_CLIP",
     "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "VOID_BAND",
     "CARD_VOID",
     "BALANCE_OFF"
@@ -250,5 +258,21 @@
   "fp-icon-mask": [
     "TAP_TARGET",
     "BALANCE_OFF"
+  ],
+  "tp-group-child-align": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
+    "COLOR_DOMINANCE"
+  ],
+  "fp-group-child-align": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "COLOR_DOMINANCE"
   ]
 }
