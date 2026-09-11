@@ -18,3 +18,33 @@ export const loc = (n) => {
 };
 /** 比率 → 百分数串（Palette 行 / 面积占比消息） */
 export const pct = (v) => Math.round(v * 100) + '%';
+/** 中位数（GROUP_CHILD_ALIGN / IMG_SIZE_INCONSISTENT 偏离统计共用） */
+export const median = (arr) => {
+  const s = [...arr].sort((a, b) => a - b);
+  return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+};
+/** 结构签名：子树骨架的规范化串（逐层 tag+首类，文本/几何不参与）。
+ *  同构兄弟归同组、异构不跨组比较——页面级不同角色兄弟（hero/列表/徽标区）
+ *  骨架各异，混入同组会让尺寸/比例类规则跨角色误报 */
+export const structuralSignature = (n) => {
+  const own = n.tag + (n.cls ? '.' + n.cls.split('.')[0] : '');
+  if (!n.children.length) return own;
+  return own + '[' + n.children.map(structuralSignature).join(',') + ']';
+};
+/** 结构路径收集：以 item 为根 DFS，产出每个命中节点的跨项匹配路径
+ *  （逐层 tag+首类签名+出现序，同 GROUP_CHILD_ALIGN 的路径方案） */
+export const collectByPath = (item, isTarget) => {
+  const out = [];
+  const walk = (n, path) => {
+    if (isTarget(n)) out.push({ path: path || 'root', node: n });
+    const occ = new Map();
+    for (const c of n.children) {
+      const sig = c.tag + (c.cls ? '.' + c.cls.split('.')[0] : '');
+      const k = occ.get(sig) || 0;
+      occ.set(sig, k + 1);
+      walk(c, (path ? path + ' > ' : '') + sig + '#' + k);
+    }
+  };
+  walk(item, '');
+  return out;
+};

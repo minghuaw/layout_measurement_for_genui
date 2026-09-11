@@ -4,7 +4,7 @@
  * 语义：留白与比例（不违规但"不舒服"）。判定对象为空白带、卡片饱满度、
  *   宽高比、行/屏幕密度、左右视觉重量；多为从宽阈值（宁可漏报不可误报）。
  */
-import { label, loc, r0, spread, pct } from '../engine/util.mjs';
+import { label, loc, r0, spread, pct, collectByPath, median } from '../engine/util.mjs';
 
 /** collectTextNodes —— 递归收集子树内所有带文本的节点（CARD_VOID 内容包络计算用） */
 function collectTextNodes(n, out) {
@@ -77,24 +77,39 @@ export const rhythmRules = [
   },
   {
     id: 'IMG_SIZE_INCONSISTENT', layer: 'L3', severity: 'warn', runner: 'listGroup',
-    theory: '媒体尺寸一致性',
+    theory: '媒体尺寸一致性——组内各项的「对应媒体元素」（叶子、无文本，任何尺寸/比例）按结构路径跨项匹配（逐层 tag+首类签名+出现序，同 GROUP_CHILD_ALIGN 方案），宽或高偏离组内中位 >DIFF 即报。结构路径保证只比同类媒体（图标对图标、封面对封面），不依赖方形/尺寸带启发式；每建报各偏离路径组',
     detect: (g, T) => {
-      const thumbs = [];
+      const byPath = new Map();
+      const order = [];
       for (const item of g.items) {
-        const t = [];
-        (function find(n) {
-          if (!n.children.length && !n.text && r0(n.rect.w) === r0(n.rect.h) && n.rect.w >= 24 && n.rect.w <= 128) t.push(n);
-          for (const c of n.children) find(c);
-        })(item);
-        if (t.length) thumbs.push(t[0]);
+        for (const { path, node } of collectByPath(item, (n) => !n.children.length && !n.text)) {
+          if (!byPath.has(path)) { byPath.set(path, []); order.push(path); }
+          byPath.get(path).push({ item, node });
+        }
       }
-      if (thumbs.length >= 2 && spread(thumbs.map((n) => n.rect.w)) > T.DIFF) {
-        const members = thumbs.slice(0, 3).map((n) => `${loc(n)}(${r0(n.rect.w)}px)`);
-        return { n: g.items.length, key: g.key, thumbs: thumbs.map((n) => r0(n.rect.w)), members };
+      const hits = [];
+      for (const path of order) {
+        const rows = byPath.get(path);
+        if (rows.length < 3) continue; /* 样本不足，中位数不稳 */
+        const ws = rows.map((r) => r.node.rect.w);
+        const hs = rows.map((r) => r.node.rect.h);
+        const wSp = spread(ws), hSp = spread(hs);
+        if (wSp <= T.DIFF && hSp <= T.DIFF) continue;
+        const dim = wSp >= hSp ? 'w' : 'h';
+        const vals = dim === 'w' ? ws : hs;
+        const med = median(vals);
+        const outliers = rows
+          .map((r, i) => ({ r, d: Math.abs(vals[i] - med) }))
+          .sort((a, b) => b.d - a.d);
+        hits.push({
+          n: g.items.length, key: g.key, parent: g.parent,
+          path, dim, vals: vals.map(r0), med: r0(med),
+          ex: outliers.slice(0, 3).map((o) => `${loc(o.r.node)}(${r0(dim === 'w' ? o.r.node.rect.w : o.r.node.rect.h)}px)`),
+        });
       }
-      return null;
+      return hits.length ? hits : null;
     },
-    message: (h) => `${h.n} 个 ${h.key} 的缩略图尺寸不一致: ${h.thumbs.join('/')}px${h.members.length ? '；如: ' + h.members.join(', ') : ''}`
+    message: (h) => `${h.n} 个 ${h.key} 媒体尺寸不一致（${h.path} 的 ${h.dim} ${h.vals.join('/')}px，中位 ${h.med}px）${h.ex.length ? '；如: ' + h.ex.join(', ') : ''} — 对应媒体应尺寸一致，统一为同一宽高`
   },
   {
     id: 'LINE_LENGTH', layer: 'L3', severity: 'warn', runner: 'node',

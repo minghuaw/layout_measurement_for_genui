@@ -99,6 +99,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | 规则 | 判据 | 状态 |
 |---|---|---|
 | ALIGN / SIZE / RADIUS_INCONSISTENT | 列表组左缘极差 >4px / 尺寸极差 >6px / 圆角 >2px。SIZE 含**可见卡片盒**：解析每项「绘制表面（自身底色/渐变/背景图/阴影/媒体，圆角边框不计）最大子盒」，严格同 tag 方可比——捕捉被透明包裹层拉伸掩盖的内部卡片尺寸不一致 | 已实现（卡片盒增强） |
+| **listGroup 结构分区**（建组层，影响全部 item 级 listGroup 规则） | 同 tag+首cls、宽 ≥100 的兄弟桶内再按**结构签名**（逐层 tag+首类的子树骨架串，文本/几何不参与）分区，仅同构分区 ≥3 成组——页面级不同角色兄弟（hero/列表/徽标区）骨架各异，不再跨角色比较（如阅读首页 5 个 section 的媒体/比例混比误报） | 新增 |
 | GROUP_CHILD_ALIGN | **重复项内对应子元素几何一致性**：全子树按结构路径（逐层 tag+首类签名+出现序）跨项匹配（含结构性孙元素，如图标），各维 dx/dy/w/h 相对自身项取值，偏离组内中位 >TOL 的项为错位。文本驱动豁免：子树含文本（≥TEXT_MIN_LEN）→ 其几何随内容长度自然变化（换行/行内宽度/级联），按方向豁免——图标/图片等结构性子元素仍严格比对。每偏离路径组建报 | 新增（全子树+文本豁免） |
 | FONT_INCONSISTENT / COLOR_INCONSISTENT | 排版分组字号极差 >1px / 颜色不一致 | 已实现 |
 | SPACING / LINE_HEIGHT_TIGHT | 间距极差 >24px / 行高 <1.2 | 已实现 |
@@ -116,7 +117,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 |---|---|---|
 | VOID_BAND / CARD_VOID | 文本叶子 y 投影断档 ≥96px / 卡片内容包络 <60% 或底部空洞（VOID_BAND 投影计入图表/媒体占位，避免把无文本区块当空白带） | 已实现 |
 | ASPECT_INCONSISTENT / EXTREME | 列表卡片 h/w 极差 >0.3 / 单卡 >3 或 <0.15 | 已实现 |
-| IMG_SIZE_INCONSISTENT | 同列表缩略图尺寸极差 >2px | 已实现 |
+| IMG_SIZE_INCONSISTENT | 组内各项「对应媒体」（叶子无文本，任何尺寸/比例）按结构路径跨项匹配（同 GROUP_CHILD_ALIGN 路径方案），宽或高偏离中位 >2px 即报；每建报各偏离路径组。不再依赖方形/尺寸带启发式，只比同类媒体（图标对图标、封面对封面） | 已实现 |
 | LINE_LENGTH | 文本块行长越界（中文 20-45 字 / 45-75ch，限定 p 且文本 ≥20 字） | 新增 |
 | DENSITY_EXTREME | 单屏元素密度 <3 或 >60 | 新增 |
 | BALANCE_OFF | 左右视觉重量（面积×暗度）失衡 >25%（Ngo balance 因子） | 新增 |

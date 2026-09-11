@@ -260,6 +260,7 @@
     "CONTRAST_LOW",
     "SIZE_INCONSISTENT",
     "GROUP_CHILD_ALIGN",
+    "IMG_SIZE_INCONSISTENT",
     "COLOR_DOMINANCE"
   ],
   "fp-group-child-align": [
@@ -283,9 +284,15 @@
     "CONTRAST_LOW",
     "SIZE_INCONSISTENT",
     "GROUP_CHILD_ALIGN",
+    "IMG_SIZE_INCONSISTENT",
     "COLOR_DOMINANCE"
   ],
   "fp-text-wrap-varies": [
     "SIZE_INCONSISTENT"
+  ],
+  "fp-img-size-cross-section": [],
+  "tp-img-size-rect": [
+    "SIZE_INCONSISTENT",
+    "IMG_SIZE_INCONSISTENT"
   ]
 }

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fp-img-size-cross-section</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #222; line-height: 1.5; padding-bottom: 16px; }
+  /* 3 个无类名 section 兄弟（同 tag 构成候选桶），角色与骨架各异：
+     hero 大封面 86 / 进度行媒体 54 / 推荐卡媒体 58 —— 媒体尺寸差异是分角色设计，
+     不应跨 section 比较（结构分区后各自不成组，IMG_SIZE 应静默） */
+  section { background: #fff; margin-top: 8px; padding: 16px; }
+  .hero { display: flex; align-items: center; gap: 16px; }
+  .hero-media { width: 86px; height: 86px; border-radius: 12px; background: linear-gradient(135deg, #4f8cff, #8fc0ff); flex-shrink: 0; }
+  .hero-info h2 { font-size: 18px; }
+  .hero-info small { display: block; margin-top: 6px; font-size: 12px; color: #6b7280; }
+  h3 { font-size: 16px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+  .row-media { width: 54px; height: 54px; border-radius: 8px; background: linear-gradient(135deg, #34a770, #8fd4b0); flex-shrink: 0; }
+  .row-info { flex: 1; min-width: 0; }
+  .row-info p { font-size: 14px; }
+  .row-info small { display: block; margin-top: 4px; font-size: 12px; color: #6b7280; }
+  .hot-card { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .hot-media { width: 58px; height: 58px; border-radius: 8px; background: linear-gradient(135deg, #e0a23d, #f2cd8a); flex-shrink: 0; }
+  .hot-info p { font-size: 14px; }
+  .hot-info small { display: block; margin-top: 4px; font-size: 12px; color: #6b7280; }
+</style>
+</head>
+<body>
+  <section>
+    <div class="hero">
+      <div class="hero-media"></div>
+      <div class="hero-info">
+        <h2>每日英语磨耳</h2>
+        <small>每天 10 分钟，听力稳步提升</small>
+      </div>
+    </div>
+  </section>
+  <section>
+    <h3>今日进度</h3>
+    <div class="row">
+      <div class="row-media"></div>
+      <div class="row-info">
+        <p>晨间听力 · Unit 3</p>
+        <small>已完成 6 分钟</small>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-media"></div>
+      <div class="row-info">
+        <p>午后跟读 · Unit 4</p>
+        <small>已完成 4 分钟</small>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-media"></div>
+      <div class="row-info">
+        <p>晚间复习 · Unit 5</p>
+        <small>已完成 2 分钟</small>
+      </div>
+    </div>
+  </section>
+  <section>
+    <h3>热门推荐</h3>
+    <div class="hot-card">
+      <div class="hot-media"></div>
+      <div class="hot-info">
+        <p>儿歌磨耳精选合集</p>
+        <small>12.6 万人正在听</small>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

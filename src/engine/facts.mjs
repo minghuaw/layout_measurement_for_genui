@@ -5,7 +5,7 @@
  *   - allNodes      全量节点扁平数组（node/page 执行器遍历）
  *   - containers    所有子节点 ≥2 的容器（pair/container 执行器输入）
  *   - textGroups    排版分组（tag|父tag|cls 为键，≥1 有文本节点）
- *   - listGroups    列表分组（同 tag+首cls、宽 ≥100、数量 ≥3）
+ *   - listGroups    列表分组（同 tag+首cls、宽 ≥100、数量 ≥3；桶内按结构签名分区，同构才成组）
  *   - voidBands     文本叶子 y 投影合并后的垂直空白带（VOID_BAND 输入）
  *   - palette       调色板（复用 color.mjs computePalette）
  *
@@ -14,7 +14,7 @@
  *   （_inHScroll/_isScrollX 由 collect.mjs 计算，同为内部字段。）
  */
 import { computePalette } from '../color.mjs';
-import { label } from './util.mjs';
+import { label, structuralSignature } from './util.mjs';
 
 /** hasClip —— 递归判断某节点子树内是否存在文本裁切节点 */
 function hasClip(nodes) {
@@ -64,7 +64,9 @@ export function buildFacts(data, cfg) {
     textGroups.get(key).push(n);
   }
 
-  /* 列表分组：同 tag+首cls 且宽 ≥100 的兄弟节点 ≥3 构成一组（对齐/尺寸/圆角/比例类规则输入） */
+  /* 列表分组：同 tag+首cls 且宽 ≥100 的兄弟节点 ≥3 构成一组（对齐/尺寸/圆角/比例类规则输入）。
+     桶内再按结构签名分区（同构才可比）：页面级不同角色兄弟（hero/列表/徽标区）骨架各异，
+     混入同组会让一致性规则跨角色比较产生误报（如阅读首页 5 个 section 的 58/54/86px 媒体混比） */
   const listGroups = [];
   const collect = (nodes, parent) => {
     const byKey = new Map();
@@ -75,7 +77,15 @@ export function buildFacts(data, cfg) {
       byKey.get(key).push(n);
     }
     for (const [key, items] of byKey) {
-      if (items.length >= 3) listGroups.push({ key, items, parent });
+      const bySig = new Map();
+      for (const item of items) {
+        const sig = structuralSignature(item);
+        if (!bySig.has(sig)) bySig.set(sig, []);
+        bySig.get(sig).push(item);
+      }
+      for (const [, sub] of bySig) {
+        if (sub.length >= 3) listGroups.push({ key, items: sub, parent });
+      }
     }
     for (const n of nodes) collect(n.children, label(n));
   };
