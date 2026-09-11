@@ -8,9 +8,42 @@
  *   - detect：返回 null（不命中）或单对象/数组（命中，对象即 message 的输入 h）
  *   - message：由命中对象渲染为带 CSS 修复线索 + 理论依据的消息串（LLM 回流文本）
  */
-import { hex, contrastRatio, rgbToHsl, parseHex } from '../color.mjs';
+import { hex, contrastRatio, rgbToHsl, parseHex, blendFg } from '../color.mjs';
 import { label, loc, r0, pct } from '../engine/util.mjs';
 
+/** gradFractionAt —— 页面坐标点投影到渐变轴（CSS 角度：0deg 向上、顺时针），返回 0..1 渐变分数。
+ *  渐变线过盒中心，方向 d = (sin θ, −cos θ)；线长 L = |W·sin θ| + |H·cos θ|（CSS 规范公式）。
+ *  轴对齐（0/90/180/270）时退化为按 x/y 的线性投影。 */
+const gradFractionAt = (geom, px, py) => {
+  const rad = (geom.deg * Math.PI) / 180;
+  const dx = Math.sin(rad), dy = -Math.cos(rad);
+  const cx = geom.rect.x + geom.rect.w / 2;
+  const cy = geom.rect.y + geom.rect.h / 2;
+  const L = Math.abs(geom.rect.w * dx) + Math.abs(geom.rect.h * dy);
+  if (L <= 0) return 0.5;
+  return 0.5 + (((px - cx) * dx + (py - cy) * dy) / L);
+};
+/** gradColorAt —— 渐变在分数 f 处的颜色（线性插值；coincident stop 后者生效=硬切） */
+const gradColorAt = (stops, f) => {
+  if (f <= stops[0].pos) return stops[0].rgba;
+  const last = stops[stops.length - 1];
+  if (f >= last.pos) return last.rgba;
+  for (let i = 1; i < stops.length; i++) {
+    if (f <= stops[i].pos) {
+      const s0 = stops[i - 1], s1 = stops[i];
+      const span = s1.pos - s0.pos;
+      if (span <= 1e-6) return s1.rgba; /* coincident：位置相同 → 后一 stop 生效 */
+      const t = (f - s0.pos) / span;
+      return {
+        r: s0.rgba.r + (s1.rgba.r - s0.rgba.r) * t,
+        g: s0.rgba.g + (s1.rgba.g - s0.rgba.g) * t,
+        b: s0.rgba.b + (s1.rgba.b - s0.rgba.b) * t,
+        a: s0.rgba.a + (s1.rgba.a - s0.rgba.a) * t
+      };
+    }
+  }
+  return last.rgba;
+};
 /**
  * coverScan —— 覆盖检测共享扫描（MEDIA_COVERED / TEXT_COVERED 共用）
  *
@@ -45,6 +78,8 @@ const coverScan = (F, T, isVictim, opts = {}) => {
     if (!gi || !gi.stops || gi.stops.length < 2) return 0;
     const rect = c.rect;
     const deg = gi.deg;
+    /* 仅轴对齐渐变（0/90/180/270）可投影；斜向渐变的覆盖占比不可靠 → 跳过 */
+    if (![0, 90, 180, 270].includes(deg)) return 0;
     const vert = deg === 0 || deg === 180;
     if (vert ? !(rect.h > 0) : !(rect.w > 0)) return 0;
     const proj = vert
@@ -204,10 +239,32 @@ export const basicRules = [
   },
   {
     id: 'GRADIENT_CONTRAST', layer: 'L1', severity: 'error', runner: 'node',
-    theory: '渐变背景上文字的 WCAG AA 对比度（按渐变各色中最差的一档校正）——CONTRAST_LOW 只读纯色背景，渐变此前不可度量',
+    theory: '渐变背景上文字的 WCAG AA 对比度——有渐变几何时按「文字盒沿渐变轴的两个边界点」取实际底色（文字不在最不利 stop 上则不误报，修正装饰性条纹误报）；无几何（radial/解析失败）回退为最差 stop',
     when: (n) => !!n.text && !!n.gradStops,
     detect: (n, T) => {
       const need = (n.fontSize || 16) >= T.LARGE_FS ? T.RATIO_LARGE : T.RATIO_NORMAL;
+      const geom = n._gradGeom;
+      if (geom && geom.stops && geom.stops.length >= 2 && geom.rect && geom.rect.w > 0 && geom.rect.h > 0) {
+        /* 位置感知：文字盒四角投影到渐变轴，取最小/最大分数（两端边界），各插值出实际底色，
+           对比取更差者——装饰性条纹（最不利 stop 不在文字下方）不再误报 */
+        const corners = [
+          [n.rect.x, n.rect.y], [n.rect.x + n.rect.w, n.rect.y],
+          [n.rect.x, n.rect.y + n.rect.h], [n.rect.x + n.rect.w, n.rect.y + n.rect.h]
+        ];
+        const fr = corners.map(([px, py]) => gradFractionAt(geom, px, py));
+        const fLo = Math.max(0, Math.min(...fr));
+        const fHi = Math.min(1, Math.max(...fr));
+        let worst = { stopHex: '', ratio: Infinity };
+        for (const f of [fLo, fHi]) {
+          const raw = gradColorAt(geom.stops, f);
+          const eff = raw.a >= 1 ? [raw.r, raw.g, raw.b] : blendFg(raw, n.bg);
+          const r = contrastRatio(n.fg, eff);
+          if (r < worst.ratio) worst = { stopHex: hex(eff), ratio: r };
+        }
+        if (worst.ratio < need - 0.02) return { n, ratio: worst.ratio, need, stopHex: worst.stopHex };
+        return null;
+      }
+      /* 回退：无几何（radial/解析失败）→ 最差 stop */
       let worst = Infinity;
       let stopHex = '';
       for (const s of n.gradStops) {
@@ -217,7 +274,7 @@ export const basicRules = [
       if (worst < need - 0.02) return { n, ratio: worst, need, stopHex };
       return null;
     },
-    message: (h) => `${loc(h.n)} 文字色 ${hex(h.n.fg)} 与渐变背景色 ${h.stopHex} 对比度仅 ${h.ratio.toFixed(2)}:1（渐变各色中最低的一档，未达 WCAG AA ${h.need}:1）—— 建议调整文字色或该渐变颜色，或改用纯色背景`
+    message: (h) => `${loc(h.n)} 文字色 ${hex(h.n.fg)} 与渐变底色 ${h.stopHex} 对比度仅 ${h.ratio.toFixed(2)}:1（未达 WCAG AA ${h.need}:1）—— 建议调整文字色或该渐变颜色，或改用纯色背景`
   },
   {
     id: 'IMG_BROKEN', layer: 'L1', severity: 'error', runner: 'node',

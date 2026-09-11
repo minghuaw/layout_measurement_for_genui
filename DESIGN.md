@@ -83,7 +83,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | OVERLAP | 同父兄弟矩形相交且交叠面积占较小元素 ≥10% 方报（浮点防亚像素误报；absolute/fixed 定位分层豁免，负 margin 微堆叠 ≤10% 视为视觉紧贴设计） | 已实现（v1.2 语义增强） |
 | TAP_TARGET | 可交互元素最小边 < 44px | 已实现 |
 | CONTRAST_LOW | 有效前景/背景对比度 < 4.5:1（≥24px 大字 3:1），消息含建议色；渐变背景让位 GRADIENT_CONTRAST | 已实现 |
-| GRADIENT_CONTRAST | 渐变背景上文字对比度按最不利 stop 校正（stop 沿继承链向下传递，不透明纯底截断） | 新增 |
+| GRADIENT_CONTRAST | 渐变背景上文字对比度——**位置感知**：渐变几何（角度+stop 位置+元素盒）沿继承链向下传递，取文字盒沿渐变轴两个边界点的实际底色（插值），对比取更差者；无几何（radial/解析失败）回退最差 stop。不透明纯底截断 | 新增（位置感知） |
 | IMG_BROKEN | 图像加载失败（complete && naturalWidth===0），建议修 URL 或改 alt 占位（懒加载天然排除） | 新增 |
 | SVG_ICON_HINT | **提示（info）**：`<img>` 引入的 SVG 图标（尺寸小 ≤48px + 上下文启发：交互元素内 / alt 空 / 页头页脚）——颜色固定在资源内、无法随主题/背景调整（currentColor 在 `<img>` 中解析为黑色）→ 建议改用 mask-image + background-color 控制颜色；建议色按「页面文字主色 → 强调色 → 黑白」取首个 ≥3:1 | 新增 |
 | MEDIA_COVERED | 富媒体（img/video/canvas/svg/iframe/object/echarts 容器 + url 背景图容器）被不透明元素遮挡 ≥30% 面积（共享 coverScan：绘制模型=定位元素盖过 static 内容，受害者锚点=最近定位祖先；祖先排除；渐变 scrim 与半透明豁免） | 新增 |
@@ -99,7 +99,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | 规则 | 判据 | 状态 |
 |---|---|---|
 | ALIGN / SIZE / RADIUS_INCONSISTENT | 列表组左缘极差 >4px / 尺寸极差 >6px / 圆角 >2px。SIZE 含**可见卡片盒**：解析每项「绘制表面（自身底色/渐变/背景图/阴影/媒体，圆角边框不计）最大子盒」，严格同 tag 方可比——捕捉被透明包裹层拉伸掩盖的内部卡片尺寸不一致 | 已实现（卡片盒增强） |
-| GROUP_CHILD_ALIGN | **重复项内对应子元素几何一致性**：子元素按「tag+首类签名+组内出现序」跨项匹配（容忍条件性子元素），各维 dx/dy/w/h 相对自身项取值，偏离组内中位 >TOL 的项为错位（如某项文本过长换行，使其头部行变高、图标垂直居中下坠）。每组建报首个偏离签名组（后续偏移为同一换行的连锁） | 新增 |
+| GROUP_CHILD_ALIGN | **重复项内对应子元素几何一致性**：全子树按结构路径（逐层 tag+首类签名+出现序）跨项匹配（含结构性孙元素，如图标），各维 dx/dy/w/h 相对自身项取值，偏离组内中位 >TOL 的项为错位。文本驱动豁免：子树含文本（≥TEXT_MIN_LEN）→ 其几何随内容长度自然变化（换行/行内宽度/级联），按方向豁免——图标/图片等结构性子元素仍严格比对。每偏离路径组建报 | 新增（全子树+文本豁免） |
 | FONT_INCONSISTENT / COLOR_INCONSISTENT | 排版分组字号极差 >1px / 颜色不一致 | 已实现 |
 | SPACING / LINE_HEIGHT_TIGHT | 间距极差 >24px / 行高 <1.2 | 已实现 |
 | RADIUS_SCALE_OFF | 全页圆角值不落在设计刻度 {4,8,12,16,20,24}（圆角系统化，不止组内一致） | 新增 |

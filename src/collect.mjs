@@ -341,7 +341,7 @@ const COLLECT = (vw) => {
     }
     if (cur.trim()) parts.push(cur);
     if (parts.length < 2) return null;
-    /* 方向：<deg> 或 to <side>；缺省 180deg（to bottom），首段即 stop */
+    /* 方向：<deg> 或 to <side>；缺省 180deg（to bottom），首段即 stop。任意角度均保留几何 */
     let deg = 180, i = 0;
     const first = parts[0].trim();
     const dm = first.match(/^(-?\d+(?:\.\d+)?)deg$/i);
@@ -349,8 +349,9 @@ const COLLECT = (vw) => {
     if (dm) { deg = parseFloat(dm[1]); i = 1; }
     else if (kwMap[first.toLowerCase()] !== undefined) { deg = kwMap[first.toLowerCase()]; i = 1; }
     const norm = ((deg % 360) + 360) % 360;
-    if (![0, 90, 180, 270].includes(norm)) return null;
-    const extent = (norm === 90 || norm === 270) ? (rect?.w || 0) : (rect?.h || 0);
+    const rad = (norm * Math.PI) / 180;
+    /* px 位置换算基准：渐变线长度（CSS 公式 |W·sin| + |H·cos|） */
+    const extent = Math.abs((rect?.width || 0) * Math.sin(rad)) + Math.abs((rect?.height || 0) * Math.cos(rad));
     const stops = [];
     for (; i < parts.length; i++) {
       const p = parts[i].trim();
@@ -372,7 +373,11 @@ const COLLECT = (vw) => {
     stops.forEach((st, k) => { if (st.pos === null || !isFinite(st.pos)) st.pos = k / (n - 1); });
     stops.forEach((st) => { st.pos = Math.min(1, Math.max(0, st.pos)); });
     stops.sort((a, b) => a.pos - b.pos);
-    return { deg: norm, stops };
+    return {
+      deg: norm,
+      stops,
+      rect: { x: rect?.x || 0, y: rect?.y || 0, w: rect?.width || 0, h: rect?.height || 0 }
+    };
   };
   /** 直接文本摘要：压空白、截断到 40 字（树体积控制） */
   const clip = (s) => {
@@ -451,7 +456,7 @@ const COLLECT = (vw) => {
     if (w <= 0 || h <= 0) return 0;
     return (w * h) / Math.max(1, a.width * a.height);
   };
-  const walk = (el, parentBg, parentStops, inHScroll, inInteractive, inChrome) => {
+  const walk = (el, parentBg, parentStops, inHScroll, inInteractive, inChrome, parentGeom) => {
     const out = [];
     const ordMap = {};
     /* 定位背景层栈：最近的「定位 + 有背景」兄弟（提供后续定位兄弟的可见底色/渐变） */
@@ -463,7 +468,7 @@ const COLLECT = (vw) => {
       const r = child.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) {
         /* 零尺寸节点自身不渲染：子节点上提并完整继承父级背景/渐变/横滚上下文 */
-        out.push(...walk(child, parentBg, parentStops, inHScroll, inInteractive, inChrome));
+        out.push(...walk(child, parentBg, parentStops, inHScroll, inInteractive, inChrome, parentGeom));
         continue;
       }
       const positioned = cs.position !== 'static';
@@ -507,9 +512,13 @@ const COLLECT = (vw) => {
       const ownStops = gradient ? parseGradStops(cs.backgroundImage) : null;
       /* 渐变遮罩覆盖检测输入（TEXT_COVERED）：方向 + 原始 stop（含 alpha/位置），
          内部字段（_ 前缀，落盘 geometry.json 时剥除） */
-      const gradInfo = gradient ? parseGradInfo(cs.backgroundImage, { w: r.width, h: r.height }) : null;
+      const gradInfo = gradient ? parseGradInfo(cs.backgroundImage, r) : null;
       const ownStopsB = ownStops ? ownStops.map((c) => blend(c, bg).map((v) => Math.round(v))) : null;
       const inheritedStops = (bgOwn && own.a >= 1) ? null : (baseStops || null);
+      /* 渐变几何（GRADIENT_CONTRAST 位置感知输入）：自身渐变优先，否则继承祖先几何；
+         不透明纯底截断（与渐变色继承链一致）。rect = 渐变元素盒（页面坐标，投影用） */
+      const inheritedGeom = (bgOwn && own.a >= 1) ? null : (parentGeom || null);
+      const childGeom = gradInfo || inheritedGeom;
       const gradStops = ownStopsB || inheritedStops;
       const childStops = ownStopsB || inheritedStops;
       /* 图像加载状态（IMG_BROKEN 输入）：complete && naturalWidth===0 = 已请求且失败；
@@ -558,7 +567,7 @@ const COLLECT = (vw) => {
           yRange = chartYRange(child);
         }
       }
-      const kids = walk(child, bg, childStops, inHScroll || ownHScroll, inInteractive || interactive, inChrome || isChrome);
+      const kids = walk(child, bg, childStops, inHScroll || ownHScroll, inInteractive || interactive, inChrome || isChrome, childGeom);
       /* 本节点作为定位背景层：定位 + 有背景（实心/渐变/媒体/背景图）→ 供后续定位兄弟取用 */
       if (positioned && (bgOwn || ownStopsB || media || bgUrl)) {
         layer = { rect: r, bg, stops: childStops };
@@ -586,6 +595,9 @@ const COLLECT = (vw) => {
         _isScrollX: ownHScroll,
         gradStops: gradStops || null,
         _gradInfo: gradInfo || null,
+        _gradGeom: childGeom || null,
+        writingMode: cs.writingMode || 'horizontal-tb',
+        textLen: (child.textContent || '').replace(/\s+/g, '').length,
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },
         pos: cs.position,
@@ -658,10 +670,14 @@ const COLLECT = (vw) => {
     return out;
   };
 
-  /* body 自身渐变 stop → walk 初始 parentStops（供后代 GRADIENT_CONTRAST 继承） */
+  /* body 自身渐变 stop → walk 初始 parentStops（供后代 GRADIENT_CONTRAST 继承）；
+     body 渐变几何 → walk 初始 parentGeom（位置感知对比度采样用） */
   const bodyStops = /gradient/i.test(bodyCs.backgroundImage) ? parseGradStops(bodyCs.backgroundImage) : null;
   const bodyStopsB = bodyStops ? bodyStops.map((c) => blend(c, baseBg).map((v) => Math.round(v))) : null;
-  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, baseBg, bodyStopsB, false, false, false) };
+  const bodyRect = document.body.getBoundingClientRect();
+  const bodyGeom = /linear-gradient/i.test(bodyCs.backgroundImage)
+    ? parseGradInfo(bodyCs.backgroundImage, bodyRect) : null;
+  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, baseBg, bodyStopsB, false, false, false, bodyGeom) };
 };
 
 /**

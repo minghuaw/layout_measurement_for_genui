@@ -94,25 +94,27 @@ export const orderRules = [
   },
   {
     id: 'GROUP_CHILD_ALIGN', layer: 'L2', severity: 'warn', runner: 'listGroup',
-    theory: '重复项内「对应子元素」几何一致性——子元素按 tag+首类签名+出现序跨项匹配，各维 (dx/dy/w/h) 相对自身项取值；偏离组内中位 >TOL 的项为错位（如某项文本过长换行，使其内图标/标题整体下移）。每组建报首个偏离签名组',
+    theory: '重复项内「对应子元素」几何一致性——全子树按结构路径（逐层 tag+首类签名+出现序）跨项匹配（含结构性孙元素，如图标），各维 (dx/dy/w/h) 相对自身项取值；偏离组内中位 >TOL 的项为错位。文本驱动的偏移按文字方向豁免（横排豁免 h/dy、竖排豁免 w/dx）——段落高度随内容长度自然变化，而图标/图片等结构性子元素应对齐。每组建报各偏离路径组',
     detect: (g, T) => {
       const items = g.items;
       if (items.length < 3) return null;
-      /* 1) 按「签名+出现序」跨项匹配子元素 */
-      const groups = new Map(); /* key -> { sig, occ, order, rows:[{item, child}] } */
-      let order = 0;
-      for (const item of items) {
-        const occ = new Map();
-        for (const child of item.children) {
-          const sig = child.tag + (child.cls ? '.' + child.cls.split('.')[0] : '');
-          const k = occ.get(sig) || 0;
-          occ.set(sig, k + 1);
-          const key = sig + '#' + k;
-          if (!groups.has(key)) groups.set(key, { sig, occ: k, order: order++, rows: [] });
-          groups.get(key).rows.push({ item, child });
+      /* 1) 全子树展平：结构路径（逐层 签名+出现序）→ 跨项匹配（含结构性孙元素） */
+      const groups = new Map();
+      const order = [];
+      const walkTree = (item, node, path) => {
+        const seen = new Map();
+        for (const ch of node.children) {
+          const sig = ch.tag + (ch.cls ? '.' + ch.cls.split('.')[0] : '');
+          const occ = seen.get(sig) || 0;
+          seen.set(sig, occ + 1);
+          const p = path ? path + ' > ' + sig + '#' + occ : sig + '#' + occ;
+          if (!groups.has(p)) { groups.set(p, { path: p, rows: [] }); order.push(p); }
+          groups.get(p).rows.push({ item, node: ch });
+          walkTree(item, ch, p);
         }
-      }
-      /* 2) 逐签名组比对各维（相对自身项），偏离组内中位 >TOL 的项为错位 */
+      };
+      for (const item of items) walkTree(item, item, '');
+      /* 2) 逐路径组（≥3 项）比对各维（相对自身项）；文本驱动的偏移按方向豁免 */
       const median = (arr) => {
         const s = [...arr].sort((a, b) => a - b);
         return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
@@ -121,32 +123,37 @@ export const orderRules = [
         ['dx', (it, c) => c.rect.x - it.rect.x], ['dy', (it, c) => c.rect.y - it.rect.y],
         ['w', (it, c) => c.rect.w], ['h', (it, c) => c.rect.h],
       ];
-      for (const key of [...groups.keys()].sort((a, b) => groups.get(a).order - groups.get(b).order)) {
-        const grp = groups.get(key);
+      const hits = [];
+      for (const p of order) {
+        const grp = groups.get(p);
         if (grp.rows.length < 3) continue; /* 样本不足（<3），中位数不稳 */
+        /* 文本驱动豁免：子树含文本（≥TEXT_MIN_LEN）→ 其几何（w/h/dx/dy）整体归因于内容：
+           段落高度随换行变化、行内宽度随文字长度变化、后续子元素位置随之级联——
+           均为内容驱动的自然变化，不比对；无文本的结构性子元素（图标/图片）严格比对 */
+        const node0 = grp.rows[0].node;
+        const minTextLen = Math.min(...grp.rows.map((r) => r.node.textLen || 0));
+        if (minTextLen >= T.TEXT_MIN_LEN) continue;
         const dev = [];
         for (const [name, get] of DIMS) {
-          const vals = grp.rows.map((r) => get(r.item, r.child));
+          const vals = grp.rows.map((r) => get(r.item, r.node));
           const med = median(vals);
           const outliers = grp.rows
             .map((r, i) => ({ r, d: Math.abs(vals[i] - med) }))
             .filter((o) => o.d > T.TOL)
             .sort((a, b) => b.d - a.d);
-          if (outliers.length) dev.push({ dim: name, vals, med, outliers });
+          if (outliers.length) dev.push({ dim: name, vals: vals.map(r0), med: r0(med), outliers });
         }
         if (!dev.length) continue;
-        /* 取偏离最大的一维渲染；每组建报首个偏离签名组（后续偏移多为同一换行的连锁） */
-        const top = dev.slice().sort((a, b) => b.outliers[0].d - a.outliers[0].d)[0];
-        return {
+        const top = dev.sort((a, b) => b.outliers[0].d - a.outliers[0].d)[0];
+        hits.push({
           n: items.length, key: g.key, parent: g.parent,
-          sig: grp.sig + (grp.occ ? `（第${grp.occ + 1}个）` : ''),
-          dim: top.dim, vals: top.vals.map(r0), med: r0(top.med),
-          ex: top.outliers.slice(0, 3).map((o) => `${label(o.r.item)} > ${loc(o.r.child)}`),
-        };
+          path: grp.path, dim: top.dim, vals: top.vals, med: top.med,
+          ex: top.outliers.slice(0, 3).map((o) => `${label(o.r.item)} > ${loc(o.r.node)}`),
+        });
       }
-      return null;
+      return hits.length ? hits : null;
     },
-    message: (h) => `${h.n} 个 ${h.key} 内对应子元素几何不一致：${h.sig} ${h.dim} ${h.vals.join('/')}px，偏离中位 ${h.med}px（如 ${h.ex[0]}）— 重复项内对应子元素应几何一致，多由某项文本过长换行导致；建议统一/截断文本或固定子元素尺寸`
+    message: (h) => `${h.n} 个 ${h.key} 内对应子元素几何不一致：${h.path} 的 ${h.dim} ${h.vals.join('/')}px，偏离中位 ${h.med}px（如 ${h.ex[0]}）— 重复项内对应子元素应几何一致，多由某项文本过长换行导致；建议统一/截断文本或固定子元素尺寸`
   },
   {
     id: 'RADIUS_INCONSISTENT', layer: 'L2', severity: 'warn', runner: 'listGroup',

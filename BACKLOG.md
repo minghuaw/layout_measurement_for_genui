@@ -146,6 +146,18 @@ Two related `CONTRAST_LOW` FP classes closed:
    there is the A8 worst-stop limitation (text sits at the dark end). Multi-layer scrim
    compositing (scrim over an image layer) is approximated (last layer wins).
 
+### A8. RESOLVED (2026-09-11) — GRADIENT_CONTRAST position-aware (worst-stop FPs eliminated)
+`GRADIENT_CONTRAST` used the **worst stop** across the gradient regardless of where the
+text sits — a 3px decorative stripe (`linear-gradient(90deg, var(--accent) 3px, …)`) or a
+gradient's light end fired on text that visually sits elsewhere (decor family-guide r0.3:
+26 hits). Fix: the walk now propagates the gradient **geometry** (`_gradGeom`: deg + raw
+stop positions + the gradient element's rect, own-or-inherited like `gradStops`), and the
+rule samples the gradient color at the **text box's two boundary extremes along the
+gradient axis** (general projection via the CSS gradient-line formula, handling any angle
+and coincident stops), using the worse contrast of the two. Radial/unparsed gradients fall
+back to worst-stop. Fixtures `fp-gradient-stripe-text` (stripe → no fire) /
+`tp-gradient-text-spans` (text straddling a low-contrast region → fires).
+
 ## B. Detection techniques (engine capabilities, for future investigations)
 
 ### B1. Clip detection

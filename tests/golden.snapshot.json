@@ -19,12 +19,10 @@
     "TAP_TARGET",
     "TAP_TARGET",
     "SIZE_INCONSISTENT",
-    "GROUP_CHILD_ALIGN",
     "SPACING"
   ],
   "font-chaos": [
     "SIZE_INCONSISTENT",
-    "GROUP_CHILD_ALIGN",
     "FONT_INCONSISTENT",
     "FONT_INCONSISTENT",
     "FONT_INCONSISTENT"
@@ -53,7 +51,6 @@
   ],
   "ratio-chaos": [
     "SIZE_INCONSISTENT",
-    "GROUP_CHILD_ALIGN",
     "VOID_BAND",
     "VOID_BAND",
     "CARD_VOID",
@@ -62,7 +59,6 @@
   ],
   "void-band": [
     "SIZE_INCONSISTENT",
-    "GROUP_CHILD_ALIGN",
     "VOID_BAND",
     "VOID_BAND",
     "VOID_BAND"
@@ -84,8 +80,7 @@
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
-    "SIZE_INCONSISTENT",
-    "GROUP_CHILD_ALIGN"
+    "SIZE_INCONSISTENT"
   ],
   "color-chaos": [
     "CONTRAST_LOW",
@@ -243,7 +238,6 @@
   ],
   "tp-body-bg-gradient": [
     "GRADIENT_CONTRAST",
-    "GRADIENT_CONTRAST",
     "DENSITY_EXTREME"
   ],
   "tp-icon-img-hint": [
@@ -274,5 +268,24 @@
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "COLOR_DOMINANCE"
+  ],
+  "fp-gradient-stripe-text": [],
+  "tp-gradient-text-spans": [
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST"
+  ],
+  "tp-structural-grandchild": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
+    "COLOR_DOMINANCE"
+  ],
+  "fp-text-wrap-varies": [
+    "SIZE_INCONSISTENT"
   ]
 }

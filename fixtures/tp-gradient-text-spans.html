@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tp-gradient-text-spans</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1e2a23; color: #ede3d0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; padding: 20px; }
+  /* 文字盒横跨低对比渐变区域（整盒都在浅金底上）——应报 GRADIENT_CONTRAST */
+  .banner { background: linear-gradient(180deg, #dca44c 0%, #dca44c 100%); border-radius: 12px; padding: 20px 16px; margin-bottom: 12px; }
+  .banner h2 { font-size: 20px; margin: 0 0 6px; color: #ede3d0; }
+  .banner p { font-size: 13px; line-height: 1.6; margin: 0; color: #c4cdba; }
+</style>
+</head>
+<body>
+  <div class="banner">
+    <h2>精选好物</h2>
+    <p>每日更新，为你推荐最值得入手的好东西。</p>
+  </div>
+  <div class="banner">
+    <h2>限时活动</h2>
+    <p>本周全场满减，叠加会员折扣更划算。</p>
+  </div>
+</body>
+</html>

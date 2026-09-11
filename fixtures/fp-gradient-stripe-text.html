@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fp-gradient-stripe-text</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1e2a23; color: #ede3d0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; padding: 20px; }
+  /* 3px 强调色条纹 + 其余为可读底色：文字完全落在非条纹区域，不应误报 GRADIENT_CONTRAST */
+  .card { background: linear-gradient(90deg, #dca44c 3px, #28352d 3px); border-radius: 12px; padding: 16px 16px 16px 24px; margin-bottom: 12px; }
+  .card h3 { font-size: 16px; margin: 0 0 6px; color: #ede3d0; }
+  .card p { font-size: 13px; line-height: 1.6; margin: 0; color: #c4cdba; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h3>硬性要求</h3>
+    <p>至少三居、宜留四居，主卧做成含更衣间与主卫的套房布局，客厅等开放共享区保持通透。</p>
+  </div>
+  <div class="card">
+    <h3>与风格的冲突</h3>
+    <p>美式田园偏爱宽大厚重的家具，小户型需要选择简化版的美式线条来平衡空间感。</p>
+  </div>
+</body>
+</html>
