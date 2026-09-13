@@ -46,7 +46,6 @@
     "IMG_BROKEN",
     "SIZE_INCONSISTENT",
     "GROUP_CHILD_ALIGN",
-    "ASPECT_INCONSISTENT",
     "IMG_SIZE_INCONSISTENT"
   ],
   "ratio-chaos": [
@@ -217,8 +216,7 @@
     "COLOR_INCONSISTENT",
     "COLOR_INCONSISTENT",
     "RADIUS_SCALE_OFF",
-    "FONT_FAMILY_BLOAT",
-    "ASPECT_INCONSISTENT"
+    "FONT_FAMILY_BLOAT"
   ],
   "tp-card-size-mismatch": [
     "TEXT_CLIP",

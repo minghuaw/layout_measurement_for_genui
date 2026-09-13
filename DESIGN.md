@@ -100,6 +100,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 |---|---|---|
 | ALIGN / SIZE / RADIUS_INCONSISTENT | 列表组左缘极差 >4px / 尺寸极差 >6px / 圆角 >2px。SIZE 含**可见卡片盒**：解析每项「绘制表面（自身底色/渐变/背景图/阴影/媒体，圆角边框不计）最大子盒」，严格同 tag 方可比——捕捉被透明包裹层拉伸掩盖的内部卡片尺寸不一致 | 已实现（卡片盒增强） |
 | **listGroup 结构分区**（建组层，影响全部 item 级 listGroup 规则） | 同 tag+首cls、宽 ≥100 的兄弟桶内再按**结构签名**（逐层 tag+首类的子树骨架串，文本/几何不参与）分区，仅同构分区 ≥3 成组——页面级不同角色兄弟（hero/列表/徽标区）骨架各异，不再跨角色比较（如阅读首页 5 个 section 的媒体/比例混比误报） | 新增 |
+| **pathGroup 原始桶**（供自带结构路径匹配的规则） | 结构分区会把「同组件 + 可选子元素」的成员排除（如 decor budget-board 多一条价格行 → 与另 3 个 board 签名不同 → 分区后各自成组），导致 GROUP_CHILD_ALIGN/IMG_SIZE 漏报其对应子元素错位。故另建**不分区**的原始桶 `pathGroups`（同 tag+首cls、宽 ≥100、≥3），由 `pathGroup` runner 供给 GROUP_CHILD_ALIGN / IMG_SIZE_INCONSISTENT——两规则本就逐结构路径比对、天然容忍条件性/可选子元素 | 新增（修复分区回归） |
 | GROUP_CHILD_ALIGN | **重复项内对应子元素几何一致性**：全子树按结构路径（逐层 tag+首类签名+出现序）跨项匹配（含结构性孙元素，如图标），各维 dx/dy/w/h 相对自身项取值，偏离组内中位 >TOL 的项为错位。文本驱动豁免：子树含文本（≥TEXT_MIN_LEN）→ 其几何随内容长度自然变化（换行/行内宽度/级联），按方向豁免——图标/图片等结构性子元素仍严格比对。每偏离路径组建报 | 新增（全子树+文本豁免） |
 | FONT_INCONSISTENT / COLOR_INCONSISTENT | 排版分组字号极差 >1px / 颜色不一致 | 已实现 |
 | SPACING / LINE_HEIGHT_TIGHT | 间距极差 >24px / 行高 <1.2 | 已实现 |
@@ -325,9 +326,9 @@ lightweight_layout_eng/
 │  │
 │  │
 │   ├── engine/                         # ★ 执行层："怎么检查"——通用机器，不认识具体规则
-│   │   ├── facts.mjs                   #   事实索引一次构建：allNodes+父链/textGroups/listGroups/
+│   │   ├── facts.mjs                   #   事实索引一次构建：allNodes+父链/textGroups/listGroups/pathGroups/
 │   │   │                               #     siblingPairs/palette/voidBands（消除 _pt hack）
-│   │   ├── runners.mjs                 #   四类执行器 node/pair/group/page + 通用抑制机制
+│   │   ├── runners.mjs                 #   执行器 node/pair/group/page/listGroup/pathGroup + 通用抑制机制
 │   │   │                               #     （最内层/最外层去重）+ makeIssue 产出
 │   │   └── index.mjs                   #   runAll(geometry, cfg)→issues[]：建facts→筛规则→分发→汇总
 │   │

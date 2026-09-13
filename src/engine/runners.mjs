@@ -61,6 +61,14 @@ export const runners = {
     }
     return out;
   },
+  /** 原始列表桶（不做结构分区）：供自带结构路径匹配的规则（GROUP_CHILD_ALIGN / IMG_SIZE_INCONSISTENT） */
+  pathGroup: (rule, T, facts) => {
+    const out = [];
+    for (const g of facts.pathGroups) {
+      out.push(...asArray(rule.detect(g, T, facts)));
+    }
+    return out;
+  },
   /** 页面级：整个 facts 一次传入（调色板/CSSOM/空白带/密度/平衡等） */
   page: (rule, T, facts) => asArray(rule.detect(facts, T))
 };

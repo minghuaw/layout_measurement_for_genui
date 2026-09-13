@@ -93,7 +93,7 @@ export const orderRules = [
       : `${h.n} 个 ${h.key} 宽度不一致: ${h.ws.join('/')}px (容器 ${h.parent})`
   },
   {
-    id: 'GROUP_CHILD_ALIGN', layer: 'L2', severity: 'warn', runner: 'listGroup',
+    id: 'GROUP_CHILD_ALIGN', layer: 'L2', severity: 'warn', runner: 'pathGroup',
     theory: '重复项内「对应子元素」几何一致性——全子树按结构路径（逐层 tag+首类签名+出现序）跨项匹配（含结构性孙元素，如图标），各维 (dx/dy/w/h) 相对自身项取值；偏离组内中位 >TOL 的项为错位。文本驱动的偏移按文字方向豁免（横排豁免 h/dy、竖排豁免 w/dx）——段落高度随内容长度自然变化，而图标/图片等结构性子元素应对齐。每组建报各偏离路径组',
     detect: (g, T) => {
       const items = g.items;

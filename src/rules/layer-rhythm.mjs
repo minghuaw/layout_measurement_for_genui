@@ -76,7 +76,7 @@ export const rhythmRules = [
     message: (h) => `${h.count} 个 ${h.key} 宽高比失调: ${h.ratios.join('/')} (容器 ${h.parent})${h.members.length ? '；如: ' + h.members.join(', ') : ''}`
   },
   {
-    id: 'IMG_SIZE_INCONSISTENT', layer: 'L3', severity: 'warn', runner: 'listGroup',
+    id: 'IMG_SIZE_INCONSISTENT', layer: 'L3', severity: 'warn', runner: 'pathGroup',
     theory: '媒体尺寸一致性——组内各项的「对应媒体元素」（叶子、无文本，任何尺寸/比例）按结构路径跨项匹配（逐层 tag+首类签名+出现序，同 GROUP_CHILD_ALIGN 方案），宽或高偏离组内中位 >DIFF 即报。结构路径保证只比同类媒体（图标对图标、封面对封面），不依赖方形/尺寸带启发式；每建报各偏离路径组',
     detect: (g, T) => {
       const byPath = new Map();
