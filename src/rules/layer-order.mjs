@@ -366,16 +366,16 @@ export const orderRules = [
   /* ---- 水平滑动容器左缘留白 ---- */
   {
     id: 'HSCROLL_EDGE_SPACING', layer: 'L2', severity: 'warn', runner: 'node',
-    theory: '水平滑动容器左缘留白——首项不应紧贴容器边缘，需 ≥MIN_LEFT 内边距。判定基于初始加载几何（未滚动时的首个可见子项），与 ELEMENT_OVERFLOW 的 hscroll 豁免互补：溢出是设计使然，但首项贴边缺呼吸空间仍是不美观。注意：内边距放在内层 wrapper 时 gap 读为 0（潜在误报）。',
+    theory: '水平滑动容器首项不应紧贴视口左缘（按视口坐标判，非容器内边距）：首项 rect.x < MIN_LEFT 时报。判定基于初始加载几何（未滚动时的首个可见子项），与 ELEMENT_OVERFLOW 的 hscroll 豁免互补：溢出是设计使然，但首项贴视口边缘缺呼吸空间仍是不美观。消息不预设具体数值，建议与页面其他元素的左缘留白保持一致（模型可从页面源码对齐）。',
     when: (n) => n._isScrollX && (n.children || []).some((c) => c.rect.w > 0),
     detect: (n, T) => {
       const first = n.children.find((c) => c.rect.w > 0);
       if (!first) return null;
-      const gap = first.rect.x - n.rect.x;
+      const gap = first.rect.x;
       if (gap < T.MIN_LEFT) return { n, first, gap: r0(gap) };
       return null;
     },
-    message: (h, T) =>
-      `水平滑动容器 ${loc(h.n)}（首项 ${loc(h.first)}）首项距左缘仅 ${h.gap}px（建议 ≥${T.MIN_LEFT}px）——应添加左内边距，避免首项贴边`
+    message: (h) =>
+      `水平滑动容器 ${loc(h.n)}（首项 ${loc(h.first)}）首项紧贴左缘（间距 ${h.gap}px）——应添加左内边距，与页面其他元素的左缘留白保持一致，避免首项贴边`
   }
 ];
