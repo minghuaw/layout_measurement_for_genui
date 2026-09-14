@@ -54,6 +54,7 @@ export const DEFAULTS = {
     BORDER_INCONSISTENT:{ enabled: true, thresholds: {} },
     BORDER_OVERUSE:    { enabled: true, thresholds: { MAX_RATIO: 0.5 } },
     WEIGHT_INCONSISTENT:{ enabled: true, thresholds: {} },
+    HSCROLL_EDGE_SPACING: { enabled: true, thresholds: { MIN_LEFT: 12 } },
     FONT_FAMILY_BLOAT: { enabled: true, thresholds: { MAX: 2 } },
     GRAY_SHADE_BLOAT:  { enabled: true, thresholds: { MAX: 5, GRAY_S: 0.08 } },
     CONTROL_TEXT_CENTER: { enabled: true, thresholds: { MAX: 4 } },

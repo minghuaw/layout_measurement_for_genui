@@ -362,5 +362,20 @@ export const orderRules = [
       return hits.length ? hits : null;
     },
     message: (h) => `${label(h.n)} 图表容器底部超出其外层卡片 ${label(h.p)} ${h.over}px——外层含内边距/边框时子级高度不应与其总高相同；请压缩图表高度或去掉冲突的内边距，使图表完整落在卡片内`
+  },
+  /* ---- 水平滑动容器左缘留白 ---- */
+  {
+    id: 'HSCROLL_EDGE_SPACING', layer: 'L2', severity: 'warn', runner: 'node',
+    theory: '水平滑动容器左缘留白——首项不应紧贴容器边缘，需 ≥MIN_LEFT 内边距。判定基于初始加载几何（未滚动时的首个可见子项），与 ELEMENT_OVERFLOW 的 hscroll 豁免互补：溢出是设计使然，但首项贴边缺呼吸空间仍是不美观。注意：内边距放在内层 wrapper 时 gap 读为 0（潜在误报）。',
+    when: (n) => n._isScrollX && (n.children || []).some((c) => c.rect.w > 0),
+    detect: (n, T) => {
+      const first = n.children.find((c) => c.rect.w > 0);
+      if (!first) return null;
+      const gap = first.rect.x - n.rect.x;
+      if (gap < T.MIN_LEFT) return { n, first, gap: r0(gap) };
+      return null;
+    },
+    message: (h, T) =>
+      `水平滑动容器 ${loc(h.n)}（首项 ${loc(h.first)}）首项距左缘仅 ${h.gap}px（建议 ≥${T.MIN_LEFT}px）——应添加左内边距，避免首项贴边`
   }
 ];

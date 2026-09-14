@@ -222,6 +222,7 @@
     "TEXT_CLIP",
     "SIZE_INCONSISTENT",
     "GROUP_CHILD_ALIGN",
+    "HSCROLL_EDGE_SPACING",
     "VOID_BAND",
     "CARD_VOID",
     "BALANCE_OFF"
@@ -292,5 +293,12 @@
   "tp-img-size-rect": [
     "SIZE_INCONSISTENT",
     "IMG_SIZE_INCONSISTENT"
+  ],
+  "fp-hscroll-no-padding": [
+    "HSCROLL_EDGE_SPACING",
+    "BALANCE_OFF"
+  ],
+  "tp-hscroll-padding": [
+    "BALANCE_OFF"
   ]
 }
