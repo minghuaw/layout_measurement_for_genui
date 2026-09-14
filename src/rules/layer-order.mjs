@@ -381,14 +381,17 @@ export const orderRules = [
   /* ---- 文本被纵向挤压（本应横排却成垂直列） ---- */
   {
     id: 'TEXT_SQUISHED', layer: 'L2', severity: 'warn', runner: 'node',
-    theory: '检测因布局冲突被纵向挤压的文本——本应横排的文字（writingMode=horizontal-tb）在 flex/grid 父容器中因空间不足被压缩到极窄宽度、堆栈成垂直列。区别于有意纵向排盘（writingMode:vertical-rl 等，when 排除）。判定：实际宽 < 估算横排宽 ×EST_RATIO 且 高 > 宽 ×H_W_RATIO。',
+    theory: '检测因布局冲突被纵向挤压的文本——本应横排的文字（writingMode=horizontal-tb）在 flex/grid 父容器中因空间不足被压缩到极窄宽度、堆栈成垂直列。区别于有意纵向排盘（writingMode:vertical-rl 等，when 排除）。判定：实际行数 > 预期最大行数 +TOL（预期行数 = text.length × CHARS_PER_LINE），避免对长段落下行产生的假阳性。',
     when: (n) => !!n.text && n.text.length >= 3 && (!n.writingMode || n.writingMode === 'horizontal-tb'),
     detect: (n, T) => {
-      const estW = n.text.length * (n.fontSize || 16) * 0.55;
-      if (n.rect.w >= estW * T.EST_RATIO) return null;
+      const fs = n.fontSize || 16;
+      const lhPx = fs * (n.lineHeight || 1.5);
+      const actualLines = Math.round(n.rect.h / lhPx);
+      const maxExpectedLines = Math.ceil(n.text.length * T.CHARS_PER_LINE) + T.TOL;
+      if (actualLines <= maxExpectedLines) return null;
       if (n.rect.h <= n.rect.w * T.H_W_RATIO) return null;
-      return { n, w: r0(n.rect.w), h: r0(n.rect.h), est: Math.ceil(estW), txt: n.text.slice(0, 10) };
+      return { n, w: r0(n.rect.w), h: r0(n.rect.h), lines: actualLines, txt: n.text.slice(0, 10) };
     },
-    message: (h) => `${loc(h.n)} 文本宽 ${h.w}px 高 ${h.h}px（估算横排至少需 ${h.est}px）——文字可能因布局冲突被纵向挤压，应检查包裹容器宽度/间距/flex 换行等布局`
+    message: (h) => `${loc(h.n)} 文本宽 ${h.w}px 高 ${h.h}px（实际 ${h.lines} 行，仅能容纳 1 字/行），推定因布局冲突被纵向挤压——应检查包裹容器宽度/间距/flex 换行等布局`
   }
 ];

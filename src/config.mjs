@@ -55,7 +55,7 @@ export const DEFAULTS = {
     BORDER_OVERUSE:    { enabled: true, thresholds: { MAX_RATIO: 0.5 } },
     WEIGHT_INCONSISTENT:{ enabled: true, thresholds: {} },
     HSCROLL_EDGE_SPACING: { enabled: true, thresholds: { MIN_LEFT: 12 } },
-    TEXT_SQUISHED: { enabled: true, thresholds: { EST_RATIO: 0.7, H_W_RATIO: 2 } },
+    TEXT_SQUISHED: { enabled: true, thresholds: { CHARS_PER_LINE: 0.5, TOL: 1, H_W_RATIO: 2 } },
     FONT_FAMILY_BLOAT: { enabled: true, thresholds: { MAX: 2 } },
     GRAY_SHADE_BLOAT:  { enabled: true, thresholds: { MAX: 5, GRAY_S: 0.08 } },
     CONTROL_TEXT_CENTER: { enabled: true, thresholds: { MAX: 4 } },

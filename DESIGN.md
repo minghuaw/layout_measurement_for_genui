@@ -108,6 +108,7 @@ fixtures/*.html ──▶ run.mjs（启动器）/ collect.mjs (Playwright chromi
 | BORDER_INCONSISTENT / BORDER_OVERUSE | 同组边框不一 / 带边框元素密度过高（应以阴影留白替代） | 新增 |
 | WEIGHT_INCONSISTENT | 同组字重不一致 | 新增 |
 | HSCROLL_EDGE_SPACING | 水平滑动容器（overflow-x auto/scroll）首项距容器左缘 <12px（无左内边距）——初始加载几何判定，与 ELEMENT_OVERFLOW 的 hscroll 豁免互补（溢出属设计使然，但首项贴边缺呼吸空间仍是不美观） | 新增 |
+| TEXT_SQUISHED | 检测因布局冲突被纵向挤压的文本：本应横排的文字（writingMode=horizontal-tb）在 flex/grid 父容器中空间不足、堆栈成垂直列（实际行数 > text.length × CHARS_PER_LINE + TOL，且 h > w × H_W_RATIO）——区别于有意纵向排盘（writingMode:vertical-rl 等 by when） | 新增 |
 | FONT_FAMILY_BLOAT | 字族数 > 2 | 新增 |
 | GRAY_SHADE_BLOAT | 文字灰阶档数 > 5 | 新增 |
 | CONTROL_TEXT_CENTER | 交互控件内文字相对盒子中心垂直偏移 >4px（如加大高度后文字贴顶） | 新增 |
