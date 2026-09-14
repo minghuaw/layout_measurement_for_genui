@@ -299,5 +299,17 @@
   ],
   "tp-hscroll-padding": [
     "BALANCE_OFF"
+  ],
+  "fp-text-squished": [
+    "OVERFLOW",
+    "ELEMENT_OVERFLOW",
+    "TEXT_CLIP",
+    "TEXT_SQUISHED"
+  ],
+  "tp-text-normal": [
+    "OVERFLOW",
+    "ELEMENT_OVERFLOW",
+    "DENSITY_EXTREME",
+    "BALANCE_OFF"
   ]
 }

@@ -377,5 +377,18 @@ export const orderRules = [
     },
     message: (h) =>
       `水平滑动容器 ${loc(h.n)}（首项 ${loc(h.first)}）首项紧贴左缘（间距 ${h.gap}px）——应添加左内边距，与页面其他元素的左缘留白保持一致，避免首项贴边`
+  },
+  /* ---- 文本被纵向挤压（本应横排却成垂直列） ---- */
+  {
+    id: 'TEXT_SQUISHED', layer: 'L2', severity: 'warn', runner: 'node',
+    theory: '检测因布局冲突被纵向挤压的文本——本应横排的文字（writingMode=horizontal-tb）在 flex/grid 父容器中因空间不足被压缩到极窄宽度、堆栈成垂直列。区别于有意纵向排盘（writingMode:vertical-rl 等，when 排除）。判定：实际宽 < 估算横排宽 ×EST_RATIO 且 高 > 宽 ×H_W_RATIO。',
+    when: (n) => !!n.text && n.text.length >= 3 && (!n.writingMode || n.writingMode === 'horizontal-tb'),
+    detect: (n, T) => {
+      const estW = n.text.length * (n.fontSize || 16) * 0.55;
+      if (n.rect.w >= estW * T.EST_RATIO) return null;
+      if (n.rect.h <= n.rect.w * T.H_W_RATIO) return null;
+      return { n, w: r0(n.rect.w), h: r0(n.rect.h), est: Math.ceil(estW), txt: n.text.slice(0, 10) };
+    },
+    message: (h) => `${loc(h.n)} 文本宽 ${h.w}px 高 ${h.h}px（估算横排至少需 ${h.est}px）——文字可能因布局冲突被纵向挤压，应检查包裹容器宽度/间距/flex 换行等布局`
   }
 ];
