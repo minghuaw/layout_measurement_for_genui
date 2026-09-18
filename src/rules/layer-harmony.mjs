@@ -1,11 +1,11 @@
 /**
- * layer-harmony.mjs —— L4 色彩和谐（6 条）
+ * layer-harmony.mjs —— L4 色彩和谐（8 条）
  *
  * 语义：配色章法（从不出错到有修养）。判据核心是 color.mjs computePalette 的
  *   面积归因结果（bg 占比/强调色面积/鲜艳面积/色相聚簇/和声），以及灰阶与明暗系统化。
  */
 import { rgbToHsl, parseHex, hex } from '../color.mjs';
-import { pct } from '../engine/util.mjs';
+import { pct, label } from '../engine/util.mjs';
 
 export const harmonyRules = [
   /* ---- 面积法则（60-30-10） ---- */
@@ -19,13 +19,13 @@ export const harmonyRules = [
         out.push({ kind: 'bg', hex: p.bgTop[0].hex, share: p.bgTop[0].share });
       }
       if (p.accentArea > T.MAX_ACCENT) {
-        out.push({ kind: 'accent', share: p.accentArea, hexes: p.accentTop.map((x) => x.hex) });
+        out.push({ kind: 'accent', share: p.accentArea, hexes: p.accentTop.map((x) => x.hex), els: p.accentEls || [] });
       }
       return out;
     },
     message: (h) => h.kind === 'bg'
       ? `主导背景 ${h.hex} 仅占 ${pct(h.share)}（60-30-10 法则建议主导色 ≥50%），背景色过于碎片化`
-      : `强调色面积占 ${pct(h.share)}（60-30-10 法则建议 ≤10-15%）：${h.hexes.join('/')}，建议大面积使用中性色`
+      : `强调色面积占 ${pct(h.share)}（60-30-10 法则建议 ≤10-15%）：${h.hexes.join('/')}${h.els.length ? '，主要来源: ' + h.els.map((e) => `${e.tag}${e.cls ? '.' + e.cls : ''}@y${e.y}(${pct(e.share)})`).join(', ') : ''}，建议用中性色替换装饰性强调或减少强调元素数量`
   },
   /* ---- 和声与克制 ---- */
   {
@@ -80,5 +80,77 @@ export const harmonyRules = [
       return null;
     },
     message: (h) => `色相 ${h.hue}° 出现 ${h.count} 档离散明度，应预先定义系统色阶（如 50-900）`
+  },
+  /* ---- 表面一致性：渐变背景（图表/媒体容器） ---- */
+  {
+    id: 'GRADIENT_BG', layer: 'L4', severity: 'warn', runner: 'page',
+    theory: '纯色表面页面不使用渐变背景（图表/媒体容器），且渐变不可可靠度量文字对比',
+    detect: (F) => {
+      const hits = F.allNodes.filter((n) => n.media && n.gradient);
+      return hits.length ? hits : null;
+    },
+    message: (h) => `${label(h)} 使用了渐变背景，与页面纯色表面不一致且无法可靠度量文字对比——建议改用调色板内的纯色背景（若需修图表文字对比，改图表文字/坐标颜色而非背景）`
+  },
+  /* ---- 图表数据/线条/数据点 marker 色与页面强调色一致（逐 series） ---- */
+  {
+    id: 'CHART_DATA_COLOR', layer: 'L4', severity: 'warn', runner: 'page',
+    theory: '每个 series 都应显式设 series.color/itemStyle.color 并与页面强调色一致——只设 lineStyle.color 时数据点 marker 用 ECharts 默认色板（随机）',
+    detect: (F, T) => {
+      const hits = [];
+      // 页面“主色”：优先取非中性的强调色（饱和度>0.12），否则退回正文主字色
+      const pick = () => {
+        const cands = [
+          ...((F.palette && F.palette.accentTop) || []).map((x) => x.hex),
+          ...((F.palette && F.palette.textTop) || []).map((x) => x.hex)
+        ];
+        for (const hx of cands) {
+          try {
+            const [, s] = rgbToHsl(parseHex(hx));
+            if (s > 0.12) return hx;
+          } catch {}
+        }
+        return cands[0] || null;
+      };
+      const accent = pick();
+      const hueOf = (hx) => { try { return rgbToHsl(parseHex(hx))[0]; } catch { return null; } };
+      const accentHue = accent ? hueOf(accent) : null;
+      const dist = (a, b) => Math.abs(((a - b) % 360 + 540) % 360 - 180);
+      for (const n of F.allNodes) {
+        if (!(n.chartTextFgs || n.tag === 'canvas')) continue;
+        const series = n.chartSeries || [];
+        for (let i = 0; i < series.length; i++) {
+          const s = series[i];
+          const hexes = (s.colors || []).filter((c) => /^#/.test(c));
+          if (!s.hasSeriesColor) {
+            hits.push({ n, i, s, suggest: accent, kind: 'noSeriesColor', hexes: hexes.slice(0, 2).join('/') });
+            continue;
+          }
+          if (!accentHue) continue;
+          if (!hexes.length) { hits.push({ n, i, s, suggest: accent, kind: 'noHex' }); continue; }
+          const farAny = hexes.some((c) => {
+            const hu = hueOf(c);
+            return hu === null ? false : dist(hu, accentHue) > T.MAX_HUE;
+          });
+          if (farAny) hits.push({ n, i, s, suggest: accent, kind: 'far', hexes: hexes.slice(0, 2).join('/') });
+        }
+        // markLine/markPoint marker uncolored -> uncontrolled
+        if (!hits.some((h) => h.n === n) && n.chartHasMark === true && n.chartMarkExplicit === false) {
+          hits.push({ n, suggest: accent, kind: 'marker' });
+        }
+      }
+      return hits.length ? hits : null;
+    },
+    message: (h) => {
+      if (h.kind === 'marker') {
+        return `${label(h.n)} 图表阈值/标记（markLine/markPoint）未显式着色，使用 ECharts 默认色（=随机/不受控）——请给其 lineStyle.color 显式设置颜色，与系列/页面强调色 ${h.suggest} 一致`;
+      }
+      if (h.kind === 'noSeriesColor') {
+        return `${label(h.n)} 的 series[${h.i}]（${h.s.type}${h.s.name ? ' '+h.s.name : ''}）未显式设 series.color / itemStyle.color——线条与数据点 marker 会用 ECharts 默认色板（随机）。请给每个 series（含额外派生的）设 series.color = ${h.suggest}，itemStyle/lineStyle 保持同族`;
+      }
+      if (h.kind === 'far') {
+        return `${label(h.n)} 的 series[${h.i}] 颜色 ${h.hexes} 与页面强调色 ${h.suggest} 偏差过大——请把该 series 的 series.color / itemStyle.color 设为 ${h.suggest}（数据点 marker 同色）`;
+      }
+      return `${label(h.n)} 的 series[${h.i}] 颜色与页面强调色 ${h.suggest} 不一致——请显式设置 series.color 为该强调色`;
+    }
   }
 ];

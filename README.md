@@ -1,6 +1,6 @@
 # 轻量布局度量引擎 · 使用说明
 
-面向 H5 静态页面的布局/配色质量度量工具：无头浏览器采集事实 → 五层美学体系（48 条规则）判定 → 输出紧凑纯文本 `report.txt`（可直接回流给 LLM）。架构与设计详见 [DESIGN.md](DESIGN.md)。
+面向 H5 静态页面的布局/配色质量度量工具：无头浏览器采集事实 → 五层美学体系（63 条规则）判定 → 输出紧凑纯文本 `report.txt`（可直接回流给 LLM）。架构与设计详见 [DESIGN.md](DESIGN.md)。
 
 ## 环境准备
 
@@ -22,7 +22,10 @@ npx playwright install chromium
 ```powershell
 npm run analyze -- <path/to/page.html>            # 位置参数
 node src/analyze.mjs --file page.html --out ./out # 旗标形式，--out 覆盖输出目录
+node src/analyze.mjs https://example.com --name example --out ./out   # URL 模式
 ```
+
+URL 模式：输入以 `http(s)://` 开头即直接分析远程页面（同一 375×812 移动视口）；报告命名无法从 URL 推导，`--name` 与 `--out` 必填。等待策略为 `networkidle`（30s 超时后回退 `load`，适配长轮询类页面）。
 
 ### 方式二：批量夹具管线（fixtures/ → reports/）
 
@@ -46,6 +49,7 @@ node src/run.mjs overflow
 ```
 === Layout Report: good.html ===
 Page 375×812 contentH=917 scrollW=375          # 页面尺寸 / 内容高度 / 横向滚动宽
+URL: file:///…/good.html                       # 实测地址（http(s) 含 query/hash；file 模式为本地路径）
 Config: defaults                               # 配置来源（defaults 或 <文件> (N 处覆盖)）
 Palette bg:#fff 86% | accent:#2563eb 5% ...    # 调色板单行（背景/文本/强调/和声）
 ├─ header.header (0,0 375×79)                  # 事实树（标签+矩形+紧凑元标记）
@@ -81,7 +85,7 @@ npm test          # 配置层 14 项用例（tests/config.test.mjs）
 npm run golden    # Golden 基线对比（15 夹具计数 + type 序列，需先 npm run collect）
 ```
 
-Golden 基线：`0/4/2/7/3/2/2/4/1/5/3/5/9/9/7`（good 恒为 0）。
+Golden 基线：`0/4/2/7/3/2/2/4/3/5/3/5/9/9/7/8/12/3/3/7/3/33`（good 恒为 0；fp-* 为 OVERLAP 已知误报挑战夹具）。
 
 ## 修复实验与风格转换
 

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>渐变遮罩层-图片+渐变蒙版+文字</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #222; padding-bottom: 12px; }
+.header { padding: 16px; background: #fff; }
+.header h1 { font-size: 20px; }
+.header p { margin-top: 4px; font-size: 13px; color: #5f6368; }
+
+/* 场景说明：图片卡片使用三层兄弟结构：图片层 + 渐变遮罩层 + 文字层，
+   三者同父且矩形完全重叠。这是内容平台（视频/文章封面）的标准设计。 */
+.media-list { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.media-card { position: relative; border-radius: 12px; overflow: hidden; height: 180px; }
+.media-img { position: absolute; inset: 0; background: linear-gradient(135deg, #667eea, #764ba2); }
+.media-gradient { position: absolute; inset: 0; background: linear-gradient(transparent 30%, rgba(0,0,0,.65)); }
+.media-text { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; z-index: 1; }
+.media-text h3 { font-size: 16px; color: #fff; line-height: 1.4; }
+.media-text p { margin-top: 4px; font-size: 12px; color: rgba(255,255,255,.8); }
+.media-text .meta { margin-top: 8px; display: flex; gap: 10px; font-size: 11px; color: rgba(255,255,255,.7); }
+
+.tabbar { margin-top: 12px; display: flex; background: #fff; border-radius: 12px; }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 56px; text-decoration: none; color: #6b7280; font-size: 10px; }
+.tabbar .icon { font-size: 18px; }
+</style>
+</head>
+<body>
+<header class="header">
+  <h1>热门内容</h1>
+  <p>精选 4 篇值得一读的文章</p>
+</header>
+<main class="media-list">
+  <article class="media-card">
+    <div class="media-img"></div>
+    <div class="media-gradient"></div>
+    <div class="media-text">
+      <h3>2026 年前端开发趋势展望</h3>
+      <p>从 AI 辅助编码到边缘计算，聊聊接下来会发生什么</p>
+      <div class="meta"><span>技术</span><span>5 分钟阅读</span></div>
+    </div>
+  </article>
+  <article class="media-card">
+    <div class="media-img"></div>
+    <div class="media-gradient"></div>
+    <div class="media-text">
+      <h3>如何设计一个好看又好用的卡片</h3>
+      <p>从间距、圆角、阴影三个维度拆解卡片设计</p>
+      <div class="meta"><span>设计</span><span>8 分钟阅读</span></div>
+    </div>
+  </article>
+  <article class="media-card">
+    <div class="media-img"></div>
+    <div class="media-gradient"></div>
+    <div class="media-text">
+      <h3>远程工作三年，我学到的十件事</h3>
+      <p>效率、沟通、心态，一个都不 能少</p>
+      <div class="meta"><span>职场</span><span>6 分钟阅读</span></div>
+    </div>
+  </article>
+  <article class="media-card">
+    <div class="media-img"></div>
+    <div class="media-gradient"></div>
+    <div class="media-text">
+      <h3>用 CSS 画出好看的几何图案</h3>
+      <p>从渐变到 conic-gradient，探索纯 CSS 的视觉表现力</p>
+      <div class="meta"><span>前端</span><span>10 分钟阅读</span></div>
+    </div>
+  </article>
+</main>
+<nav class="tabbar">
+  <a href="#"><span class="icon">🏠</span><span>首页</span></a>
+  <a href="#"><span class="icon">🧭</span><span>发现</span></a>
+  <a href="#"><span class="icon">☆</span><span>收藏</span></a>
+  <a href="#"><span class="icon">⚙</span><span>我的</span></a>
+</nav>
+</body>
+</html>

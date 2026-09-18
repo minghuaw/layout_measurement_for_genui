@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tp-text-normal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: -apple-system, "PingFang SC", sans-serif; padding: 20px; }
+  /* wide container: heading + chips fit on one line, heading stays horizontal */
+  .header-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; width: 620px; }
+  h2 { font-size: 22px; font-weight: 600; white-space: nowrap; }
+  .chip { font-size: 12px; background: #eee; border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="header-row">
+  <h2>今天吃什么</h2>
+  <div style="display:flex; gap:8px;">
+    <span class="chip">全天约 1500 kcal，适中偏低开启减脂。</span>
+    <span class="chip">蛋白质约 95g，约占全天热量 25%。</span>
+  </div>
+</div>
+</body>
+</html>

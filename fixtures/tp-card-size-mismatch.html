@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tp-card-size-mismatch</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f1e8; color: #2b3a4a; }
+  .page { max-width: 375px; margin: 0 auto; padding: 16px; }
+  h3 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: #46586a; }
+  /* 横滑区：overflow-x auto —— 其自身 TEXT_CLIP/ELEMENT_OVERFLOW 应豁免 */
+  .scroller { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+  .card { flex: 0 0 280px; min-width: 0; padding: 0; border: none; background: transparent; cursor: pointer; text-align: left; border-radius: 20px; }
+  /* 可见卡片盒：绘制表面（底色 + 阴影） */
+  .face { border-radius: 20px; overflow: hidden; background: #ffffff; box-shadow: 0 4px 14px rgba(31, 40, 35, 0.12); }
+  .thumb { height: 150px; background: #cfe3d5; }
+  .body { padding: 12px; }
+  .name { margin: 0; font-size: 17px; font-weight: 600; color: #2b3a4a; }
+  .desc { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: #46586a; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  /* 横滑区内部、自身不可滚动的裁切文本 —— TEXT_CLIP 仍应检出 */
+  .clipbox { flex: 0 0 200px; align-self: flex-start; white-space: nowrap; overflow: hidden; font-size: 13px; line-height: 1.5; color: #46586a; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <h3>本周挑菜</h3>
+    <div class="scroller">
+      <button class="card">
+        <div class="face">
+          <div class="thumb"></div>
+          <div class="body">
+            <p class="name">木耳鱼香肉丝</p>
+            <p class="desc">糖改醋、木耳替肥肉，鱼香依旧开胃不升糖，全家都爱吃的一道家常下饭菜。</p>
+          </div>
+        </div>
+      </button>
+      <button class="card">
+        <div class="face">
+          <div class="thumb"></div>
+          <div class="body">
+            <p class="name">西芹百合炒鸡片</p>
+            <p class="desc">高蛋白低负担，清爽利口，爸妈都能多吃两块，少油少盐的清淡做法。</p>
+          </div>
+        </div>
+      </button>
+      <button class="card">
+        <div class="face">
+          <div class="thumb"></div>
+          <div class="body">
+            <p class="name">清蒸鲈鱼</p>
+            <p class="desc">蒸出来的鲜嫩。</p>
+          </div>
+        </div>
+      </button>
+      <div class="clipbox">这是一段位于横向滚动容器内部、自身不可滚动且被裁切的超长文本用于验证 TEXT_CLIP 仍能检出</div>
+    </div>
+  </div>
+</body>
+</html>

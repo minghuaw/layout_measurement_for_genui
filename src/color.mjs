@@ -5,7 +5,6 @@
  *   为全部规则层提供颜色数学能力，包括：
  *   - 格式解析/转换：字符串 ↔ rgb 数组 ↔ hex ↔ HSL
  *   - alpha 合成（source-over）、WCAG 亮度/对比度
- *   - 建议色二分搜索（低对比时给出可达标的替代色）
  *   - 全页调色板统计（computePalette：背景/文本/强调三角色制归因 + 和声判定）
  *
  * 约束：所有函数均为纯计算，不接触 DOM；输入一律为 [r,g,b(,a)] 数组或 CSS 色串。
@@ -70,50 +69,10 @@ export function rgbToHsl(rgb) {
   return [h, s, l];
 }
 
-/** HSL → rgb 数组（建议色二分搜索的逆运算；h 可为任意角度，自动模 360） */
-export function hslToRgb(h, s, l) {
-  const c = (1 - Math.abs(2 * l - 1)) * s;
-  const hp = ((h % 360) + 360) % 360 / 60;
-  const x = c * (1 - Math.abs((hp % 2) - 1));
-  let r = 0, g = 0, b = 0;
-  if (hp < 1) [r, g, b] = [c, x, 0];
-  else if (hp < 2) [r, g, b] = [x, c, 0];
-  else if (hp < 3) [r, g, b] = [0, c, x];
-  else if (hp < 4) [r, g, b] = [0, x, c];
-  else if (hp < 5) [r, g, b] = [x, 0, c];
-  else [r, g, b] = [c, 0, x];
-  const m = l - c / 2;
-  return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
-}
-
 /** 高饱和判定：饱和度 ≥0.5 且明度在 0.2-0.8 之间（用于强调色/鲜艳面积归因） */
 export function isVivid(rgb) {
   const [, s, l] = rgbToHsl(rgb);
   return s >= 0.5 && l >= 0.2 && l <= 0.8;
-}
-
-/**
- * 建议可达标色：保持前景色相/饱和度，沿明度轴二分搜索（24 次迭代）找
- * 满足目标对比度 target 的最接近色；背景亮则压暗、背景暗则提亮。
- * @returns "#rrggbb" 建议色串（LLM 可直接落进 CSS）
- */
-export function suggestAccessible(fg, bg, target = 4.5) {
-  const [h, s, l] = rgbToHsl(fg);
-  const darken = luminance(bg) > 0.18;
-  let lo = darken ? 0 : l;
-  let hi = darken ? l : 1;
-  let best = darken ? [0, 0, 0] : [255, 255, 255];
-  for (let i = 0; i < 24; i++) {
-    const mid = (lo + hi) / 2;
-    const c = hslToRgb(h, s, mid);
-    if (contrastRatio(c, bg) >= target) {
-      best = c;
-      if (darken) hi = mid; else lo = mid;
-    } else {
-      if (darken) lo = mid; else hi = mid;
-    }
-  }
-  return hex(best);
 }
 
 /** Map 累加助手（同一 key 面积累加） */
@@ -137,6 +96,7 @@ export function computePalette(tree, pageInfo) {
   const bgMap = new Map();
   const textMap = new Map();
   const accentMap = new Map();
+  const accentEls = [];
   let vividArea = 0;
   const vividList = [];
   const vividSet = new Map();
@@ -157,7 +117,10 @@ export function computePalette(tree, pageInfo) {
         vividList.push({ hex: hex(n.bg), area });
         addMap(vividSet, hex(n.bg), area);
       }
-      if (n.bgOwn && (vivid || n.interactive)) addMap(accentMap, hex(n.bg), area);
+      if (n.bgOwn && (vivid || n.interactive)) {
+        addMap(accentMap, hex(n.bg), area);
+        accentEls.push({ tag: n.tag, cls: n.cls, y: Math.round(n.rect.y), hex: hex(n.bg), area });
+      }
       walk(n.children);
     }
   };
@@ -177,6 +140,8 @@ export function computePalette(tree, pageInfo) {
     bgTop: topN(bgMap, 2).map(([h, a]) => ({ hex: h, share: a / total })),
     textTop: topN(textMap, 2).map(([h, a]) => ({ hex: h, share: a / total })),
     accentTop: topN(accentMap, 3).map(([h, a]) => ({ hex: h, share: a / total })),
+    accentEls: accentEls.sort((a, b) => b.area - a.area).slice(0, 3)
+      .map((e) => ({ tag: e.tag, cls: e.cls, y: e.y, hex: e.hex, share: e.area / total })),
     accentArea: [...accentMap.values()].reduce((s, v) => s + v, 0) / total,
     vividArea: vividArea / total,
     vividTop: vividList.sort((a, b) => b.area - a.area).slice(0, 3),

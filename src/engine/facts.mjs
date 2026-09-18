@@ -5,15 +5,18 @@
  *   - allNodes      全量节点扁平数组（node/page 执行器遍历）
  *   - containers    所有子节点 ≥2 的容器（pair/container 执行器输入）
  *   - textGroups    排版分组（tag|父tag|cls 为键，≥1 有文本节点）
- *   - listGroups    列表分组（同 tag+首cls、宽 ≥100、数量 ≥3）
+ *   - listGroups    列表分组（同 tag+首cls、宽 ≥100、数量 ≥3；桶内按结构签名分区，同构才成组）
+ *   - pathGroups    原始列表桶（同 tag+首cls、宽 ≥100、数量 ≥3，不做结构分区；供自带结构路径
+ *                   匹配的规则 GROUP_CHILD_ALIGN / IMG_SIZE_INCONSISTENT，容忍条件性子元素）
  *   - voidBands     文本叶子 y 投影合并后的垂直空白带（VOID_BAND 输入）
  *   - palette       调色板（复用 color.mjs computePalette）
  *
  * 注意：此处会向 geo 节点挂 `_` 前缀内部字段（_pt/_pe/_clipInner/_outerExceeds），
  *   collect.mjs 落盘 geometry.json 时以 replacer 剥除，保证产物只含纯净事实。
+ *   （_inHScroll/_isScrollX 由 collect.mjs 计算，同为内部字段。）
  */
 import { computePalette } from '../color.mjs';
-import { label } from './util.mjs';
+import { label, structuralSignature } from './util.mjs';
 
 /** hasClip —— 递归判断某节点子树内是否存在文本裁切节点 */
 function hasClip(nodes) {
@@ -38,9 +41,10 @@ export function buildFacts(data, cfg) {
   if (data.tree.length >= 2) containers.push({ children: data.tree, parentLabel: 'body' });
 
 /** 一次深度遍历：填充内部字段 + 收集 allNodes / containers / 溢出层级标记 */
-  const walk = (nodes, parentTag, pe) => {
+  const walk = (nodes, parentTag, pe, parentLabel) => {
     for (const n of nodes) {
-      n._pt = parentTag;
+      n._pt = parentTag;                 /* 父标签名（textGroups 分组键：跨模板实例的一致性检查用） */
+      n._pLabel = parentLabel || parentTag; /* 父完整定位串（含 ord —— ISSUE 消息容器上下文用） */
       n._pe = pe;
       n._clipInner = n.textClip ? !hasClip(n.children) : false;
       const right = n.rect.x + n.rect.w;
@@ -48,10 +52,10 @@ export function buildFacts(data, cfg) {
       n._outerExceeds = exceeds && !pe;
       allNodes.push(n);
       if (n.children.length >= 2) containers.push({ children: n.children, parentLabel: label(n) });
-      walk(n.children, n.tag, pe || exceeds);
+      walk(n.children, n.tag, pe || exceeds, label(n));
     }
   };
-  walk(data.tree, 'body', false);
+  walk(data.tree, 'body', false, 'body');
 
   /* 排版分组：同类标签+父标签+类名的有文本节点归组（FONT/COLOR/WEIGHT 等一致性规则输入） */
   const textGroups = new Map();
@@ -62,8 +66,15 @@ export function buildFacts(data, cfg) {
     textGroups.get(key).push(n);
   }
 
-  /* 列表分组：同 tag+首cls 且宽 ≥100 的兄弟节点 ≥3 构成一组（对齐/尺寸/圆角/比例类规则输入） */
+  /* 列表分组：
+     - listGroups（结构分区版）：同 tag+首cls、宽 ≥100 的兄弟桶内再按结构签名分区（同构才可比），
+       供 item 级一致性规则（对齐/尺寸/圆角/比例/卡片）——避免页面级不同角色兄弟（hero/列表/徽标区）
+       跨角色比较误报（如阅读首页 5 个 section 的 58/54/86px 媒体混比）。
+     - pathGroups（原始桶）：仅同 tag+首cls、宽 ≥100、数量 ≥3，不做结构分区，供自带结构路径匹配的
+       规则（GROUP_CHILD_ALIGN / IMG_SIZE_INCONSISTENT）——这类规则逐路径比对、天然容忍条件性/
+       可选子元素（如某卡多一条价格行），分区反而会把同组件的可选项成员排除、漏报对应子元素错位。 */
   const listGroups = [];
+  const pathGroups = [];
   const collect = (nodes, parent) => {
     const byKey = new Map();
     for (const n of nodes) {
@@ -73,15 +84,26 @@ export function buildFacts(data, cfg) {
       byKey.get(key).push(n);
     }
     for (const [key, items] of byKey) {
-      if (items.length >= 3) listGroups.push({ key, items, parent });
+      if (items.length >= 3) pathGroups.push({ key, items, parent });
+      const bySig = new Map();
+      for (const item of items) {
+        const sig = structuralSignature(item);
+        if (!bySig.has(sig)) bySig.set(sig, []);
+        bySig.get(sig).push(item);
+      }
+      for (const [, sub] of bySig) {
+        if (sub.length >= 3) listGroups.push({ key, items: sub, parent });
+      }
     }
     for (const n of nodes) collect(n.children, label(n));
   };
   collect(data.tree, 'body');
 
-  /* voidBands：文本叶子 y 区间先按起点排序、相邻重叠区间合并，再取区间之间的空隙（≥bandMin 视为空白带） */
+  /* voidBands：文本叶子 y 区间先按起点排序、相邻重叠区间合并，再取区间之间的空隙（≥bandMin 视为空白带）。
+     图表/媒体（media 节点，无文本但占满自身区域，如 data-echarts 容器）同样计入投影，
+     避免把图表这类“无文本内容”的区块误判为垂直空白带。 */
   const ivs = allNodes
-    .filter((n) => n.text)
+    .filter((n) => n.text || n.media)
     .map((n) => [n.rect.y, n.rect.y + n.rect.h])
     .sort((a, b) => a[0] - b[0]);
   const merged = [];
@@ -99,12 +121,16 @@ export function buildFacts(data, cfg) {
   }
 
   return {
+    tree: data.tree,
     allNodes,
     containers,
     textGroups: [...textGroups.entries()],
     listGroups,
+    pathGroups,
     palette: computePalette(data.tree, pi),
     voidBands,
+    /* 图表文字（data-echarts 内 axisLabel/textStyle 等）blend 后的前景数组（CHART_TEXT_CONTRAST 输入） */
+    chartTexts: allNodes.filter((n) => Array.isArray(n.chartTextFgs) && n.chartTextFgs.length),
     pageInfo: pi,
     cssom: pi.cssom || {}
   };

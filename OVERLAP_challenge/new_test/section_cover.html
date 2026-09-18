@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>区块间距计算错误-内容面板盖住横幅文案</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #222; padding-bottom: 12px; }
+.header { padding: 16px; background: #fff; }
+.header h1 { font-size: 20px; }
+.header p { margin-top: 4px; font-size: 13px; color: #5f6368; }
+
+/* 缺陷植入：内容面板 margin-top: -70px 上移盖住促销横幅的下半部分文案，
+   交叠占横幅面积约 54%，副标题被白底面板遮挡，属真实缺陷 */
+.promo { margin: 12px; padding: 28px 16px; background: #1d4ed8; border-radius: 12px; }
+.promo h2 { font-size: 20px; color: #ffffff; }
+.promo p { margin-top: 6px; font-size: 13px; color: #dbeafe; line-height: 1.5; }
+
+.panel { margin: 0 12px; margin-top: -70px; background: #fff; border-radius: 12px; padding: 14px; }
+.panel h2 { font-size: 15px; }
+.panel ul { margin-top: 8px; }
+.panel li { padding: 8px 0; border-bottom: 1px solid #f5f6fa; }
+.panel li:last-child { border-bottom: none; }
+.li-title { font-size: 13px; color: #222; }
+.li-sub { display: block; margin-top: 2px; font-size: 12px; color: #6b7280; }
+
+.tabbar { margin: 12px; display: flex; background: #fff; border-radius: 12px; }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 56px; text-decoration: none; color: #6b7280; font-size: 10px; }
+.tabbar .icon { font-size: 18px; }
+</style>
+</head>
+<body>
+<header class="header">
+  <h1>会员中心</h1>
+  <p>开通会员享全部权益</p>
+</header>
+<section class="promo">
+  <h2>限时 5 折开通</h2>
+  <p>年度会员直降 60 元，截止本周日晚 24 点，错过再等一年。</p>
+</section>
+<main class="panel">
+  <h2>会员权益</h2>
+  <ul>
+    <li>
+      <div class="li-title">全站内容免广告</div>
+      <span class="li-sub">价值 120 元/年</span>
+    </li>
+    <li>
+      <div class="li-title">专属客服通道</div>
+      <span class="li-sub">7×12 小时在线</span>
+    </li>
+    <li>
+      <div class="li-title">每月专属券包</div>
+      <span class="li-sub">合计 60 元/月</span>
+    </li>
+    <li>
+      <div class="li-title">生日专属礼遇</div>
+      <span class="li-sub">惊喜礼包</span>
+    </li>
+  </ul>
+</main>
+<nav class="tabbar">
+  <a href="#"><span class="icon">🏠</span><span>首页</span></a>
+  <a href="#"><span class="icon">🧭</span><span>发现</span></a>
+  <a href="#"><span class="icon">☆</span><span>收藏</span></a>
+  <a href="#"><span class="icon">⚙</span><span>我的</span></a>
+</nav>
+</body>
+</html>

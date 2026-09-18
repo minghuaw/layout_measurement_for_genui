@@ -7,7 +7,7 @@
  *   默认关闭（config DEFAULTS enabled:false），经 METRICS_ON 按需开启。
  */
 import { label, r0 } from '../engine/util.mjs';
-import { contrastRatio as cr, suggestAccessible as sa } from '../color.mjs';
+import { contrastRatio as cr } from '../color.mjs';
 
 /** 全页带阴影的节点集合（L5 阴影类规则共用） */
 const shadowed = (F) => F.allNodes.filter((n) => n.shadow);
@@ -140,9 +140,9 @@ export const refineRules = [
     theory: 'WCAG AAA 7:1（aspirational，默认关闭）',
     detect: (F, T) => {
       const bad = withText(F).filter((n) => cr(n.fg, n.bg) < T.RATIO);
-      if (bad.length) return { count: bad.length, ex: label(bad[0]), sugg: sa(bad[0].fg, bad[0].bg, T.RATIO) };
+      if (bad.length) return { count: bad.length, ex: label(bad[0]) };
       return null;
     },
-    message: (h, T) => `${h.count} 处对比度未达 AAA ${T.RATIO}:1（如 ${h.ex}，建议 ${h.sugg}）`
+    message: (h, T) => `${h.count} 处对比度未达 AAA ${T.RATIO}:1（如 ${h.ex}）`
   }
 ];

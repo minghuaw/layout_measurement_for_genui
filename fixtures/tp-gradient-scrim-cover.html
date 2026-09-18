@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tp-gradient-scrim-cover</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #1e2a23; color: #ede3d0; }
+  .page { max-width: 375px; margin: 0 auto; padding: 32px 20px; background: #1e2a23; }
+  .hero { position: relative; width: 100%; }
+  .photo { width: 100%; height: 200px; border-radius: 16px; display: block; background: #cfe3d5; }
+  /* 渐隐遮罩：定位层，盖住整个 header（含 static 副标题）——最底部近乎不透明 */
+  .scrim { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 16px;
+           background: linear-gradient(180deg, rgba(30, 42, 35, 0) 40%, #1e2a23 100%); }
+  .sub { margin: 24px 0 0; font-size: 15px; line-height: 1.6; color: #ede3d0; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="photo"></div>
+      <div class="scrim"></div>
+      <p class="sub">200㎡ 三代同堂的美式田园，一次读懂。</p>
+    </header>
+  </div>
+</body>
+</html>

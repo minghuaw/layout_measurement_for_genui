@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fp-text-wrap-varies</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1e2a23; color: #ede3d0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; padding: 20px; }
+  /* 段落文本长度天然不同 → 高度随内容换行自然变化 —— 不应报 GROUP_CHILD_ALIGN */
+  .card { background: #28352d; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .card h3 { font-size: 15px; margin: 0 0 6px; color: #ede3d0; }
+  .card p { font-size: 13px; line-height: 1.6; margin: 0; color: #c4cdba; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h3>风格解析</h3>
+    <p>美式田园的灵魂是回归自然、温馨舒适，可视为美式乡村的同源变体，讲究原木与棉麻的质感搭配。</p>
+  </div>
+  <div class="card">
+    <h3>空间方案</h3>
+    <p>全屋收纳的第一站。</p>
+  </div>
+  <div class="card">
+    <h3>家庭需求</h3>
+    <p>三代人作息不同，各自都需要独立安静的空间来休息和生活，隔音与采光都要兼顾。</p>
+  </div>
+</body>
+</html>

@@ -8,7 +8,8 @@
   ],
   "overlap": [
     "OVERLAP",
-    "OVERLAP"
+    "OVERLAP",
+    "TEXT_COVERED"
   ],
   "mixed": [
     "OVERFLOW",
@@ -17,9 +18,11 @@
     "TAP_TARGET",
     "TAP_TARGET",
     "TAP_TARGET",
+    "SIZE_INCONSISTENT",
     "SPACING"
   ],
   "font-chaos": [
+    "SIZE_INCONSISTENT",
     "FONT_INCONSISTENT",
     "FONT_INCONSISTENT",
     "FONT_INCONSISTENT"
@@ -30,6 +33,7 @@
   ],
   "card-chaos": [
     "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "RADIUS_INCONSISTENT"
   ],
   "cramped": [
@@ -39,9 +43,13 @@
     "LINE_HEIGHT_TIGHT"
   ],
   "img-chaos": [
+    "IMG_BROKEN",
+    "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
     "IMG_SIZE_INCONSISTENT"
   ],
   "ratio-chaos": [
+    "SIZE_INCONSISTENT",
     "VOID_BAND",
     "VOID_BAND",
     "CARD_VOID",
@@ -49,6 +57,7 @@
     "ASPECT_EXTREME"
   ],
   "void-band": [
+    "SIZE_INCONSISTENT",
     "VOID_BAND",
     "VOID_BAND",
     "VOID_BAND"
@@ -69,7 +78,8 @@
     "CONTRAST_LOW",
     "CONTRAST_LOW",
     "CONTRAST_LOW",
-    "CONTRAST_LOW"
+    "CONTRAST_LOW",
+    "SIZE_INCONSISTENT"
   ],
   "color-chaos": [
     "CONTRAST_LOW",
@@ -90,5 +100,216 @@
     "COLOR_DOMINANCE",
     "GARISH_SATURATION",
     "HARMONY_OFF"
+  ],
+  "fp-absolute-layering": [
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "COLOR_INCONSISTENT"
+  ],
+  "fp-badge-overlay": [
+    "TEXT_CLIP",
+    "TEXT_CLIP",
+    "TEXT_CLIP",
+    "TEXT_CLIP",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW"
+  ],
+  "fp-negative-margin-stack": [],
+  "fp-hero-overlay": [
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST"
+  ],
+  "fp-decoration-layer": [
+    "ELEMENT_OVERFLOW",
+    "ELEMENT_OVERFLOW",
+    "TEXT_CLIP",
+    "TEXT_CLIP",
+    "GLASS_NO_BLUR"
+  ],
+  "fp-fab": [
+    "SPACING",
+    "SHADOW_OVERKILL"
+  ],
+  "fp-gradient-overlay-card": [
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "VOID_BAND",
+    "VOID_BAND",
+    "VOID_BAND",
+    "VOID_BAND",
+    "CARD_VOID"
+  ],
+  "tp-avatar-pile": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP"
+  ],
+  "tp-margin-overlap-cards": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP"
+  ],
+  "tp-price-collision": [
+    "OVERLAP"
+  ],
+  "tp-relative-shift-card": [
+    "OVERLAP",
+    "TEXT_COVERED",
+    "TEXT_COVERED",
+    "TEXT_COVERED",
+    "SPACING",
+    "VOID_BAND"
+  ],
+  "tp-section-cover": [
+    "OVERLAP"
+  ],
+  "tp-tag-pileup": [
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP",
+    "OVERLAP"
+  ],
+  "tp-hainan": [
+    "TEXT_CLIP",
+    "OVERLAP",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "TAP_TARGET",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "TEXT_COVERED",
+    "FONT_INCONSISTENT",
+    "COLOR_INCONSISTENT",
+    "COLOR_INCONSISTENT",
+    "COLOR_INCONSISTENT",
+    "RADIUS_SCALE_OFF",
+    "FONT_FAMILY_BLOAT"
+  ],
+  "tp-card-size-mismatch": [
+    "TEXT_CLIP",
+    "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
+    "VOID_BAND",
+    "CARD_VOID",
+    "BALANCE_OFF"
+  ],
+  "tp-gradient-scrim-cover": [
+    "TEXT_COVERED"
+  ],
+  "fp-scrim-above-text": [],
+  "fp-translucent-scrim": [],
+  "tp-body-bg-dark-text": [
+    "DENSITY_EXTREME"
+  ],
+  "tp-body-bg-gradient": [
+    "GRADIENT_CONTRAST",
+    "DENSITY_EXTREME"
+  ],
+  "tp-icon-img-hint": [
+    "TAP_TARGET",
+    "SVG_ICON_HINT",
+    "BALANCE_OFF"
+  ],
+  "fp-icon-large-svg": [
+    "DENSITY_EXTREME",
+    "BALANCE_OFF"
+  ],
+  "fp-icon-mask": [
+    "TAP_TARGET",
+    "BALANCE_OFF"
+  ],
+  "tp-group-child-align": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
+    "IMG_SIZE_INCONSISTENT",
+    "COLOR_DOMINANCE"
+  ],
+  "fp-group-child-align": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "COLOR_DOMINANCE"
+  ],
+  "fp-gradient-stripe-text": [],
+  "tp-gradient-text-spans": [
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST",
+    "GRADIENT_CONTRAST"
+  ],
+  "tp-structural-grandchild": [
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "CONTRAST_LOW",
+    "SIZE_INCONSISTENT",
+    "GROUP_CHILD_ALIGN",
+    "IMG_SIZE_INCONSISTENT",
+    "COLOR_DOMINANCE"
+  ],
+  "fp-text-wrap-varies": [
+    "SIZE_INCONSISTENT"
+  ],
+  "fp-img-size-cross-section": [],
+  "tp-img-size-rect": [
+    "SIZE_INCONSISTENT",
+    "IMG_SIZE_INCONSISTENT"
+  ],
+  "fp-hscroll-no-padding": [
+    "HSCROLL_EDGE_SPACING",
+    "BALANCE_OFF"
+  ],
+  "tp-hscroll-padding": [
+    "BALANCE_OFF"
+  ],
+  "fp-text-squished": [
+    "OVERFLOW",
+    "ELEMENT_OVERFLOW",
+    "TEXT_CLIP",
+    "TEXT_SQUISHED"
+  ],
+  "tp-text-normal": [
+    "OVERFLOW",
+    "ELEMENT_OVERFLOW",
+    "DENSITY_EXTREME",
+    "BALANCE_OFF"
   ]
 }

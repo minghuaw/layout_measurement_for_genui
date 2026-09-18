@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fp-icon-mask</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1e2a23; color: #ede3d0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; padding: 20px; }
+  .bar { display: flex; align-items: center; gap: 12px; }
+  .back { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 6px; border: 1px solid #48584c; background: #28352d; }
+  /* mask-image 渲染的图标（颜色由 background-color 控制）——非 <img>，不应触发 SVG_ICON_HINT */
+  .icon { display: inline-block; width: 20px; height: 20px; background-color: #ede3d0;
+          -webkit-mask-image: url(icon-assets/arrow-left.svg); mask-image: url(icon-assets/arrow-left.svg);
+          -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; mask-position: center; }
+  h1 { font-size: 22px; margin: 0; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <button class="back" aria-label="返回"><span class="icon"></span></button>
+    <h1>三代同堂</h1>
+  </div>
+</body>
+</html>

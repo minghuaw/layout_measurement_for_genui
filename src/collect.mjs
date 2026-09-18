@@ -45,6 +45,8 @@ const COLLECT = (vw) => {
   const SKIP = new Set(['SCRIPT', 'STYLE', 'META', 'LINK', 'TITLE', 'NOSCRIPT', 'BASE', 'HEAD']);
   /** 可交互元素选择器（TAP_TARGET / 反馈类规则的判定输入） */
   const INTERACTIVE = 'a,button,input,select,textarea,[role="button"],[contenteditable="true"]';
+  /** 图表/媒体容器选择器（VOID_BAND 空白带投影须计入其占位，避免把无文本内容区当空白带） */
+  const MEDIA = 'canvas,img,video,iframe,svg,object,[data-echarts],[data-chart-section],.echarts';
 
   /** 解析 computed color 字符串 "rgb(a)(r,g,b[,a])" → {r,g,b,a}；不匹配返回 null */
   const parseCs = (s) => {
@@ -55,6 +57,220 @@ const COLLECT = (vw) => {
     return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
   };
 
+  /** 解析任意常见颜色字面量（#rgb/#rrggbb/#rrggbbaa / rgb(a)）→ {r,g,b,a}；否则 null */
+  const parseCol = (s) => {
+    if (!s) return null;
+    const h = s.trim();
+    if (h[0] === '#') {
+      let x = h.slice(1);
+      if (x.length === 3 || x.length === 4) x = [...x].map((c) => c + c).join('');
+      if (x.length === 6) x += 'ff';
+      if (!/^[0-9a-fA-F]{8}$/.test(x)) return null;
+      return {
+        r: parseInt(x.slice(0, 2), 16),
+        g: parseInt(x.slice(2, 4), 16),
+        b: parseInt(x.slice(4, 6), 16),
+        a: parseInt(x.slice(6, 8), 16) / 255
+      };
+    }
+    /* CSS color() 函数（浏览器把 color-mix(...) 计算为该形式，如 color(srgb 0 0 0 / 0)）——
+       通道按 0-1（或百分比）解析；用于渐变 stop 的原始颜色/透明度提取 */
+    const cm = h.match(/^color\(\s*[a-z0-9-]+\s+([\d.]+%?)\s+([\d.]+%?)\s+([\d.]+%?)\s*(?:\/\s*([\d.]+%?)\s*)?\)$/i);
+    if (cm) {
+      const to255 = (v) => (v.endsWith('%') ? (parseFloat(v) / 100) * 255 : parseFloat(v) * 255);
+      const a = cm[4] === undefined ? 1 : (cm[4].endsWith('%') ? parseFloat(cm[4]) / 100 : parseFloat(cm[4]));
+      return { r: Math.round(to255(cm[1])), g: Math.round(to255(cm[2])), b: Math.round(to255(cm[3])), a };
+    }
+    return parseCs(h);
+  };
+
+  /**
+   * collectChartTextColors —— 从 data-echarts 配置 JSON 中抽取“文字性”颜色（textStyle / axisLabel /
+   * nameTextStyle / label / name 语境下的 color 值）。图表颜色此前不进入任何规则（canvas/DOM 不可见、
+   * 属性 JSON 未被解析），导致模型任意改动图表配色而无反馈；此字段使图表文字进入对比度测量。
+   */
+  const collectChartTextColors = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    const out = [];
+    const walk = (v, path, inText) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === 'string') {
+        if (!/^(#([0-9a-f]{3,8})|rgba?\(|transparent)/i.test(v)) return;
+        if (v.toLowerCase() === 'transparent') return;
+        if (inText) out.push(v);
+        return;
+      }
+      if (Array.isArray(v)) {
+        for (const it of v) walk(it, path, inText);
+        return;
+      }
+      if (typeof v === 'object') {
+        for (const k of Object.keys(v)) {
+          const texty = inText || /textStyle|axisLabel|nameTextStyle|label|^name$/i.test(k);
+          walk(v[k], path + '.' + k, texty);
+        }
+      }
+    };
+    walk(obj, '', false);
+    return out.length ? out : null;
+  };
+
+  /**
+   * chartTopRisk —— 图表顶部空间风险（y 轴最大值刻度/轴名被裁切的启发式）：
+   *   只有显式 grid.containLabel=true 才算稳妥（让 ECharts 自动保留坐标轴标签空间）；
+   *   仅给 grid.top 数值仍可能裁切（exp17 实测 top:60 仍裁）。
+   * 返回 true/false；无 data-echarts 或解析失败返回 null。
+   */
+  const computeChartTopRisk = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    if (!obj || typeof obj !== 'object') return null;
+    const g = obj.grid;
+    if (g && g.containLabel === true) return false;
+    return true;
+  };
+
+  /**
+   * collectChartDataColors —— 从 data-echarts 配置抽取"数据/线条"非文字颜色（series 下的
+   *   color / lineStyle / itemStyle / areaStyle 等）。返回 { explicit, colors }：
+   *   未显式设置系列色时 ECharts 使用默认色板（不受控、与页面强调色无关），
+   *   这是图表"随机色"的来源；explicit=false 供 CHART_DATA_COLOR 判定。
+   */
+  const collectChartDataColors = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    const res = { explicit: false, colors: [], hasMark: false, markExplicit: false };
+    const walk = (v, path, inSeries) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === 'string') {
+        if (!inSeries) return;
+        if (path.includes('.data')) return; // series 的数据数组本身
+        const isMark = /\.(markLine|markPoint)/.test(path);
+        if (isMark) res.hasMark = true;
+        if (/^(#([0-9a-f]{3,8})|rgba?\(|transparent)/i.test(v) && !/transparent/i.test(v)) {
+          res.colors.push(v);
+          if (isMark) res.markExplicit = true;
+        }
+        return;
+      }
+      if (Array.isArray(v)) { for (const it of v) walk(it, path, inSeries); return; }
+      if (typeof v === 'object') {
+        if (inSeries && /\.(markLine|markPoint)(\.|$)/.test(path + '.') ) res.hasMark = true;
+        for (const k of Object.keys(v)) {
+          const inS = inSeries || /(^|\.)series/.test(path + '.' + k) || path === '' && k === 'series';
+          walk(v[k], path + '.' + k, inS);
+        }
+      }
+    };
+    // detect mark presence at object level too (markLine/markPoint may hold only data/style)
+    const scanMarks = (v) => {
+      if (v === null || typeof v !== 'object') return;
+      if (Array.isArray(v)) { for (const it of v) scanMarks(it); return; }
+      for (const k of Object.keys(v)) {
+        if (k === 'markLine' || k === 'markPoint') res.hasMark = true;
+        scanMarks(v[k]);
+      }
+    };
+    scanMarks(obj);
+    walk(obj, '', false);
+    if (res.colors.length) res.explicit = true;
+    return res;
+  };
+
+  /**
+   * chartYRange —— 纵轴数据范围度量：解析 series 数值型 data 的极值（仅纯数字叶子），
+   *   以及显式声明的 yAxis.min / yAxis.max。供 CHART_Y_RANGE（0 起点/范围过宽）判定。
+   * 返回 { dataMin, dataMax, yMin, yMax }；无数字 data 或解析失败返回 null。
+   */
+  const chartYRange = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    if (!obj || typeof obj !== 'object') return null;
+    const nums = [];
+    const walk = (v, inSeriesData) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === 'number' && Number.isFinite(v) && inSeriesData) { nums.push(v); return; }
+      if (Array.isArray(v)) { for (const it of v) walk(it, inSeriesData); return; }
+      if (typeof v === 'object') {
+        for (const k of Object.keys(v)) {
+          const asData = k === 'data' ? true : inSeriesData;
+          walk(v[k], asData);
+        }
+      }
+    };
+    // only descend into series -> data
+    const series = obj.series;
+    if (series) {
+      const arr = Array.isArray(series) ? series : [series];
+      for (const s of arr) if (s && typeof s === 'object') walk(s.data, true);
+    }
+    if (!nums.length) return null;
+    const dataMin = Math.min(...nums);
+    const dataMax = Math.max(...nums);
+    const y = Array.isArray(obj.yAxis) ? obj.yAxis[0] : obj.yAxis;
+    const yMin = y && typeof y.min === 'number' ? y.min : null;
+    const yMax = y && typeof y.max === 'number' ? y.max : null;
+    return { dataMin, dataMax, yMin, yMax };
+  };
+
+  /**
+   * collectChartSeries —— 逐 series 捕获颜色状态（系列/数据点 marker 随机色的根因）：
+   *   每个 series 记录 { type, name, symbol, hasSeriesColor, colors }：
+   *   - hasSeriesColor：series.color 或 series.itemStyle.color 是否显式存在
+   *     （series.color 决定线条与数据点 marker 的填充色；只设 lineStyle.color 时
+   *       marker/symbol 仍用 ECharts 默认色板 = 随机）
+   *   - colors：该 series 下除 markLine/数据外的显式颜色串（hex/rgba）
+   */
+  const collectChartSeries = (el) => {
+    const raw = el.getAttribute('data-echarts');
+    if (!raw) return null;
+    let obj;
+    try { obj = JSON.parse(raw); } catch { return null; }
+    const list = obj && obj.series;
+    if (!list) return null;
+    const arr = Array.isArray(list) ? list : [list];
+    const out = [];
+    for (const s of arr) {
+      if (!s || typeof s !== 'object') continue;
+      const colors = [];
+      const collect = (v, path) => {
+        if (v === null || v === undefined) return;
+        if (typeof v === 'string') {
+          if (path.includes('.data') || /\.(markLine|markPoint)/.test(path)) return;
+          if (/^(#([0-9a-f]{3,8})|rgba?\(|transparent)/i.test(v) && !/transparent/i.test(v)) {
+            colors.push(v);
+          }
+          return;
+        }
+        if (Array.isArray(v)) { for (const it of v) collect(it, path); return; }
+        if (typeof v === 'object') {
+          for (const k of Object.keys(v)) collect(v[k], path + '.' + k);
+        }
+      };
+      collect(s, '');
+      const hasSeriesColor =
+        typeof s.color === 'string' ||
+        (s.itemStyle && typeof s.itemStyle.color === 'string');
+      out.push({
+        type: s.type || 'line',
+        name: s.name || '',
+        symbol: s.symbol || null,
+        hasSeriesColor: !!hasSeriesColor,
+        colors
+      });
+    }
+    return out.length ? out : null;
+  };
+
   /** alpha 合成：前景 f 叠加到底色 b（标准 source-over 公式） */
   const blend = (f, b) => {
     if (!f || f.a <= 0) return [b[0], b[1], b[2]];
@@ -62,24 +278,136 @@ const COLLECT = (vw) => {
     return [f.r * a + b[0] * (1 - a), f.g * a + b[1] * (1 - a), f.b * a + b[2] * (1 - a)];
   };
 
-  /* ---- 页面级信息：视口基准 / 滚动尺寸 / body 底色 ---- */
+  /* ---- 页面级信息：视口基准 / 滚动尺寸 / 页面底色（html→body 合成） ---- */
   const scrollEl = document.scrollingElement || document.documentElement;
-  const bodyOwn = parseCs(getComputedStyle(document.body).backgroundColor);
+  const bodyCs = getComputedStyle(document.body);
+  const htmlOwn = parseCs(getComputedStyle(document.documentElement).backgroundColor);
+  const bodyOwn = parseCs(bodyCs.backgroundColor);
+  /* 页面基底色：白 → html 底色 → body 底色（逐层 alpha 合成）——作为 walk 初始 parentBg，
+     使「无自身背景」的节点合成到真实页面底色（而非固定白色），修正 body 底色被忽略
+     导致的 CONTRAST_LOW 等误报 */
+  let baseBg = [255, 255, 255];
+  if (htmlOwn && htmlOwn.a > 0) baseBg = blend(htmlOwn, baseBg);
+  if (bodyOwn && bodyOwn.a > 0) baseBg = blend(bodyOwn, baseBg);
+  baseBg = baseBg.map((v) => Math.round(v));
   const pageInfo = {
     viewport: vw,
     innerW: window.innerWidth,
     scrollWidth: scrollEl.scrollWidth,
     scrollHeight: scrollEl.scrollHeight,
-    /** body 自身底色（树从 body.children 开始，body 底色需单独带回供面积归因补全） */
-    bodyBg: bodyOwn && bodyOwn.a > 0 ? blend(bodyOwn, [255, 255, 255]).map((v) => Math.round(v)) : null
+    /** 实测 URL（重定向后的最终地址，含 query/hash）——报告 URL: 行溯源输入 */
+    url: location.href,
+    /** 页面底色（html→body 合成；树从 body.children 开始，用于面积归因补全 + 节点背景链起点） */
+    bodyBg: baseBg
   };
 
   /** 数值保留两位小数（防亚像素抖动，判定层再决定取整时机） */
   const f2 = (n) => Math.round(n * 100) / 100;
+  /** 解析 linear-gradient 中的颜色 stop（≤4 个，rgba/hex；radial/解析失败返回 null）——GRADIENT_CONTRAST 输入 */
+  const parseGradStops = (s) => {
+    if (!s || !/linear-gradient\(/i.test(s)) return null;
+    const inner = s.slice(s.toLowerCase().indexOf('linear-gradient('));
+    const colors = inner.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/gi) || [];
+    if (colors.length < 2 || colors.length > 4) return null;
+    const stops = colors.map(parseCol).filter(Boolean);
+    return stops.length >= 2 ? stops : null;
+  };
+  /**
+   * parseGradInfo —— 解析 linear-gradient 的「方向 + 原始 stop（颜色含 alpha + 位置）」，
+   * 供渐变遮罩覆盖检测（TEXT_COVERED）：需未与底色合成的 alpha 与 stop 位置，才能算出
+   * 渐变在受害者所在位置的透明度。radial / 解析失败 / 非轴对齐（非 0/90/180/270deg）
+   * 返回 null（规则侧跳过，避免误报）。返回 { deg, stops:[{ rgba:{r,g,b,a}, pos:0..1 }] }
+   * （pos 归一化并升序；px 位置按元素轴向尺寸换算）。
+   */
+  const parseGradInfo = (s, rect) => {
+    const gm = s && s.match(/(?<![a-z-])linear-gradient\(/i);
+    if (!gm) return null;
+    const start = gm.index + gm[0].length;
+    let depth = 1, end = start;
+    while (end < s.length && depth > 0) {
+      const ch = s[end];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+      end++;
+    }
+    const inner = s.slice(start, end - 1);
+    /* 顶层逗号切分（保护 rgba(...) 内的逗号） */
+    const parts = [];
+    let cur = '', d = 0;
+    for (const ch of inner) {
+      if (ch === '(') d++;
+      else if (ch === ')') d--;
+      if (ch === ',' && d === 0) { parts.push(cur); cur = ''; } else cur += ch;
+    }
+    if (cur.trim()) parts.push(cur);
+    if (parts.length < 2) return null;
+    /* 方向：<deg> 或 to <side>；缺省 180deg（to bottom），首段即 stop。任意角度均保留几何 */
+    let deg = 180, i = 0;
+    const first = parts[0].trim();
+    const dm = first.match(/^(-?\d+(?:\.\d+)?)deg$/i);
+    const kwMap = { 'to top': 0, 'to bottom': 180, 'to right': 90, 'to left': 270 };
+    if (dm) { deg = parseFloat(dm[1]); i = 1; }
+    else if (kwMap[first.toLowerCase()] !== undefined) { deg = kwMap[first.toLowerCase()]; i = 1; }
+    const norm = ((deg % 360) + 360) % 360;
+    const rad = (norm * Math.PI) / 180;
+    /* px 位置换算基准：渐变线长度（CSS 公式 |W·sin| + |H·cos|） */
+    const extent = Math.abs((rect?.width || 0) * Math.sin(rad)) + Math.abs((rect?.height || 0) * Math.cos(rad));
+    const stops = [];
+    for (; i < parts.length; i++) {
+      const p = parts[i].trim();
+      const cm = p.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)|color\([^)]*\)/i);
+      if (!cm) continue;
+      const rgba = parseCol(cm[0]);
+      if (!rgba) continue;
+      const rest = p.slice(cm.index + cm[0].length);
+      const pm = rest.match(/(-?\d+(?:\.\d+)?)(%|px)?/);
+      let pos = null;
+      if (pm) {
+        const v = parseFloat(pm[1]);
+        pos = pm[2] === 'px' ? (extent > 0 ? v / extent : null) : v / 100;
+      }
+      stops.push({ rgba, pos });
+    }
+    if (stops.length < 2) return null;
+    const n = stops.length;
+    stops.forEach((st, k) => { if (st.pos === null || !isFinite(st.pos)) st.pos = k / (n - 1); });
+    stops.forEach((st) => { st.pos = Math.min(1, Math.max(0, st.pos)); });
+    stops.sort((a, b) => a.pos - b.pos);
+    return {
+      deg: norm,
+      stops,
+      rect: { x: rect?.x || 0, y: rect?.y || 0, w: rect?.width || 0, h: rect?.height || 0 }
+    };
+  };
   /** 直接文本摘要：压空白、截断到 40 字（树体积控制） */
   const clip = (s) => {
     s = (s || '').replace(/\s+/g, ' ').trim();
     return s.length > 40 ? s.slice(0, 40) + '…' : s;
+  };
+
+  /**
+   * measureTextDelta —— 元素子树文本行盒（全部文本节点并集）垂直中心 相对 元素盒子中心的偏移 px。
+   * 用于 CONTROL_TEXT_CENTER（按钮等交互元素内文字是否垂直居中）；无可见文本返回 null。
+   * 注意：line box 含行高上下 half-leading，阈值（默认 4px）在规则层取。
+   */
+  const measureTextDelta = (el) => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    let top = null;
+    let bottom = null;
+    let node;
+    while ((node = walker.nextNode())) {
+      if (!node.textContent || !node.textContent.trim()) continue;
+      if (node.parentElement && node.parentElement.closest('script,style,noscript')) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const r = range.getBoundingClientRect();
+      if (!(r.height > 0) || !(r.width > 0)) continue;
+      top = top === null ? r.top : Math.min(top, r.top);
+      bottom = bottom === null ? r.bottom : Math.max(bottom, r.bottom);
+    }
+    if (top === null) return null;
+    const er = el.getBoundingClientRect();
+    return f2((top + bottom) / 2 - (er.top + er.bottom) / 2);
   };
 
   /** 解析 box-shadow → {y 偏移, blur, alpha, 层数}；none/不合法返回 null（L5 阴影类规则输入） */
@@ -114,26 +442,48 @@ const COLLECT = (vw) => {
   /**
    * walk —— 深度优先构建事实树
    * parentBg：父级有效背景（alpha 合成链，逐层向下传递）
+   * parentStops：父级渐变 stop（继承链，不透明纯底截断）
+   * inHScroll：任一严格祖先 computed overflow-x ∈ {auto, scroll}——该节点处于
+   *   横向滚动容器内（轮播/横滑行属有意设计，其右缘越界是可滚动内容而非缺陷）
    * 跳过：非渲染标签 / display:none / visibility:hidden
    * 零尺寸节点：自身不入树，子节点上提（hoist），避免树断裂
+   * 定位背景层：容器内「定位 + 有背景」的兄弟（如 .card > .bg(abs, inset:0) + .body(rel, z-index)）
+   *   视觉上在后续定位兄弟之下——后续定位兄弟（及其子树）以该层为可见底色/渐变，而非祖先链底色
    */
-  const walk = (el, parentBg) => {
+  const rectOverlapFrac = (a, b) => {
+    const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+    const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+    if (w <= 0 || h <= 0) return 0;
+    return (w * h) / Math.max(1, a.width * a.height);
+  };
+  const walk = (el, parentBg, parentStops, inHScroll, inInteractive, inChrome, parentGeom) => {
     const out = [];
+    const ordMap = {};
+    /* 定位背景层栈：最近的「定位 + 有背景」兄弟（提供后续定位兄弟的可见底色/渐变） */
+    let layer = null; /* { rect, bg, stops } */
     for (const child of el.children) {
       if (SKIP.has(child.tagName)) continue;
       const cs = getComputedStyle(child);
       if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-      const kids = walk(child, parentBg);
       const r = child.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) {
-        out.push(...kids);
+        /* 零尺寸节点自身不渲染：子节点上提并完整继承父级背景/渐变/横滚上下文 */
+        out.push(...walk(child, parentBg, parentStops, inHScroll, inInteractive, inChrome, parentGeom));
         continue;
       }
+      const positioned = cs.position !== 'static';
+      /* 被最近的定位背景层覆盖的定位兄弟：以该层为底（修正「背景层为兄弟、祖先链看不到」的底色） */
+      const onLayer = positioned && layer && rectOverlapFrac(r, layer.rect) >= 0.8;
+      const baseBg = onLayer ? layer.bg : parentBg;
+      const baseStops = onLayer ? layer.stops : parentStops;
       /* 有效背景/前景：自身背景 alpha>0 则叠加父级，否则继承父级；
          前景 color 同样叠加到有效背景上（半透明文字场景） */
       const own = parseCs(cs.backgroundColor);
       const bgOwn = !!own && own.a > 0;
-      const bg = bgOwn ? blend(own, parentBg) : parentBg;
+      const bg = bgOwn ? blend(own, baseBg) : baseBg;
+      /* 背景链逐层向下传递：子树以本节点合成后的有效背景为底（而非 parentBg），
+         否则彩色容器内的文本会被误算成祖先底色（如蓝底横幅上白字被算成白底）
+         —— 本仓库版本已含此修复（kids 携带 bg + childStops，见 walk 尾部） */
       const fgRaw = parseCs(cs.color);
       const fg = fgRaw ? blend(fgRaw, bg) : bg;
       const shadow = parseShadow(cs.boxShadow);
@@ -142,16 +492,132 @@ const COLLECT = (vw) => {
       /* 直接文本 = 元素自身的文本节点拼接（不含子孙，控制树内文本体积） */
       let text = '';
       for (const n of child.childNodes) if (n.nodeType === 3) text += n.textContent;
+      const interactive = child.matches(INTERACTIVE);
+      const isChrome = child.tagName === 'HEADER' || child.tagName === 'NAV';
+      const media = child.matches(MEDIA);
+      /* 定位锚点（ISSUE 消息 pinpoint 元素用）：
+         tid = 首个 data-test* 属性值（跨框架测试定位约定，data-testid / data-test / ember data-test-*）
+         alt = 图像替代文本（IMG_BROKEN 占位建议输入）；aria = aria-label
+         ord = 同标签渲染兄弟序号（1 起，树内计数，与 textGroups 分组口径一致） */
+      const testAttr = child.getAttributeNames().find((a) => a.startsWith('data-test'));
+      const tid = testAttr ? (child.getAttribute(testAttr) || '') : '';
+      const alt = child.tagName === 'IMG' ? (child.getAttribute('alt') || '') : '';
+      const aria = child.getAttribute('aria-label') || '';
+      const tagKey = child.tagName;
+      ordMap[tagKey] = (ordMap[tagKey] || 0) + 1;
+      /* 渐变背景（linear/radial-gradient）——有效 stop 颜色供 GRADIENT_CONTRAST：
+         自身渐变优先（blend 到自身有效底色）；无自身渐变且自身底非不透明时继承祖先渐变；
+         自身不透明纯底遮住祖先渐变 → null（不再向下传递） */
+      const gradient = /gradient\(/i.test(cs.backgroundImage || '');
+      const ownStops = gradient ? parseGradStops(cs.backgroundImage) : null;
+      /* 渐变遮罩覆盖检测输入（TEXT_COVERED）：方向 + 原始 stop（含 alpha/位置），
+         内部字段（_ 前缀，落盘 geometry.json 时剥除） */
+      const gradInfo = gradient ? parseGradInfo(cs.backgroundImage, r) : null;
+      const ownStopsB = ownStops ? ownStops.map((c) => blend(c, bg).map((v) => Math.round(v))) : null;
+      const inheritedStops = (bgOwn && own.a >= 1) ? null : (baseStops || null);
+      /* 渐变几何（GRADIENT_CONTRAST 位置感知输入）：自身渐变优先，否则继承祖先几何；
+         不透明纯底截断（与渐变色继承链一致）。rect = 渐变元素盒（页面坐标，投影用） */
+      const inheritedGeom = (bgOwn && own.a >= 1) ? null : (parentGeom || null);
+      const childGeom = gradInfo || inheritedGeom;
+      const gradStops = ownStopsB || inheritedStops;
+      const childStops = ownStopsB || inheritedStops;
+      /* 图像加载状态（IMG_BROKEN 输入）：complete && naturalWidth===0 = 已请求且失败；
+         懒加载未触发时 complete=false，天然排除，无误报 */
+      const isImg = child.tagName === 'IMG';
+      const imgBroken = isImg ? (child.complete && child.naturalWidth === 0) : false;
+      const imgSrcTail = isImg ? (child.getAttribute('src') || '').slice(-24) : '';
+      /* SVG 图标提示输入：<img> 的 src 是否 SVG（<img> 引入的 SVG 颜色固定、无法随主题/背景调整） */
+      const imgSvg = isImg ? /\.svg(\?|#|$)/i.test(child.getAttribute('src') || '') : false;
+      /* 富媒体背景容器（url 背景图）——MEDIA_COVERED 覆盖判定输入
+         （修复模型惯用 img→backgroundImage 重构，纯 img 判定会漏检重构后页面） */
+      const bgUrl = /url\(/i.test(cs.backgroundImage || '');
+      /* 本节点自身是否横向可滚动（overflow-x auto/scroll）——传给子节点参与 _inHScroll 链；
+         注意 overflow-y 非 visible 时 overflow-x 计算值会回退为 auto（CSS 规范），此时
+         横向越界内容确实可滚，豁免语义成立。自身 overflow-x 不作用于自身（严格祖先才算） */
+      const ownHScroll = /auto|scroll/i.test(cs.overflowX || '');
+      /* 图表文字前景（blend 到容器有效背景上）——图表文字对比度规则输入 */
+      let chartTextFgs = null;
+      let chartTopRisk = null;
+      let chartDataExplicit = null;
+      let chartDataColors = null;
+      let chartHasMark = null;
+      let chartMarkExplicit = null;
+      let chartSeries = null;
+      let yRange = null;
+      if (media) {
+        const cols = collectChartTextColors(child);
+        if (cols) {
+          const fgs = [];
+          for (const c of cols) {
+            const p = parseCol(c);
+            if (p) fgs.push(blend(p, bg).map((v) => Math.round(v)));
+          }
+          if (fgs.length) chartTextFgs = fgs;
+        }
+        if (child.hasAttribute('data-echarts')) {
+          chartTopRisk = computeChartTopRisk(child);
+          const dc = collectChartDataColors(child);
+          if (dc) {
+            chartDataExplicit = dc.explicit;
+            chartDataColors = dc.colors;
+            chartHasMark = dc.hasMark;
+            chartMarkExplicit = dc.markExplicit;
+          }
+          chartSeries = collectChartSeries(child);
+          yRange = chartYRange(child);
+        }
+      }
+      const kids = walk(child, bg, childStops, inHScroll || ownHScroll, inInteractive || interactive, inChrome || isChrome, childGeom);
+      /* 本节点作为定位背景层：定位 + 有背景（实心/渐变/媒体/背景图）→ 供后续定位兄弟取用 */
+      if (positioned && (bgOwn || ownStopsB || media || bgUrl)) {
+        layer = { rect: r, bg, stops: childStops };
+      }
       out.push({
         tag: child.tagName.toLowerCase(),
         id: child.id || '',
         cls: child.classList.length ? Array.from(child.classList).slice(0, 2).join('.') : '',
         role: child.getAttribute('role') || '',
+        tid,
+        alt,
+        aria,
+        ord: ordMap[tagKey],
+        imgBroken,
+        imgSrcTail,
+        imgSvg,
+        bgUrl,
+        /* 内部事实（`_` 前缀，geometry.json 落盘剥除）：
+           _inHScroll  处于横向滚动容器「内」（严格祖先）——ELEMENT_OVERFLOW 豁免输入
+           _isScrollX  自身即横向滚动容器（overflow-x auto/scroll）——ELEMENT_OVERFLOW/
+                       TEXT_CLIP 容器自身豁免输入（可滚动溢出属有意设计，非缺陷） */
+        _inHScroll: inHScroll,
+        _inInteractive: inInteractive,
+        _inChrome: inChrome,
+        _isScrollX: ownHScroll,
+        gradStops: gradStops || null,
+        _gradInfo: gradInfo || null,
+        _gradGeom: childGeom || null,
+        writingMode: cs.writingMode || 'horizontal-tb',
+        textLen: (child.textContent || '').replace(/\s+/g, '').length,
         text: clip(text),
         rect: { x: f2(r.x), y: f2(r.y), w: f2(r.width), h: f2(r.height) },
         pos: cs.position,
-        interactive: child.matches(INTERACTIVE),
-        textClip: child.scrollWidth > child.clientWidth + 1,
+        interactive,
+        media,
+        gradient,
+        chartTextFgs,
+        chartTopRisk,
+        chartDataExplicit,
+        chartDataColors,
+        chartHasMark,
+        chartMarkExplicit,
+        chartSeries,
+        yRange,
+        /* 交互元素内文字垂直居中偏移 px（无文本/不可测为 null） */
+        vcenterDelta: interactive ? measureTextDelta(child) : null,
+        /* 文本裁切：横向内容溢出「且自身不可滚动」——overflow-x auto/scroll 的溢出
+           是横滑区（轮播/横滑行）有意设计，可由滚动抵达，不算裁切（TEXT_CLIP 豁免）；
+           自身 overflow 为 visible/hidden/clip 的溢出才计入 */
+        textClip: child.scrollWidth > child.clientWidth + 1 && !ownHScroll,
         fontSize: parseFloat(cs.fontSize) || null,
         lineHeight: cs.lineHeight === 'normal' ? null : f2(parseFloat(cs.lineHeight) / parseFloat(cs.fontSize)),
         radius: parseFloat(cs.borderTopLeftRadius) || 0,
@@ -174,7 +640,6 @@ const COLLECT = (vw) => {
     }
     return out;
   };
-
   /**
    * scanCssom —— 样式表伪类扫描（P1 反馈类规则的输入）
    * 统计 :hover / :focus(-visible) / outline 移除三类选择器；
@@ -205,7 +670,14 @@ const COLLECT = (vw) => {
     return out;
   };
 
-  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, [255, 255, 255]) };
+  /* body 自身渐变 stop → walk 初始 parentStops（供后代 GRADIENT_CONTRAST 继承）；
+     body 渐变几何 → walk 初始 parentGeom（位置感知对比度采样用） */
+  const bodyStops = /gradient/i.test(bodyCs.backgroundImage) ? parseGradStops(bodyCs.backgroundImage) : null;
+  const bodyStopsB = bodyStops ? bodyStops.map((c) => blend(c, baseBg).map((v) => Math.round(v))) : null;
+  const bodyRect = document.body.getBoundingClientRect();
+  const bodyGeom = /linear-gradient/i.test(bodyCs.backgroundImage)
+    ? parseGradInfo(bodyCs.backgroundImage, bodyRect) : null;
+  return { pageInfo: { ...pageInfo, cssom: scanCssom() }, tree: walk(document.body, baseBg, bodyStopsB, false, false, false, bodyGeom) };
 };
 
 /**
@@ -222,9 +694,11 @@ const COLLECT = (vw) => {
  *                   true=额外产出 aria/geometry/cdp 三产物（格式对比实验、style_eval 用）
  *   - filePath      （可选）直接指定的页面文件绝对路径；提供时跳过 inputDir/<name>.html 拼装，
  *                   用于单文件独立分析（src/analyze.mjs），支持任意扩展名
+ *   - url           （可选）远程页面 http(s) URL；提供时跳过本地文件拼装直接打开该地址，
+ *                   等待 networkidle（30s 超时后回退 load），供 src/analyze.mjs URL 模式使用
  * @returns { name, sizes, issues } 供启动器汇总（工具模式下 sizes 仅含 report）
  */
-export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, fullArtifacts = false, filePath }) {
+export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, fullArtifacts = false, filePath, url }) {
   mkdirSync(outDir, { recursive: true });
   const ctx = await browser.newContext({
     viewport: VIEWPORT,
@@ -233,8 +707,19 @@ export async function collectPage(browser, { name, inputDir, outDir, cfg, echo, 
     hasTouch: true
   });
   const page = await ctx.newPage();
-  const url = filePath ? pathToFileURL(filePath).href : pathToFileURL(join(inputDir, name + '.html')).href;
-  await page.goto(url);
+  if (url) {
+    /* URL 模式：networkidle 尽量等齐异步资源；长轮询类页面超时后回退 load 兜底 */
+    if (!/^https?:\/\//i.test(url)) throw new Error(`仅支持 http(s) URL: ${url}`);
+    try {
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    } catch (e) {
+      if (e.name !== 'TimeoutError') throw e;
+      await page.goto(url, { waitUntil: 'load', timeout: 30000 });
+    }
+  } else {
+    const href = filePath ? pathToFileURL(filePath).href : pathToFileURL(join(inputDir, name + '.html')).href;
+    await page.goto(href);
+  }
 
   /* 采集：事实树必采；aria/CDP 仅实验模式（工具模式跳过以提速） */
   const geo = await page.evaluate(COLLECT, { w: VIEWPORT.width, h: VIEWPORT.height });

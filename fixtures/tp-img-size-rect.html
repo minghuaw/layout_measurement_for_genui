@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tp-img-size-rect</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #222; line-height: 1.5; padding: 16px; }
+  /* 4 张同构卡片，媒体为非方形横图（96×54）：旧启发式（方形 + 24-128 尺寸带）不覆盖，
+     泛化后的媒体一致性应按结构路径比对并报出第 4 张的 48px 高度偏离 */
+  .card-list { display: flex; flex-direction: column; gap: 12px; }
+  .card { background: #fff; border-radius: 12px; padding: 14px; }
+  .title { font-size: 15px; }
+  .cover { width: 96px; height: 54px; border-radius: 8px; background: linear-gradient(135deg, #4f8cff, #8fc0ff); margin: 8px 0; }
+  .card:nth-of-type(4) .cover { height: 48px; }
+  .desc { font-size: 13px; color: #5f6368; }
+</style>
+</head>
+<body>
+  <main class="card-list">
+    <article class="card">
+      <h3 class="title">城市漫步指南</h3>
+      <div class="cover"></div>
+      <p class="desc">用半天时间探索老城区的街巷与咖啡馆，感受城市的另一面。</p>
+    </article>
+    <article class="card">
+      <h3 class="title">周末市集活动预告</h3>
+      <div class="cover"></div>
+      <p class="desc">本周末两天，近 40 家摊主集结，手作、烘焙、绿植应有尽有。</p>
+    </article>
+    <article class="card">
+      <h3 class="title">手冲咖啡入门课</h3>
+      <div class="cover"></div>
+      <p class="desc">从磨豆到注水，两小时带你做出第一杯好喝的手冲咖啡。</p>
+    </article>
+    <article class="card">
+      <h3 class="title">近郊徒步路线推荐</h3>
+      <div class="cover"></div>
+      <p class="desc">三条一日往返路线，难度适中，适合周末轻装出发。</p>
+    </article>
+  </main>
+</body>
+</html>

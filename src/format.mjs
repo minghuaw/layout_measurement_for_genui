@@ -18,6 +18,7 @@ export function formatReport(name, data, issues, configEcho) {
   const lines = [];
   lines.push(`=== Layout Report: ${name}.html ===`);
   lines.push(`Page ${pi.viewport.w}×${pi.viewport.h} contentH=${pi.scrollHeight} scrollW=${pi.scrollWidth}`);
+  if (pi.url) lines.push(`URL: ${pi.url}`);
   if (configEcho) lines.push(`Config: ${configEcho}`);
   lines.push(paletteLine(computePalette(data.tree, pi)));
   buildTree(data.tree, '', lines);
@@ -38,10 +39,11 @@ export function formatReport(name, data, issues, configEcho) {
       }
       lines.push(`  [${is.type}] ${is.msg}`);
     }
-    const counts = {};
-    for (const is of issues) counts[is.layer] = (counts[is.layer] || 0) + 1;
-    lines.push(`Layers: ${Object.keys(LAYERS).map((l) => `${l}=${counts[l] || 0}`).join(' ')}`);
   }
+  /* 分层健康度行始终输出（含 0 issue 情形，此前误置于 else 分支内） */
+  const counts = {};
+  for (const is of issues) counts[is.layer] = (counts[is.layer] || 0) + 1;
+  lines.push(`Layers: ${Object.keys(LAYERS).map((l) => `${l}=${counts[l] || 0}`).join(' ')}`);
   return lines.join('\n') + '\n';
 }
 
